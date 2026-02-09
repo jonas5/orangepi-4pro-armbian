@@ -16,6 +16,7 @@ This repo intentionally excludes all build artifacts, caches, and binary blobs.
 ---
 
 ## 🏗️ Repository Structure
+<code>
 orangepi-4pro-armbian/
 │
 ├── config/
@@ -38,7 +39,7 @@ orangepi-4pro-armbian/
 │
 ├── .gitignore
 └── README.md
-
+</code>
 
 
 ---
