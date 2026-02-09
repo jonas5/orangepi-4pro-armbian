@@ -1,0 +1,19 @@
+diff --git a/config/sources/families/sun60iw2.conf b/config/sources/families/sun60iw2.conf
+index 1111111..2222222 100644
+--- a/config/sources/families/sun60iw2.conf
++++ b/config/sources/families/sun60iw2.conf
+@@ -1,6 +1,15 @@
+ #
+ # SPDX-License-Identifier: GPL-2.0
+ #
++
++# Skip Radxa vendor U-Boot path for Orange Pi 4 Pro
++if [[ "${BOARD}" == "orangepi-4pro" ]]; then
++    echo "Skipping Radxa vendor U-Boot for ${BOARD}"
++    # Do not call build_custom_uboot(), let mainline U-Boot path handle it
++    return 0
++fi
++
+ # Copyright (c) 2013-2023 Igor Pecovnik, igor@armbian.com
+ #
+ # This file is a part of the Armbian Build Framework

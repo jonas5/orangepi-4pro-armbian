@@ -1,0 +1,14 @@
+--- a/scripts/Makefile.lib
++++ b/scripts/Makefile.lib
+@@ -404,1 +404,10 @@
+-
++
++# Rule for compiling .dts into .dtbo for out-of-tree Radxa overlays
++$(obj)/%.dtbo: $(src)/%.dts $(DTC) FORCE
++	$(call if_changed_dep,dtc)
++
++# Ensure symbols are generated for all compiled overlays
++DTC_FLAGS += -@
++
++dtbo-y += $(filter %.dtbo, $(obj-m))
++always-y += $(dtbo-y)

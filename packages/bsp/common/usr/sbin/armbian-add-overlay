@@ -1,0 +1,96 @@
+#!/bin/bash
+
+# Copyright (c) 2017 The Armbian Project https://www.armbian.com/
+#
+# This file is licensed under the terms of the GNU General Public
+# License version 2. This program is licensed "as is" without any
+# warranty of any kind, whether express or implied.
+
+if [[ ! -n $1 ]]; then
+	echo >&2 "Usage: $0 <overlay_file.dts OR overlay_file.dtbo>"
+	exit -1
+fi
+
+if [[ $EUID -ne 0 ]]; then
+	echo >&2 "This program must be run with superuser rights"
+	exit -1
+fi
+
+if [[ ! -f $1 ]]; then
+	echo >&2 "Can't open file $1. File does not exist?"
+	exit -1
+fi
+
+if [[ $1 == *.dts ]]; then
+	fname=$(basename $1 .dts)
+elif [[ $1 == *.dtbo ]]; then
+	fname=$(basename $1 .dtbo)
+else
+	echo >&2 "Overlay file name should have .dts or .dtbo extension"
+	exit -1
+fi
+
+if [[ ! -f /etc/armbian-release || ! -f /boot/armbianEnv.txt ]]; then
+	echo >&2 "Armbian is not installed properly. Missing armbian-release or armbianEnv.txt"
+	exit -1
+fi
+
+. /etc/armbian-release
+
+if ! grep -q '^setenv overlay_error' /boot/boot.cmd; then
+	echo >&2 "Overlays are not supported on ${LINUXFAMILY^} based boards."
+	exit -1
+fi
+
+if [[ ! -d /boot/overlay-user ]]; then
+	mkdir -p /boot/overlay-user
+fi
+
+if [[ $1 == *.dtbo ]]; then
+	echo "Copying pre-compiled overlay"
+	cp $1 /boot/overlay-user/${fname}.dtbo
+else
+	# Existing DTS compilation logic
+	if [[ -d /lib/modules/$(uname -r)/build/scripts/dtc ]]; then
+		if [[ ! -x /lib/modules/$(uname -r)/build/scripts/dtc/dtc ]]; then
+			echo >&2 "Error: kernel headers are not installed properly"
+			exit -1
+		else
+			export PATH=/lib/modules/$(uname -r)/build/scripts/dtc/:$PATH
+		fi
+	fi
+
+	if ! type dtc > /dev/null ; then
+		echo "Error: dtc not found in PATH"
+		exit -1
+	fi
+
+	temp_dir=$(mktemp -d)
+	echo "Compiling the overlay"
+	dtc -@ -q -I dts -O dtb -o ${temp_dir}/${fname}.dtbo $1
+	
+	if [[ $? -ne 0 ]]; then
+		echo >&2 "Error compiling the overlay"
+		exit -1
+	fi
+
+	echo "Copying the compiled overlay file to /boot/overlay-user/"
+	cp ${temp_dir}/${fname}.dtbo /boot/overlay-user/${fname}.dtbo
+	rm -rf ${temp_dir}
+fi
+
+if grep -q '^user_overlays=' /boot/armbianEnv.txt; then
+	line=$(grep '^user_overlays=' /boot/armbianEnv.txt | cut -d'=' -f2)
+	if grep -qE "(^|[[:space:]])${fname}([[:space:]]|$)" <<< $line; then
+		echo "Overlay ${fname} was already added to /boot/armbianEnv.txt, skipping"
+	elif grep -q '^user_overlays=\s*$' /boot/armbianEnv.txt; then
+		sed -i -e "s/^user_overlays=\s*$/user_overlays=${fname}/" /boot/armbianEnv.txt
+	else
+		sed -i -e "/^user_overlays=/ s/$/ ${fname}/" /boot/armbianEnv.txt
+	fi
+else
+	sed -i -e "\$auser_overlays=${fname}" /boot/armbianEnv.txt
+fi
+
+echo "Reboot is required to apply the changes"
+

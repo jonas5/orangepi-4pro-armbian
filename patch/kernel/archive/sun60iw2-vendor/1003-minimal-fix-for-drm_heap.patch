@@ -1,0 +1,169 @@
+From b6979d9c8a4d1325ed0dcc242aa699080406ffb8 Mon Sep 17 00:00:00 2001
+From: Alex Cao <alexcaoys@users.noreply.github.com>
+Date: Sat, 31 Jan 2026 19:42:16 -0500
+Subject: [PATCH] minimal fix for drm_heap
+
+---
+ bsp/drivers/drm_heap/Kconfig                    |  1 +
+ bsp/drivers/drm_heap/sunxi_drm_heap.c           | 32 +++++----------------
+ bsp/drivers/drm_heap/third-party/heap-helpers.c | 12 ++++----
+ 3 files changed, 14 insertions(+), 31 deletions(-)
+
+diff --git a/bsp/drivers/drm_heap/Kconfig b/bsp/drivers/drm_heap/Kconfig
+index a4961466..55c25024 100644
+--- a/bsp/drivers/drm_heap/Kconfig
++++ b/bsp/drivers/drm_heap/Kconfig
+@@ -7,6 +7,7 @@ config AW_DRM_HEAP
+ 	tristate "Allwinner drm heap Allwinner"
+ 	default n
+ 	select TEE
++	select DMABUF_HEAPS
+ 	help
+ 	  This implements a interface for sunxi drm management
+ 
+diff --git a/bsp/drivers/drm_heap/sunxi_drm_heap.c b/bsp/drivers/drm_heap/sunxi_drm_heap.c
+index e12010c6..a3fc6866 100644
+--- a/bsp/drivers/drm_heap/sunxi_drm_heap.c
++++ b/bsp/drivers/drm_heap/sunxi_drm_heap.c
+@@ -8,6 +8,7 @@
+  */
+ 
+ #include <linux/dma-buf.h>
++#include <linux/dma-heap.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/err.h>
+ #include <linux/highmem.h>
+@@ -29,7 +30,7 @@
+  * with other sources
+  * 							--ouyangkun 2020.09.12
+  */
+-#include "third-party/heap.c"
++// #include "third-party/heap.c"
+ #include "third-party/heap-helpers.c"
+ 
+ struct dma_heap *sunxi_drm_heap;
+@@ -50,7 +51,7 @@ static void sunxi_drm_heap_free(struct heap_helper_buffer *buffer)
+ 	kfree(buffer);
+ }
+ 
+-static int sunxi_drm_heap_allocate(struct dma_heap *heap, unsigned long len,
++static struct dma_buf *sunxi_drm_heap_allocate(struct dma_heap *heap, unsigned long len,
+ 				   unsigned long fd_flags,
+ 				   unsigned long heap_flags)
+ {
+@@ -63,7 +64,7 @@ static int sunxi_drm_heap_allocate(struct dma_heap *heap, unsigned long len,
+ 
+ 	helper_buffer = kzalloc(sizeof(*helper_buffer), GFP_KERNEL);
+ 	if (!helper_buffer)
+-		return -ENOMEM;
++		return ERR_PTR(-ENOMEM);
+ 
+ 	init_heap_helper_buffer(helper_buffer, sunxi_drm_heap_free);
+ 	helper_buffer->heap = heap;
+@@ -107,10 +108,10 @@ static int sunxi_drm_heap_allocate(struct dma_heap *heap, unsigned long len,
+ 	if (ret < 0) {
+ 		dma_buf_put(dmabuf);
+ 		/* just return, as put will call release and that will free */
+-		return ret;
++		return ERR_PTR(ret);
+ 	}
+ 
+-	return ret;
++	return ERR_PTR(ret);
+ 
+ err1:
+ 	while (pg > 0)
+@@ -119,27 +120,11 @@ static int sunxi_drm_heap_allocate(struct dma_heap *heap, unsigned long len,
+ err0:
+ 	kfree(helper_buffer);
+ 
+-	return ret;
+-}
+-
+-int sunxi_drm_heap_phys(struct dma_heap *heap, int dma_buf_fd,
+-			unsigned int *tee_addr, unsigned int *phy_addr, unsigned int *len)
+-{
+-	struct dma_buf *dma_buf;
+-	struct heap_helper_buffer *helper;
+-	dma_buf = dma_buf_get(dma_buf_fd);
+-	helper = (struct heap_helper_buffer *)dma_buf->priv;
+-	*phy_addr = page_to_phys(helper->pages[0]);
+-	*tee_addr = *phy_addr - sunxi_drm_info.drm_base +
+-		sunxi_drm_info.tee_base;
+-	*len = helper->size;
+-	dma_buf_put(dma_buf);
+-	return 0;
++	return ERR_PTR(ret);
+ }
+ 
+ static const struct dma_heap_ops sunxi_drm_heap_ops = {
+ 	.allocate = sunxi_drm_heap_allocate,
+-	.phys = sunxi_drm_heap_phys,
+ };
+ 
+ static int sunxi_drm_heap_create(void)
+@@ -160,9 +145,6 @@ static int sunxi_drm_heap_create(void)
+ 				sunxi_drm_info.drm_size, -1);
+ 	if (ret)
+ 		goto exit;
+-	ret = dma_heap_init();
+-	if (ret)
+-		goto exit;
+ 
+ 	exp_info.name = "sunxi_drm_heap";
+ 	exp_info.ops = &sunxi_drm_heap_ops;
+diff --git a/bsp/drivers/drm_heap/third-party/heap-helpers.c b/bsp/drivers/drm_heap/third-party/heap-helpers.c
+index 78ef5700..720acf6e 100644
+--- a/bsp/drivers/drm_heap/third-party/heap-helpers.c
++++ b/bsp/drivers/drm_heap/third-party/heap-helpers.c
+@@ -61,13 +61,13 @@ static void dma_heap_buffer_destroy(struct heap_helper_buffer *buffer)
+ 	buffer->free(buffer);
+ }
+ 
+-static int dma_heap_buffer_vmap_get(struct heap_helper_buffer *buffer, struct dma_buf_map *map)
++static int dma_heap_buffer_vmap_get(struct heap_helper_buffer *buffer, struct iosys_map *map)
+ {
+ 	void *vaddr;
+ 
+ 	if (buffer->vmap_cnt) {
+ 		buffer->vmap_cnt++;
+-		dma_buf_map_set_vaddr(map, buffer->vaddr);
++		iosys_map_set_vaddr(map, buffer->vaddr);
+ 		return 0;
+ 	}
+ 	vaddr = dma_heap_map_kernel(buffer);
+@@ -75,7 +75,7 @@ static int dma_heap_buffer_vmap_get(struct heap_helper_buffer *buffer, struct dm
+ 		return PTR_ERR(vaddr);
+ 	buffer->vaddr = vaddr;
+ 	buffer->vmap_cnt++;
+-	dma_buf_map_set_vaddr(map, buffer->vaddr);
++	iosys_map_set_vaddr(map, buffer->vaddr);
+ 	return 0;
+ }
+ 
+@@ -239,7 +239,7 @@ static int dma_heap_dma_buf_end_cpu_access(struct dma_buf *dmabuf,
+ 	return 0;
+ }
+ 
+-static int dma_heap_dma_buf_vmap(struct dma_buf *dmabuf, struct dma_buf_map *map)
++static int dma_heap_dma_buf_vmap(struct dma_buf *dmabuf, struct iosys_map *map)
+ {
+ 	struct heap_helper_buffer *buffer = dmabuf->priv;
+ 	int ret = 0;
+@@ -251,14 +251,14 @@ static int dma_heap_dma_buf_vmap(struct dma_buf *dmabuf, struct dma_buf_map *map
+ 	return ret;
+ }
+ 
+-static void dma_heap_dma_buf_vunmap(struct dma_buf *dmabuf, struct dma_buf_map *map)
++static void dma_heap_dma_buf_vunmap(struct dma_buf *dmabuf, struct iosys_map *map)
+ {
+ 	struct heap_helper_buffer *buffer = dmabuf->priv;
+ 
+ 	mutex_lock(&buffer->lock);
+ 	dma_heap_buffer_vmap_put(buffer);
+ 	mutex_unlock(&buffer->lock);
+-	dma_buf_map_clear(map);
++	iosys_map_clear(map);
+ }
+ 
+ const struct dma_buf_ops heap_helper_ops = {

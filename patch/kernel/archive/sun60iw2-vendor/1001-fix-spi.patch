@@ -1,0 +1,25 @@
+From 68b47675ccdfa0349ae337ab9a68fb2baeacf115 Mon Sep 17 00:00:00 2001
+From: Nick Alilovic <nickalilovic@gmail.com>
+Date: Fri, 23 Jan 2026 17:35:12 -0500
+Subject: [PATCH] fix spi
+
+fix spi
+---
+ drivers/spi/spi-sunxi.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/bsp/drivers/spi/spi-sunxi.c b/bsp/drivers/spi/spi-sunxi.c
+index d6b87b3..e47dac7 100644
+--- a/bsp/drivers/spi/spi-sunxi.c
++++ b/bsp/drivers/spi/spi-sunxi.c
+@@ -2161,7 +2161,6 @@ int sunxi_spi_sync_atomic(struct spi_device *spi, struct spi_message *message)
+ out:
+ 	message->status = ret;
+ 	ctlr->cur_msg = NULL;
+-	ctlr->cur_msg_prepared = false;
+ 
+ 	return ret;
+ }
+-- 
+2.43.0
+
