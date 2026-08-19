@@ -7,6 +7,7 @@ on:
 env:
   BOARD: orangepi4pro
   BRANCH: next
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
 permissions:
   contents: write
@@ -55,7 +56,7 @@ jobs:
         run: |
           IMG=$(find output/images -name '*.img' | head -1)
           echo "Compressing: $IMG ($(du -h "$IMG" | cut -f1))"
-          xz -0 -T0 "$IMG" || true
+          xz -6 -T0 "$IMG" || true
           ls -lh "${IMG}.xz" 2>/dev/null || { echo "ERROR: xz output not found"; exit 1; }
           echo "IMAGE_PATH=$(realpath "${IMG}.xz")" >> $GITHUB_ENV
 
@@ -107,7 +108,7 @@ jobs:
         run: |
           IMG=$(find output/images -name '*.img' | head -1)
           echo "Compressing: $IMG ($(du -h "$IMG" | cut -f1))"
-          xz -0 -T0 "$IMG" || true
+          xz -6 -T0 "$IMG" || true
           ls -lh "${IMG}.xz" 2>/dev/null || { echo "ERROR: xz output not found"; exit 1; }
           echo "IMAGE_PATH=$(realpath "${IMG}.xz")" >> $GITHUB_ENV
 
@@ -161,7 +162,7 @@ jobs:
         run: |
           IMG=$(find output/images -name '*.img' | head -1)
           echo "Compressing: $IMG ($(du -h "$IMG" | cut -f1))"
-          xz -0 -T0 "$IMG" || true
+          xz -6 -T0 "$IMG" || true
           ls -lh "${IMG}.xz" 2>/dev/null || { echo "ERROR: xz output not found"; exit 1; }
           echo "IMAGE_PATH=$(realpath "${IMG}.xz")" >> $GITHUB_ENV
 
