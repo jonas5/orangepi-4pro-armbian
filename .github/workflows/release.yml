@@ -28,10 +28,10 @@ jobs:
         run: git clone --depth=1 https://github.com/armbian/build.git armbian-build
 
       - name: Clone overlay
-        uses: actions/checkout@v4
+        run: git clone --depth=1 https://github.com/${{ github.repository }}.git overlay
 
       - name: Apply overlay
-        run: ./scripts/apply-overlay.sh ./armbian-build
+        run: ./overlay/scripts/apply-overlay.sh ./armbian-build
 
       - name: Build Bookworm server image
         working-directory: armbian-build
@@ -78,10 +78,10 @@ jobs:
         run: git clone --depth=1 https://github.com/armbian/build.git armbian-build
 
       - name: Clone overlay
-        uses: actions/checkout@v4
+        run: git clone --depth=1 https://github.com/${{ github.repository }}.git overlay
 
       - name: Apply overlay
-        run: ./scripts/apply-overlay.sh ./armbian-build
+        run: ./overlay/scripts/apply-overlay.sh ./armbian-build
 
       - name: Build Noble server image
         working-directory: armbian-build
@@ -128,10 +128,10 @@ jobs:
         run: git clone --depth=1 https://github.com/armbian/build.git armbian-build
 
       - name: Clone overlay
-        uses: actions/checkout@v4
+        run: git clone --depth=1 https://github.com/${{ github.repository }}.git overlay
 
       - name: Apply overlay
-        run: ./scripts/apply-overlay.sh ./armbian-build
+        run: ./overlay/scripts/apply-overlay.sh ./armbian-build
 
       - name: Build Trixie GNOME desktop image
         working-directory: armbian-build
