@@ -25,8 +25,7 @@ jobs:
         run: sudo systemctl restart systemd-binfmt
 
       - name: Clone Armbian build system
-        run: |
-          git clone --depth=1 https://github.com/armbian/build.git armbian-build
+        run: git clone --depth=1 https://github.com/armbian/build.git armbian-build
 
       - name: Clone overlay
         uses: actions/checkout@v4
@@ -37,7 +36,7 @@ jobs:
       - name: Build Bookworm server image
         working-directory: armbian-build
         run: |
-          sudo ./build.sh \
+          sudo ./compile.sh \
             BOARD=${{ env.BOARD }} \
             BRANCH=${{ env.BRANCH }} \
             RELEASE=bookworm \
@@ -76,8 +75,7 @@ jobs:
         run: sudo systemctl restart systemd-binfmt
 
       - name: Clone Armbian build system
-        run: |
-          git clone --depth=1 https://github.com/armbian/build.git armbian-build
+        run: git clone --depth=1 https://github.com/armbian/build.git armbian-build
 
       - name: Clone overlay
         uses: actions/checkout@v4
@@ -88,7 +86,7 @@ jobs:
       - name: Build Noble server image
         working-directory: armbian-build
         run: |
-          sudo ./build.sh \
+          sudo ./compile.sh \
             BOARD=${{ env.BOARD }} \
             BRANCH=${{ env.BRANCH }} \
             RELEASE=noble \
@@ -127,8 +125,7 @@ jobs:
         run: sudo systemctl restart systemd-binfmt
 
       - name: Clone Armbian build system
-        run: |
-          git clone --depth=1 https://github.com/armbian/build.git armbian-build
+        run: git clone --depth=1 https://github.com/armbian/build.git armbian-build
 
       - name: Clone overlay
         uses: actions/checkout@v4
@@ -139,7 +136,7 @@ jobs:
       - name: Build Trixie GNOME desktop image
         working-directory: armbian-build
         run: |
-          sudo ./build.sh \
+          sudo ./compile.sh \
             BOARD=${{ env.BOARD }} \
             BRANCH=${{ env.BRANCH }} \
             RELEASE=trixie \
