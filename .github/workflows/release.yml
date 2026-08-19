@@ -8,6 +8,9 @@ env:
   BOARD: orangepi4pro
   BRANCH: next
 
+permissions:
+  contents: write
+
 jobs:
   build-bookworm-server:
     name: Bookworm Server
