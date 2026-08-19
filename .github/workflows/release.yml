@@ -1,0 +1,165 @@
+name: Build and Upload Release Images
+
+on:
+  release:
+    types: [created]
+
+env:
+  BOARD: orangepi4pro
+  BRANCH: next
+
+jobs:
+  build-bookworm-server:
+    name: Bookworm Server
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git gcc make bc bison flex libssl-dev \
+            libc6-dev-arm64-cross gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
+            qemu-user-static binfmt-support dpkg-dev xz-utils pigz
+
+      - name: Enable binfmt
+        run: sudo systemctl restart systemd-binfmt
+
+      - name: Clone Armbian build system
+        run: |
+          git clone --depth=1 https://github.com/armbian/build.git armbian-build
+
+      - name: Clone overlay
+        uses: actions/checkout@v4
+
+      - name: Apply overlay
+        run: ./scripts/apply-overlay.sh ./armbian-build
+
+      - name: Build Bookworm server image
+        working-directory: armbian-build
+        run: |
+          sudo ./build.sh \
+            BOARD=${{ env.BOARD }} \
+            BRANCH=${{ env.BRANCH }} \
+            RELEASE=bookworm \
+            BUILD_DESKTOP=no \
+            BUILD_MINIMAL=yes \
+            KERNEL_CONFIGURE=no \
+            NO_HOST_RELEASE_CHECK=yes \
+            COMPRESS_OUTPUTIMAGE=no \
+            BUILD_OPT=image
+
+      - name: Compress image
+        working-directory: armbian-build
+        run: |
+          IMG=$(find output/images -name '*.img' | head -1)
+          xz -0 -T0 "$IMG"
+          echo "IMAGE_PATH=${IMG}.xz" >> $GITHUB_ENV
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.IMAGE_PATH }}
+
+  build-noble-server:
+    name: Noble Server
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git gcc make bc bison flex libssl-dev \
+            libc6-dev-arm64-cross gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
+            qemu-user-static binfmt-support dpkg-dev xz-utils pigz
+
+      - name: Enable binfmt
+        run: sudo systemctl restart systemd-binfmt
+
+      - name: Clone Armbian build system
+        run: |
+          git clone --depth=1 https://github.com/armbian/build.git armbian-build
+
+      - name: Clone overlay
+        uses: actions/checkout@v4
+
+      - name: Apply overlay
+        run: ./scripts/apply-overlay.sh ./armbian-build
+
+      - name: Build Noble server image
+        working-directory: armbian-build
+        run: |
+          sudo ./build.sh \
+            BOARD=${{ env.BOARD }} \
+            BRANCH=${{ env.BRANCH }} \
+            RELEASE=noble \
+            BUILD_DESKTOP=no \
+            BUILD_MINIMAL=yes \
+            KERNEL_CONFIGURE=no \
+            NO_HOST_RELEASE_CHECK=yes \
+            COMPRESS_OUTPUTIMAGE=no \
+            BUILD_OPT=image
+
+      - name: Compress image
+        working-directory: armbian-build
+        run: |
+          IMG=$(find output/images -name '*.img' | head -1)
+          xz -0 -T0 "$IMG"
+          echo "IMAGE_PATH=${IMG}.xz" >> $GITHUB_ENV
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.IMAGE_PATH }}
+
+  build-trixie-desktop:
+    name: Trixie GNOME Desktop
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git gcc make bc bison flex libssl-dev \
+            libc6-dev-arm64-cross gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
+            qemu-user-static binfmt-support dpkg-dev xz-utils pigz
+
+      - name: Enable binfmt
+        run: sudo systemctl restart systemd-binfmt
+
+      - name: Clone Armbian build system
+        run: |
+          git clone --depth=1 https://github.com/armbian/build.git armbian-build
+
+      - name: Clone overlay
+        uses: actions/checkout@v4
+
+      - name: Apply overlay
+        run: ./scripts/apply-overlay.sh ./armbian-build
+
+      - name: Build Trixie GNOME desktop image
+        working-directory: armbian-build
+        run: |
+          sudo ./build.sh \
+            BOARD=${{ env.BOARD }} \
+            BRANCH=${{ env.BRANCH }} \
+            RELEASE=trixie \
+            BUILD_DESKTOP=yes \
+            DESKTOP_ENVIRONMENT=gnome \
+            DESKTOP_ENVIRONMENT_CONFIG_NAME=config_base \
+            DESKTOP_APPGROUPS_SELECTED="browsers editors multimedia" \
+            KERNEL_CONFIGURE=no \
+            NO_HOST_RELEASE_CHECK=yes \
+            COMPRESS_OUTPUTIMAGE=no \
+            BUILD_OPT=image
+
+      - name: Compress image
+        working-directory: armbian-build
+        run: |
+          IMG=$(find output/images -name '*.img' | head -1)
+          xz -0 -T0 "$IMG"
+          echo "IMAGE_PATH=${IMG}.xz" >> $GITHUB_ENV
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.IMAGE_PATH }}
