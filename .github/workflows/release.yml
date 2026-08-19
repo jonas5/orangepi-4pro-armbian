@@ -36,7 +36,7 @@ jobs:
       - name: Build Bookworm server image
         working-directory: armbian-build
         run: |
-          sudo ./compile.sh \
+          ./compile.sh \
             BOARD=${{ env.BOARD }} \
             BRANCH=${{ env.BRANCH }} \
             RELEASE=bookworm \
@@ -86,7 +86,7 @@ jobs:
       - name: Build Noble server image
         working-directory: armbian-build
         run: |
-          sudo ./compile.sh \
+          ./compile.sh \
             BOARD=${{ env.BOARD }} \
             BRANCH=${{ env.BRANCH }} \
             RELEASE=noble \
@@ -136,7 +136,7 @@ jobs:
       - name: Build Trixie GNOME desktop image
         working-directory: armbian-build
         run: |
-          sudo ./compile.sh \
+          ./compile.sh \
             BOARD=${{ env.BOARD }} \
             BRANCH=${{ env.BRANCH }} \
             RELEASE=trixie \
