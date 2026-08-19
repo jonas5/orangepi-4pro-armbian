@@ -1,0 +1,13 @@
+diff --git a/Makefile b/Makefile
+index 9d4f86a0..572606e5 100755
+--- a/Makefile
++++ b/Makefile
+@@ -449,7 +449,7 @@ KBUILD_CPPFLAGS := -D__KERNEL__ -D__UBOOT__
+ KBUILD_CFLAGS   := -Wall -Wstrict-prototypes \
+ 		   -Wno-format-security \
+ 		   -fno-builtin -ffreestanding $(CSTD_FLAG) \
+-		   -Werror
++		   -Wno-error -Wno-error=attributes -Wno-error=array-bounds -Wno-error=array-parameter -Wno-error=address-of-packed-member
+ ifeq (x$(CONFIG_ARCH_RV32I), xy)
+ KBUILD_CFLAGS	+= -Wno-error=address-of-packed-member
+ KBUILD_CFLAGS	+= -Wno-address-of-packed-member
