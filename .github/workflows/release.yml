@@ -50,12 +50,11 @@ jobs:
       - name: Compress image
         working-directory: armbian-build
         run: |
-          df -h .
           IMG=$(find output/images -name '*.img' | head -1)
           echo "Compressing: $IMG ($(du -h "$IMG" | cut -f1))"
           xz -0 -T0 "$IMG" || true
           ls -lh "${IMG}.xz" 2>/dev/null || { echo "ERROR: xz output not found"; exit 1; }
-          echo "IMAGE_PATH=${IMG}.xz" >> $GITHUB_ENV
+          echo "IMAGE_PATH=$(realpath "${IMG}.xz")" >> $GITHUB_ENV
 
       - name: Upload to release
         uses: softprops/action-gh-release@v2
@@ -107,7 +106,7 @@ jobs:
           echo "Compressing: $IMG ($(du -h "$IMG" | cut -f1))"
           xz -0 -T0 "$IMG" || true
           ls -lh "${IMG}.xz" 2>/dev/null || { echo "ERROR: xz output not found"; exit 1; }
-          echo "IMAGE_PATH=${IMG}.xz" >> $GITHUB_ENV
+          echo "IMAGE_PATH=$(realpath "${IMG}.xz")" >> $GITHUB_ENV
 
       - name: Upload to release
         uses: softprops/action-gh-release@v2
@@ -161,7 +160,7 @@ jobs:
           echo "Compressing: $IMG ($(du -h "$IMG" | cut -f1))"
           xz -0 -T0 "$IMG" || true
           ls -lh "${IMG}.xz" 2>/dev/null || { echo "ERROR: xz output not found"; exit 1; }
-          echo "IMAGE_PATH=${IMG}.xz" >> $GITHUB_ENV
+          echo "IMAGE_PATH=$(realpath "${IMG}.xz")" >> $GITHUB_ENV
 
       - name: Upload to release
         uses: softprops/action-gh-release@v2
