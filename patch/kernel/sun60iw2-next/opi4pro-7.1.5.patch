@@ -9733,10 +9733,10 @@ index bd74901a1..422dad6ce 100644
 +obj-$(CONFIG_PHY_SUN60I_USB3)		+= phy-sun60i-usb3.o
 diff --git a/drivers/phy/allwinner/phy-sun60i-pcie.c b/drivers/phy/allwinner/phy-sun60i-pcie.c
 new file mode 100644
-index 000000000..1fd94a5ff
+index 000000000..f4e38e44f
 --- /dev/null
 +++ b/drivers/phy/allwinner/phy-sun60i-pcie.c
-@@ -0,0 +1,258 @@
+@@ -0,0 +1,262 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
 + * Allwinner sun60i PCIe PHY driver
@@ -9746,11 +9746,15 @@ index 000000000..1fd94a5ff
 +
 +#include <linux/clk.h>
 +#include <linux/delay.h>
++#include <linux/iopoll.h>
 +#include <linux/module.h>
 +#include <linux/of.h>
 +#include <linux/phy/phy.h>
 +#include <linux/platform_device.h>
 +#include <linux/regulator/consumer.h>
++
++#define PHY_MODE_PCIE_A	2
++#define PHY_MODE_PCIE_B	3
 +
 +/* PCIe PHY register offsets (mapped via SerDes) */
 +#define PCIE_PHY_CTRL		0x0200
@@ -9997,10 +10001,10 @@ index 000000000..1fd94a5ff
 +MODULE_DESCRIPTION("Allwinner sun60i PCIe PHY driver for A733");
 diff --git a/drivers/phy/allwinner/phy-sun60i-serdes.c b/drivers/phy/allwinner/phy-sun60i-serdes.c
 new file mode 100644
-index 000000000..7af7d5869
+index 000000000..b7d6032a0
 --- /dev/null
 +++ b/drivers/phy/allwinner/phy-sun60i-serdes.c
-@@ -0,0 +1,379 @@
+@@ -0,0 +1,380 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
 + * Allwinner sun60i SerDes PHY driver
@@ -10012,6 +10016,7 @@ index 000000000..7af7d5869
 +#include <linux/clk.h>
 +#include <linux/delay.h>
 +#include <linux/io.h>
++#include <linux/iopoll.h>
 +#include <linux/module.h>
 +#include <linux/of.h>
 +#include <linux/of_platform.h>
@@ -10382,10 +10387,10 @@ index 000000000..7af7d5869
 +MODULE_DESCRIPTION("Allwinner sun60i SerDes PHY driver");
 diff --git a/drivers/phy/allwinner/phy-sun60i-usb3.c b/drivers/phy/allwinner/phy-sun60i-usb3.c
 new file mode 100644
-index 000000000..b81b41c98
+index 000000000..150f9fbf5
 --- /dev/null
 +++ b/drivers/phy/allwinner/phy-sun60i-usb3.c
-@@ -0,0 +1,223 @@
+@@ -0,0 +1,224 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
 + * Allwinner sun60i USB3 PHY driver
@@ -10394,6 +10399,7 @@ index 000000000..b81b41c98
 + */
 +
 +#include <linux/clk.h>
++#include <linux/iopoll.h>
 +#include <linux/module.h>
 +#include <linux/of.h>
 +#include <linux/phy/phy.h>
@@ -10636,10 +10642,10 @@ index 951b3f1e4..ce34f323a 100644
  obj-$(CONFIG_PINCTRL_SUN9I_A80_R)	+= pinctrl-sun9i-a80-r.o
 diff --git a/drivers/pinctrl/sunxi/pinctrl-sun20i-a733.c b/drivers/pinctrl/sunxi/pinctrl-sun20i-a733.c
 new file mode 100644
-index 000000000..c857d17c9
+index 000000000..f1acf0d04
 --- /dev/null
 +++ b/drivers/pinctrl/sunxi/pinctrl-sun20i-a733.c
-@@ -0,0 +1,751 @@
+@@ -0,0 +1,724 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +// Copyright (c) 2024 Allwinner Technology Co.,Ltd. All rights reserved.
 +
@@ -11321,51 +11327,24 @@ index 000000000..c857d17c9
 + * Bank base offsets. Each bank is indexed relative to bank A.
 + * PA=0, PB=1, PC=2, PD=3, PE=4, PF=5, PG=6, PH=7, PI=8, PJ=9, PK=10.
 + */
-+static const unsigned int a733_bank_base[] = {
-+	SUNXI_BANK_OFFSET('B', 'A'),
-+	SUNXI_BANK_OFFSET('C', 'A'),
-+	SUNXI_BANK_OFFSET('D', 'A'),
-+	SUNXI_BANK_OFFSET('E', 'A'),
-+	SUNXI_BANK_OFFSET('F', 'A'),
-+	SUNXI_BANK_OFFSET('G', 'A'),
-+	SUNXI_BANK_OFFSET('H', 'A'),
-+	SUNXI_BANK_OFFSET('I', 'A'),
-+	SUNXI_BANK_OFFSET('J', 'A'),
-+	SUNXI_BANK_OFFSET('K', 'A'),
-+};
++/* Bank base offsets: PA=0, PB=1, PC=2, PD=3, PE=4, PF=5, PG=6, PH=7, PI=8, PJ=9, PK=10 */
 +
 +/*
 + * IRQ-capable banks: PB through PJ (9 banks).
 + * Maps software IRQ bank index -> hardware bank offset.
 + */
-+static const unsigned int a733_irq_bank_map[] = {
-+	SUNXI_BANK_OFFSET('B', 'A'),
-+	SUNXI_BANK_OFFSET('C', 'A'),
-+	SUNXI_BANK_OFFSET('D', 'A'),
-+	SUNXI_BANK_OFFSET('E', 'A'),
-+	SUNXI_BANK_OFFSET('F', 'A'),
-+	SUNXI_BANK_OFFSET('G', 'A'),
-+	SUNXI_BANK_OFFSET('H', 'A'),
-+	SUNXI_BANK_OFFSET('I', 'A'),
-+	SUNXI_BANK_OFFSET('J', 'A'),
-+};
++static const unsigned int a733_irq_bank_map[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 +
 +static const struct sunxi_pinctrl_desc a733_pinctrl_data = {
 +	.pins			= a733_pins,
 +	.npins			= ARRAY_SIZE(a733_pins),
-+	.banks			= ARRAY_SIZE(a733_bank_base),
-+	.bank_base		= a733_bank_base,
 +	.irq_banks		= ARRAY_SIZE(a733_irq_bank_map),
 +	.irq_bank_map		= a733_irq_bank_map,
-+	.pf_power_source_switch	= true,
-+	.auto_power_source_switch = true,
-+	.hw_type		= SUNXI_PCTL_HW_TYPE_4,
 +};
 +
 +static int a733_pinctrl_probe(struct platform_device *pdev)
 +{
-+	sunxi_info(NULL, "sunxi pinctrl version: %s\n", A733_PINCTRL_VERSION);
-+	return sunxi_bsp_pinctrl_init(pdev, &a733_pinctrl_data);
++	return sunxi_pinctrl_init(pdev, &a733_pinctrl_data);
 +}
 +
 +static const struct of_device_id a733_pinctrl_match[] = {
@@ -13580,15 +13559,15 @@ index 4483fe9c9..8732218ca 100644
 +obj-$(CONFIG_SND_SUN60I_SOC) += sun60i-audio.o
 diff --git a/sound/soc/sunxi/sun60i-audio.c b/sound/soc/sunxi/sun60i-audio.c
 new file mode 100644
-index 000000000..8945707a8
+index 000000000..507a53648
 --- /dev/null
 +++ b/sound/soc/sunxi/sun60i-audio.c
-@@ -0,0 +1,196 @@
+@@ -0,0 +1,186 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Allwinner A733 (sun60iw2) Audio Machine driver
 + *
-+ * Audio machine driver connecting I2S0 controller and ES8389 codec.
++ * Audio machine driver connecting I2S0 controller and ES8388 codec.
 + *
 + * Copyright (C) 2026 Allwinner Technology Co., Ltd.
 + */
@@ -13608,12 +13587,10 @@ index 000000000..8945707a8
 +#define DRV_NAME "sun60i-audio"
 +
 +struct sun60i_audio_card {
-+	struct snd_soc_card	card;
-+	struct snd_soc_dai_link dai_link;
-+	struct platform_device	*i2s_pdev;
-+	struct platform_device	*codec_pdev;
-+	struct snd_jack		*jack;
-+	bool			master;
++	struct snd_soc_card		card;
++	struct snd_soc_dai_link		dai_link;
++	struct snd_soc_dai_link_component	dlc[3];
++	struct snd_jack			*jack;
 +};
 +
 +static const struct snd_soc_dapm_widget sun60i_audio_widgets[] = {
@@ -13631,13 +13608,6 @@ index 000000000..8945707a8
 +	{ "MIC2", NULL, "External Mic" },
 +};
 +
-+static struct snd_soc_jack_pin jack_pins[] = {
-+	{
-+		.pin    = "Headphone",
-+		.mask   = SND_JACK_HEADPHONE,
-+	},
-+};
-+
 +static int sun60i_audio_startup(struct snd_pcm_substream *substream)
 +{
 +	return 0;
@@ -13650,7 +13620,9 @@ index 000000000..8945707a8
 +	struct snd_soc_component *component = snd_soc_rtdcom_lookup(rtd,
 +						   "es8388-codec");
 +
-+	snd_soc_component_set_sysclk(component, 0, 0, params_rate(params) * 256);
++	snd_soc_component_set_sysclk(component, 0, 0,
++				     params_rate(params) * 256,
++				     SND_SOC_CLOCK_OUT);
 +
 +	return 0;
 +}
@@ -13662,24 +13634,14 @@ index 000000000..8945707a8
 +
 +static int sun60i_audio_init(struct snd_soc_pcm_runtime *rtd)
 +{
-+	struct sun60i_audio_card *priv = snd_soc_card_get_drvdata(rtd->card);
-+	struct snd_soc_component *component;
-+	int ret;
-+
-+	component = snd_soc_rtdcom_lookup(rtd, "es8388-codec");
-+
-+	ret = snd_soc_component_set_jack(component, priv->jack, NULL);
-+	if (ret) {
-+		dev_err(rtd->card->dev, "failed to set jack: %d\n", ret);
-+		return ret;
-+	}
-+
 +	return 0;
 +}
 +
 +static int sun60i_audio_of_xlate_dai_name(struct snd_soc_component *component,
-+					  struct of_phandle_args *args)
++					  const struct of_phandle_args *args,
++					  const char **dai_name)
 +{
++	*dai_name = "ES8388 HiFi";
 +	return 0;
 +}
 +
@@ -13695,11 +13657,14 @@ index 000000000..8945707a8
 +	struct sun60i_audio_card *priv;
 +	struct device_node *i2s_node, *codec_node;
 +	struct snd_soc_dai_link *dai;
++	struct snd_soc_dai_link_component *dlc;
 +	int ret;
 +
 +	priv = devm_kzalloc(&pdev->dev, sizeof(*priv), GFP_KERNEL);
 +	if (!priv)
 +		return -ENOMEM;
++
++	dlc = priv->dlc;
 +
 +	/* Find I2S DAI */
 +	i2s_node = of_parse_phandle(pdev->dev.of_node,
@@ -13719,28 +13684,32 @@ index 000000000..8945707a8
 +	}
 +
 +	dai = &priv->dai_link;
-+	dai->name = "sun60i-audio";
-+	dai->stream_name = "sun60i-audio";
-+	dai->cpus dai_name = "ES8388 HiFi";
-+	dai->codecs dai_name = "ES8388 HiFi";
-+	dai->platforms.of_node = i2s_node;
-+	dai->codecs.of_node = codec_node;
-+	dai->init = sun60i_audio_init;
-+	dai->ops = &sun60i_audio_ops;
-+	dai->dai_fmt = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF |
-+		       SND_SOC_DAIFMT_CBS_CFS;
++	dai->name		= "sun60i-audio";
++	dai->stream_name	= "sun60i-audio";
++	dai->cpus		= &dlc[0];
++	dai->cpus->dai_name	= "ES8388 HiFi";
++	dai->codecs		= &dlc[1];
++	dai->codecs->dai_name	= "ES8388 HiFi";
++	dai->codecs->of_node	= codec_node;
++	dai->platforms		= &dlc[2];
++	dai->platforms->of_node	= i2s_node;
++	dai->num_cpus		= 1;
++	dai->num_codecs		= 1;
++	dai->num_platforms	= 1;
++	dai->init		= sun60i_audio_init;
++	dai->ops			= &sun60i_audio_ops;
++	dai->dai_fmt		= SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF |
++				  SND_SOC_DAIFMT_CBP_CFC;
 +
-+	priv->card.dai_link = dai;
-+	priv->card.num_links = 1;
-+	priv->card.owner = THIS_MODULE;
-+	priv->card.dev = &pdev->dev;
-+	priv->card.name = "Sun60i A733 Audio";
-+
-+	snd_soc_dapm_new_controls(&priv->card, sun60i_audio_widgets,
-+				  ARRAY_SIZE(sun60i_audio_widgets));
-+
-+	snd_soc_dapm_add_routes(&priv->card, sun60i_audio_routes,
-+				ARRAY_SIZE(sun60i_audio_routes));
++	priv->card.dai_link	= dai;
++	priv->card.num_links	= 1;
++	priv->card.owner	= THIS_MODULE;
++	priv->card.dev		= &pdev->dev;
++	priv->card.name		= "Sun60i A733 Audio";
++	priv->card.dapm_widgets	= sun60i_audio_widgets;
++	priv->card.num_dapm_widgets = ARRAY_SIZE(sun60i_audio_widgets);
++	priv->card.dapm_routes	= sun60i_audio_routes;
++	priv->card.num_dapm_routes = ARRAY_SIZE(sun60i_audio_routes);
 +
 +	ret = devm_snd_soc_register_card(&pdev->dev, &priv->card);
 +	if (ret) {
