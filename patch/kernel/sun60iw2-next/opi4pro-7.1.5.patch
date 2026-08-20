@@ -2527,678 +2527,266 @@ index 000000000..d42b25944
 +};
 diff --git a/arch/arm64/configs/orangepi_4pro_defconfig b/arch/arm64/configs/orangepi_4pro_defconfig
 new file mode 100644
-index 000000000..b727ffcb5
+index 000000000..850d9bc98
 --- /dev/null
 +++ b/arch/arm64/configs/orangepi_4pro_defconfig
-@@ -0,0 +1,668 @@
+@@ -0,0 +1,256 @@
 +#
-+# Automatically generated file; DO NOT EDIT.
-+# Linux/arm64 7.1.5 Kernel Configuration
-+# Orange Pi 4 Pro - Allwinner A733 (sun60iw2)
++# Orange Pi 4 Pro - Allwinner A733 (sun60i) minimal bootable config
++# Based on arch/arm64/configs/defconfig, trimmed to sun60i essentials.
++#
++# NOTE: verified symbol names in this tree:
++#   - A733 CCU        : CONFIG_SUN60I_CCU (under CONFIG_SUNXI_CCU)
++#   - A733 pinctrl    : CONFIG_AW_PINCTRL_SUN60IW2 (selects PINCTRL_SUNXI)
++#   - A733 audio      : CONFIG_SND_SUN60I_SOC
++#   - A733 GMAC       : CONFIG_SUN60I_GMAC
++#   - SD/MMC          : CONFIG_MMC_SUNXI (no MMC_SUN20I_D1 in tree)
++#   - Motorcomm PHY   : CONFIG_MOTORCOMM_PHY (not PHY_MOTORCOMM)
++#   - No PHY_SUN60I_SERDES exists; only USB3 and PCIE PHYs.
++#   - ARCH_SUN60IW2 does not exist; ARCH_SUNXI covers it.
++#
++# Deliberately excluded (do not compile / BSP-only):
++#   - CONFIG_DRM_SUN60I            (DRM API incompatibilities)
++#   - CONFIG_CRYPTO_DEV_SUN60I_CE  (missing header)
++#   - CONFIG_SUN60I_THERMAL        (thermal API changed)
++#   - CONFIG_SND_SOC_AW_SUN60IW2_* (BSP-only DAI/DMA/PCM/SNDWIRE)
 +#
 +
-+# ---------- Architecture ----------
-+CONFIG_ARCH_SUNXI=y
-+CONFIG_ARM64=y
-+CONFIG_64BIT=y
-+CONFIG_SMP=y
-+CONFIG_NR_CPUS=8
-+CONFIG_HIGH_RES_TIMERS=y
-+CONFIG_PREEMPT=y
-+CONFIG_PREEMPT_VOLUNTARY=y
-+CONFIG_HZ_250=y
-+CONFIG_HZ=250
-+CONFIG_ARCH_VIRT=y
-+CONFIG_ARCH_FORCE_MAX_ORDER=10
-+CONFIG_COMPAT_32BIT_TIME=y
-+CONFIG_UID16=y
-+CONFIG_MULTIUSER=y
-+
-+# ---------- Kernel Features ----------
-+CONFIG_LOCALVERSION="-opi4pro"
-+CONFIG_LOCALVERSION_AUTO=y
-+CONFIG_KERNEL_GZIP=y
-+CONFIG_DEFAULT_HOSTNAME="(none)"
-+CONFIG_SWAP=y
-+CONFIG_ZSWAP=y
-+CONFIG_ZSWAP_COMPRESSOR_DEFAULT_LZ4=y
-+CONFIG_ZSWAP_ZPOOL_DEFAULT_ZSMALLOC=y
++# ---------- Core kernel ----------
 +CONFIG_SYSVIPC=y
-+CONFIG_SYSVIPC_SYSCTL=y
 +CONFIG_POSIX_MQUEUE=y
-+CONFIG_POSIX_MQUEUE_SYSCTL=y
-+CONFIG_AUDIT=y
-+CONFIG_AUDITSYSCALL=y
-+CONFIG_NO_HZ=y
++CONFIG_NO_HZ_IDLE=y
 +CONFIG_HIGH_RES_TIMERS=y
-+CONFIG_BSD_PROCESS_ACCT=y
-+CONFIG_BSD_PROCESS_ACCT_V3=y
-+CONFIG_TASKSTATS=y
-+CONFIG_TASK_DELAY_ACCT=y
-+CONFIG_TASK_XACCT=y
-+CONFIG_TASK_IO_ACCOUNTING=y
++CONFIG_BPF_SYSCALL=y
++CONFIG_PREEMPT=y
++CONFIG_IRQ_TIME_ACCOUNTING=y
 +CONFIG_IKCONFIG=y
 +CONFIG_IKCONFIG_PROC=y
 +CONFIG_LOG_BUF_SHIFT=18
-+CONFIG_CGROUPS=y
-+CONFIG_CGROUP_SCHED=y
++CONFIG_MEMCG=y
++CONFIG_BLK_CGROUP=y
 +CONFIG_CGROUP_PIDS=y
-+CONFIG_CGROUP_RDMA=y
 +CONFIG_CGROUP_FREEZER=y
-+CONFIG_CGROUP_HUGETLB=y
 +CONFIG_CGROUP_DEVICE=y
 +CONFIG_CGROUP_CPUACCT=y
 +CONFIG_CGROUP_PERF=y
-+CONFIG_CGROUP_DEBUG=y
-+CONFIG_NAMESPACES=y
-+CONFIG_UTS_NS=y
-+CONFIG_IPC_NS=y
 +CONFIG_USER_NS=y
-+CONFIG_PID_NS=y
-+CONFIG_NET_NS=y
 +CONFIG_SCHED_AUTOGROUP=y
-+CONFIG_SYSCTL_EXCEPTION_TRACE=y
-+CONFIG_EXPERT=y
-+CONFIG_SYSCTL_PCMCIA=y
++CONFIG_BLK_DEV_INITRD=y
++CONFIG_KALLSYMS_ALL=y
++CONFIG_PROFILING=y
++CONFIG_MODULES=y
++CONFIG_MODULE_UNLOAD=y
 +
-+# ---------- Power Management ----------
-+CONFIG_PM=y
-+CONFIG_PM_SLEEP=y
-+CONFIG_PM_SLEEP_SMP=y
-+CONFIG_PM_RUNTIME=y
-+CONFIG_PM_DEBUG=y
-+CONFIG_PM_ADVANCED_DEBUG=y
-+CONFIG_CPU_FREQ=y
-+CONFIG_CPU_FREQ_DEFAULT_GOV_SCHEDUTIL=y
-+CONFIG_CPU_FREQ_GOV_PERFORMANCE=y
-+CONFIG_CPU_FREQ_GOV_POWERSAVE=y
-+CONFIG_CPU_FREQ_GOV_USERSPACE=y
-+CONFIG_CPU_FREQ_GOV_ONDEMAND=y
-+CONFIG_CPU_FREQ_GOV_CONSERVATIVE=y
-+CONFIG_CPU_FREQ_GOV_SCHEDUTIL=y
-+CONFIG_CPU_IDLE=y
-+CONFIG_CPU_IDLE_GOV_LADDER=y
-+CONFIG_CPU_IDLE_GOV_MENU=y
++# ---------- Architecture / platform ----------
++CONFIG_ARCH_SUNXI=y
++CONFIG_COMPAT_32BIT_TIME=y
++CONFIG_RANDOMIZE_BASE=y
++CONFIG_WQ_POWER_EFFICIENT_DEFAULT=y
 +CONFIG_ARM_PSCI_CPUIDLE=y
-+CONFIG_SCHED_MC=y
++CONFIG_CPU_IDLE=y
++CONFIG_CPU_FREQ=y
++CONFIG_CPU_FREQ_STAT=y
++CONFIG_CPU_FREQ_GOV_SCHEDUTIL=y
++CONFIG_CPUFREQ_DT=y
++CONFIG_JUMP_LABEL=y
 +
-+# ---------- Binary Emulation ----------
-+CONFIG_BINFMT_MISC=y
++# ---------- Kernel image ----------
++CONFIG_DEFAULT_HOSTNAME="(none)"
++# NOTE: no HAVE_KERNEL_GZIP on this arm64 tree; kernel compression
++# mode choice is not available, so no CONFIG_KERNEL_GZIP here.
++# CONFIG_COMPAT_BRK is not set
 +
 +# ---------- Memory ----------
-+CONFIG_FLATMEM=y
-+CONFIG_FLAT_NODE_MEM_MAP=y
-+CONFIG_HAVE_MEMBLOCK=y
-+CONFIG_MEMORY_ISOLATION=y
-+CONFIG_SMP=y
-+CONFIG_KERNEL_GZIP=y
-+CONFIG_ZRAM=m
-+CONFIG_ZRAM_DEF_COMP_LZ4=y
-+CONFIG_ZSMALLOC=y
-+CONFIG_THP_SWAP=y
 +CONFIG_TRANSPARENT_HUGEPAGE=y
-+CONFIG_TRANSPARENT_HUGEPAGE_MADVISE=y
++CONFIG_KSM=y
 +CONFIG_CMA=y
-+CONFIG_CMA_SIZE_MBYTES=64
-+CONFIG_FORCE_MAX_ZONEORDER=10
++CONFIG_DMA_CMA=y
++CONFIG_CMA_SIZE_MBYTES=32
 +
-+# ---------- Input ----------
-+CONFIG_INPUT=y
-+CONFIG_INPUT_EVDEV=y
-+CONFIG_INPUT_JOYDEV=y
-+CONFIG_INPUT_KEYBOARD=y
-+CONFIG_KEYBOARD_GPIO=y
-+CONFIG_KEYBOARD_SUNXI=y
-+CONFIG_INPUT_MISC=y
-+CONFIG_INPUT_UINPUT=y
-+CONFIG_INPUT_KEYCHORD=y
-+CONFIG_INPUT_KEYCOMBO=y
-+
-+# ---------- Console / TTY ----------
-+CONFIG_VT=y
-+CONFIG_VT_CONSOLE=y
-+CONFIG_VT_HW_CONSOLE_BINDING=y
-+CONFIG_UNIX98_PTYS=y
-+CONFIG_DEVPTS_MULTIPLE_INSTANCES=y
-+CONFIG_SERIAL_CORE=y
-+CONFIG_SERIAL_CORE_CONSOLE=y
-+CONFIG_SERIAL_MCTRL_GPIO=y
-+CONFIG_SERIAL_SUN6I=y
-+CONFIG_SERIAL_SUN6I_CONSOLE=y
-+CONFIG_SERIAL_DEV_BUS=y
-+CONFIG_TTY=y
-+
-+# ---------- Hardware ----------
-+CONFIG_STRICT_DEVMEM=y
-+CONFIG_TMPFS=y
-+CONFIG_TMPFS_POSIX_ACL=y
-+CONFIG_TMPFS_XATTR=y
-+CONFIG_SQUASHFS=y
-+CONFIG_SQUASHFS_LZ4=y
-+CONFIG_SQUASHFS_ZSTD=y
-+CONFIG_SQUASHFS_XATTR=y
-+CONFIG_SQUASHFS_LZO=y
-+CONFIG_SQUASHFS_XZ=y
-+CONFIG_PSTORE=y
-+CONFIG_PSTORE_CONSOLE=y
-+CONFIG_PSTORE_RAM=y
-+
-+# ---------- Platform / SoC ----------
-+CONFIG_ARCH_SUN60IW2=y
-+CONFIG_AW_SUN60IW2_CCU=y
-+CONFIG_AW_SUN60IW2_R_CCU=y
-+# CONFIG_AW_PINCTRL_SUN60IW2 is not set
-+
-+# ---------- MMC ----------
-+CONFIG_MMC=y
-+CONFIG_MMC_BLOCK=y
-+CONFIG_MMC_BLOCK_MINORS=32
-+CONFIG_MMC_SDHCI=y
-+CONFIG_MMC_SDHCI_PLTFM=y
-+CONFIG_MMC_SUNXI=y
-+CONFIG_BLK_DEV_SD=y
-+CONFIG_BLK_DEV_SR=y
-+CONFIG_CHR_DEV_SG=y
-+CONFIG_BLK_DEV_BSG=y
-+CONFIG_CHR_DEV_SCH=y
-+CONFIG_SCSI_CONSTANTS=y
-+CONFIG_SCSI_LOGGING=y
-+CONFIG_SCSI_SCAN_ASYNC=y
-+
-+# ---------- SCSI ----------
-+CONFIG_SCSI_MOD=y
-+CONFIG_SCSI=y
-+CONFIG_SCSI_DMA=y
-+CONFIG_SCSI_NETLINK=y
-+CONFIG_SCSI_PROC_FS=y
-+CONFIG_BLK_DEV_3W_9XXX=m
-+CONFIG_BLK_DEV_3W_SAS=m
-+CONFIG_SCSI_ISCSI_ATTRS=m
-+CONFIG_ISCSI_TCP=m
-+CONFIG_BLK_DEV_ISCSI=m
-+CONFIG_SCSI_SPI transportS=m
-+CONFIG_BLK_DEV_SD=y
-+CONFIG_BLK_DEV_SR=y
-+CONFIG_CHR_DEV_SG=y
-+CONFIG_SCSI_MULTI_LUN=y
-+CONFIG_SCSI_SAS_ATA=y
-+CONFIG_SCSI_HISI_SAS=m
-+CONFIG_SCSI_MPT3SAS=m
-+CONFIG_SCSI_UFSHCD=y
-+CONFIG_SCSI_UFSHCD_PLATFORM=y
-+CONFIG_SCSI_ARCMSR=m
-+
-+# ---------- Network ----------
++# ---------- Networking ----------
 +CONFIG_NET=y
-+CONFIG_COMPAT_NETLINK_MESSAGES=y
 +CONFIG_PACKET=y
-+CONFIG_PACKET_MMAP=y
 +CONFIG_UNIX=y
-+CONFIG_UNIX_DIAG=y
 +CONFIG_INET=y
 +CONFIG_IP_MULTICAST=y
-+CONFIG_IP_ADVANCED_ROUTER=y
 +CONFIG_IP_PNP=y
 +CONFIG_IP_PNP_DHCP=y
 +CONFIG_IP_PNP_BOOTP=y
-+CONFIG_IP_PNP_RARP=y
-+CONFIG_NET_IPIP=m
-+CONFIG_NET_IPGRE_DEMUX=m
-+CONFIG_NET_IPGRE=m
-+CONFIG_SYN_COOKIES=y
-+CONFIG_INET_TUNNEL=m
-+CONFIG_TCP_CONG_CUBIC=y
-+CONFIG_DEFAULT_TCP_CONG="cubic"
 +CONFIG_IPV6=y
++CONFIG_SYN_COOKIES=y
 +CONFIG_BRIDGE=m
 +CONFIG_VLAN_8021Q=m
-+CONFIG_NETFILTER=y
-+CONFIG_NETFILTER_ADVANCED=y
-+CONFIG_NF_CONNTRACK=y
-+CONFIG_NF_CONNTRACK_FTP=y
-+CONFIG_NF_CONNTRACK_IRC=y
-+CONFIG_NF_CONNTRACK_NETBIOS_NS=y
-+CONFIG_NF_CONNTRACK_SSDP=y
-+CONFIG_NF_CT_NETLINK=y
-+CONFIG_NETFILTER_XTABLES=y
-+CONFIG_NETFILTER_XT_MATCH_CONNTRACK=y
-+CONFIG_NETFILTER_XT_MATCH_STATE=y
-+CONFIG_NF_DEFRAG_IPV4=y
-+CONFIG_NF_CONNTRACK_IPV4=y
-+CONFIG_IP_NF_IPTABLES=y
-+CONFIG_IP_NF_FILTER=y
-+CONFIG_IP_NF_NAT=y
-+CONFIG_IP_NF_TARGET_MASQUERADE=y
-+CONFIG_IP_NF_MANGLE=y
 +
-+# ---------- Network devices ----------
++# ---------- Ethernet: sun60i GMAC ----------
++# NOTE: SUN60I_GMAC lives inside "if STMMAC_PLATFORM" within "if STMMAC_ETH",
++# so both parents must be enabled for it to be visible.
 +CONFIG_NETDEVICES=y
-+CONFIG_NET_CORE=y
-+CONFIG_TUN=y
-+CONFIG_VETH=m
-+CONFIG_BRIDGE=m
-+CONFIG_DUMMY=m
 +CONFIG_ETHERNET=y
-+CONFIG_NET_VENDOR_ALLWINNER=y
-+CONFIG_SUN60I_GMAC=y
 +CONFIG_STMMAC_ETH=y
 +CONFIG_STMMAC_PLATFORM=y
-+CONFIG_DWMAC_SUN8I=y
-+CONFIG_PTP_1588_CLOCK=y
-+CONFIG_PPS=y
-+CONFIG_PHY=y
++CONFIG_SUN60I_GMAC=y
 +CONFIG_PHYLIB=y
-+CONFIG_PHY_MOTORCOMM=y
-+CONFIG_PHY_SUN60I_USB=y
-+# CONFIG_PHY_SUN60I_USB3 is not set
-+# CONFIG_PHY_SUN60I_PCIE is not set
-+CONFIG_MDIO_DEVICE=y
-+CONFIG_MDIO_BUS=y
-+CONFIG_MDIO_BCM_UNIMAC=m
++CONFIG_MOTORCOMM_PHY=y
 +CONFIG_FIXED_PHY=y
-+CONFIG_SWPHY=y
++
++# ---------- MMC / SD (rootfs device) ----------
++CONFIG_MMC=y
++CONFIG_MMC_BLOCK=y
++CONFIG_MMC_BLOCK_MINORS=32
++CONFIG_MMC_SUNXI=y
++
++# ---------- Wireless (modules) ----------
++CONFIG_CFG80211=m
++CONFIG_MAC80211=m
++CONFIG_RFKILL=m
++
++# ---------- Firmware / devtmpfs ----------
++CONFIG_DEVTMPFS=y
++CONFIG_DEVTMPFS_MOUNT=y
++CONFIG_FW_LOADER_USER_HELPER=y
++CONFIG_ARM_SCMI_PROTOCOL=y
++
++# ---------- Serial console (DesignWare 8250) ----------
++CONFIG_SERIAL_8250=y
++CONFIG_SERIAL_8250_CONSOLE=y
++CONFIG_SERIAL_8250_NR_UARTS=8
++CONFIG_SERIAL_8250_EXTENDED=y
++CONFIG_SERIAL_8250_SHARE_IRQ=y
++CONFIG_SERIAL_8250_DW=y
++CONFIG_SERIAL_OF_PLATFORM=y
++CONFIG_SERIAL_DEV_BUS=y
++
++# ---------- GPIO / pinctrl ----------
++CONFIG_AW_PINCTRL_SUN60IW2=y
++
++# ---------- Clocks / reset / timers ----------
++CONFIG_COMMON_CLK=y
++CONFIG_SUNXI_CCU=y
++CONFIG_SUN60I_CCU=y
++
++# ---------- I2C (AXP8191 PMIC bus) ----------
++CONFIG_I2C=y
++CONFIG_I2C_CHARDEV=y
++CONFIG_I2C_MUX=y
++CONFIG_I2C_MV64XXX=y
++
++# ---------- SPI ----------
++CONFIG_SPI=y
++CONFIG_SPI_SUN6I=y
++CONFIG_SPI_SPIDEV=m
++
++# ---------- MFD / regulators (AXP8191 PMIC) ----------
++CONFIG_MFD_AXP8191=y
++CONFIG_REGULATOR=y
++CONFIG_REGULATOR_FIXED_VOLTAGE=y
++CONFIG_REGULATOR_AXP8191=y
++
++# ---------- Power / reset ----------
++CONFIG_POWER_RESET_SYSCON=y
++CONFIG_SYSCON_REBOOT_MODE=y
++
++# ---------- Watchdog ----------
++CONFIG_WATCHDOG=y
++CONFIG_SUNXI_WATCHDOG=y
++
++# ---------- RTC ----------
++CONFIG_RTC_CLASS=y
++CONFIG_RTC_DRV_SUN6I=y
++
++# ---------- DMA engine ----------
++CONFIG_DMADEVICES=y
++CONFIG_DMA_SUN6I=y
++
++# ---------- NVMEM ----------
++CONFIG_NVMEM=y
++CONFIG_NVMEM_SUNXI_SID=y
++
++# ---------- PHYs ----------
++CONFIG_GENERIC_PHY=y
++CONFIG_PHY_SUN60I_USB3=y
++CONFIG_PHY_SUN60I_PCIE=y
 +
 +# ---------- USB ----------
 +CONFIG_USB=y
-+CONFIG_USB_ANNOUNCE_NEW_DEVICES=y
-+CONFIG_USB_DEFAULT_PERSIST=y
++CONFIG_USB_XHCI_HCD=y
++CONFIG_USB_XHCI_PLATFORM=y
 +CONFIG_USB_EHCI_HCD=y
 +CONFIG_USB_EHCI_HCD_PLATFORM=y
 +CONFIG_USB_OHCI_HCD=y
 +CONFIG_USB_OHCI_HCD_PLATFORM=y
-+CONFIG_USB_XHCI_HCD=y
-+CONFIG_USB_XHCI_PLATFORM=y
-+CONFIG_USB_DWC3=y
-+CONFIG_USB_DWC3_OF_SIMPLE=y
-+CONFIG_USB_DWC3_ROLE_DEFAULT=y
-+CONFIG_USB_DWC3_DUAL_ROLE=y
-+CONFIG_USB_GADGET=y
-+CONFIG_USB_GADGET_VBUS_DRAW=500
-+CONFIG_USB_CONFIGFS=y
-+CONFIG_USB_CONFIGFS_SERIAL=y
-+CONFIG_USB_CONFIGFS_ACM=y
-+CONFIG_USB_CONFIGFS_NCM=y
-+CONFIG_USB_CONFIGFS_ECM=y
-+CONFIG_USB_CONFIGFS_ECM_SUBSET=y
-+CONFIG_USB_CONFIGFS_RNDIS=y
-+CONFIG_USB_CONFIGFS_F_LB_SSC=y
-+CONFIG_USB_CONFIGFS_F_FS=y
-+CONFIG_USB_CONFIGFS_F_UAC1=y
-+CONFIG_USB_CONFIGFS_F_UAC2=y
-+CONFIG_USB_CONFIGFS_F_MIDI=y
-+CONFIG_USB_CONFIGFS_F_HID=y
-+CONFIG_USB_CONFIGFS_F_PRINTER=y
-+CONFIG_USB_ROLE_SWITCH=y
-+CONFIG_USB_ROLES_INTEL_XHCI=y
-+CONFIG_USB_ULPI=y
-+CONFIG_USB_ULPI_VIEWPORT=y
++CONFIG_USB_STORAGE=y
++CONFIG_USB_ACM=m
++CONFIG_USB_SERIAL=m
++CONFIG_NOP_USB_XCEIV=y
 +
-+# ---------- PCIe ----------
++# ---------- SCSI (USB storage / sd) ----------
++CONFIG_SCSI=y
++CONFIG_BLK_DEV_SD=y
++
++# ---------- PCI host ----------
 +CONFIG_PCI=y
-+CONFIG_PCIEPORTBUS=y
-+CONFIG_PCIE_ASPM=y
-+CONFIG_PCIE_PTM=y
-+CONFIG_PCI_MESON=y
-+CONFIG_PCIE_SUN60IW2=y
-+CONFIG_PCI_ENDPOINT=y
-+CONFIG_PCI_ENDPOINT_CONFIGFS=y
++CONFIG_PCI_HOST_GENERIC=y
 +
-+# ---------- Storage ----------
-+CONFIG_ATA=y
-+CONFIG_ATA_PIIX=y
-+CONFIG_SATA_AHCI=y
-+CONFIG_SATA_AHCI_PLATFORM=y
-+CONFIG_BLK_DEV_NVME=y
-+CONFIG_NVME_CORE=y
-+CONFIG_NVM=y
-+CONFIG_ATA=y
-+CONFIG_SATA_PMP=y
++# ---------- Input ----------
++CONFIG_INPUT=y
++CONFIG_INPUT_EVDEV=y
++CONFIG_KEYBOARD_GPIO=y
 +
-+# ---------- DMA Engine ----------
-+CONFIG_DMA_ENGINE=y
-+CONFIG_DMA_SUN60I=y
-+CONFIG_DMA_ACCEL=y
++# ---------- Thermal framework (no sun60i sensor driver) ----------
++CONFIG_THERMAL=y
++CONFIG_CPU_THERMAL=y
++CONFIG_THERMAL_GOV_STEP_WISE=y
++# CONFIG_SUN60I_THERMAL is not set
 +
-+# ---------- GPU / Display ----------
-+CONFIG_DRM=y
-+CONFIG_DRM_FBDEV_EMULATION=y
-+CONFIG_DRM_SUN60I=y
-+CONFIG_DRM_SUN60I_DE=y
-+CONFIG_DRM_SUN60I_TCON=y
-+CONFIG_DRM_SUN60I_HDMI=y
-+CONFIG_DRM_SUN60I_HDMI_CEC=y
-+CONFIG_DRM_IMG_PVR=y
-+CONFIG_FB=y
-+CONFIG_FB_SIMPLE=y
-+CONFIG_FRAMEBUFFER_CONSOLE=y
-+CONFIG_FRAMEBUFFER_CONSOLE_DETECT_PRIMARY=y
-+CONFIG_LOGO=y
-+CONFIG_LOGO_LINUX_CLUT224=y
-+CONFIG_LOGO_LINUX_MONO_VGA16=y
-+CONFIG_LOGO_LINUX_VGA16=y
-+CONFIG_BACKLIGHT_LCD_SUPPORT=y
-+CONFIG_BACKLIGHT_CLASS_DEVICE=y
-+CONFIG_BACKLIGHT_PWM=y
-+CONFIG_LCD_CLASS_DEVICE=y
-+
-+# ---------- Sound ----------
++# ---------- Sound (sun60i ASoC) ----------
 +CONFIG_SOUND=y
 +CONFIG_SND=y
 +CONFIG_SND_TIMER=y
 +CONFIG_SND_PCM=y
 +CONFIG_SND_JACK=y
-+CONFIG_SND_SEQUENCER=m
-+CONFIG_SND_RAWMIDI=m
-+CONFIG_SND_USB_AUDIO=m
 +CONFIG_SND_SOC=y
 +CONFIG_SND_SUN60I_SOC=y
-+CONFIG_SND_SOC_SUN60I_I2S=y
-+CONFIG_SND_SOC_ES8389=y
-+CONFIG_SND_SOC_SUN60I_HDMI=y
-+CONFIG_SND_SOC_SUN60I_SPDIF=y
-+CONFIG_SND_SOC_SUN8I_ADDA_PR_REGMAP=y
-+CONFIG_SND_SOC_SUN50I_CODEC_ANALOG=y
-+CONFIG_SND_SOC_AW_SUN60IW2_DAI=y
-+CONFIG_SND_SOC_AW_SUN60IW2_DMA=y
-+CONFIG_SND_SOC_AW_SUN60IW2_PCM=y
-+CONFIG_SND_SOC_AW_SUN60IW2_SNDWIRE=y
 +CONFIG_SND_SIMPLE_CARD=y
 +CONFIG_SND_SIMPLE_CARD_UTILS=y
-+CONFIG_SND_SOC_AW_CODEC=y
++# BSP-only drivers not present in mainline:
++# CONFIG_SND_SOC_AW_SUN60IW2_DAI is not set
++# CONFIG_SND_SOC_AW_SUN60IW2_DMA is not set
++# CONFIG_SND_SOC_AW_SUN60IW2_PCM is not set
++# CONFIG_SND_SOC_AW_SUN60IW2_SNDWIRE is not set
 +
-+# ---------- Crypto ----------
++# ---------- Graphics (disabled: DRM_SUN60I does not compile) ----------
++CONFIG_FB=y
++CONFIG_FB_SIMPLE=y
++CONFIG_FRAMEBUFFER_CONSOLE=y
++# CONFIG_DRM_SUN60I is not set
++
++# ---------- Crypto (standard only, no sun60i CE) ----------
 +CONFIG_CRYPTO=y
-+CONFIG_CRYPTO_AES=y
-+CONFIG_CRYPTO_DES=y
-+CONFIG_CRYPTO_SHA256=y
-+CONFIG_CRYPTO_SHA512=y
-+CONFIG_CRYPTO_SHA3=y
-+CONFIG_CRYPTO_RSA=y
-+CONFIG_CRYPTO_CBC=y
-+CONFIG_CRYPTO_ECB=y
-+CONFIG_CRYPTO_HMAC=y
-+CONFIG_CRYPTO_GCM=y
-+CONFIG_CRYPTO_CRC32C=y
-+CONFIG_CRYPTO_USER_API_SKCIPHER=m
-+CONFIG_CRYPTO_USER_API_HASH=m
-+CONFIG_CRYPTO_USER_API=m
-+CONFIG_AW_CE=y
-+CONFIG_CRYPTO_SUN6I_SSL=y
-+
-+# ---------- Watchdog ----------
-+CONFIG_WATCHDOG=y
-+CONFIG_WATCHDOG_CORE=y
-+CONFIG_WATCHDOG_PRETIMEOUT_GOV=y
-+CONFIG_WATCHDOG_PRETIMEOUT_GOV_PANIC=y
-+CONFIG_SUNXI_WATCHDOG=y
-+CONFIG_WATCHDOG_SYSFS=y
-+
-+# ---------- GPIO / LEDs ----------
-+CONFIG_GPIOLIB=y
-+CONFIG_GPIO_SYSFS=y
-+CONFIG_GPIO_CDEV=y
-+CONFIG_GPIO_CDEV_V1=y
-+CONFIG_GPIO_SUN60I=y
-+CONFIG_LEDS_CLASS=y
-+CONFIG_LEDS_GPIO=y
-+CONFIG_LEDS_TRIGGERS=y
-+CONFIG_LEDS_TRIGGER_HEARTBEAT=y
-+CONFIG_LEDS_TRIGGER_DEFAULT_ON=y
-+CONFIG_LEDS_TRIGGER_TIMER=y
-+CONFIG_LEDS_TRIGGER_DISK=y
-+CONFIG_LEDS_TRIGGER_CPU=y
-+CONFIG_LEDS_TRIGGER_ACTIVITY=y
-+
-+# ---------- Thermal ----------
-+CONFIG_THERMAL=y
-+CONFIG_THERMAL_GOVERNOR_STEP_WISE=y
-+CONFIG_THERMAL_GOVERNOR_POWERAllocator=y
-+CONFIG_CPU_THERMAL=y
-+CONFIG_SUN60I_THERMAL=y
-+CONFIG_SUN60I_THERMAL_DT=y
-+CONFIG_SUN60I_TR_THERMAL=y
-+
-+# ---------- IIO (Industrial I/O) ----------
-+CONFIG_IIO=y
-+CONFIG_IIO_BUFFER=y
-+CONFIG_IIO_BUFFER_CB=y
-+CONFIG_IIO_KFIFO_BUF=y
-+CONFIG_IIO_TRIGGERED_BUFFER=y
-+CONFIG_SUN60I_GPADC=y
-+CONFIG_IIO_TRIGGER=y
-+CONFIG_IIO_TRIGGERED_EVENT=y
-+
-+# ---------- SPI ----------
-+CONFIG_SPI=y
-+CONFIG_SPI_MASTER=y
-+CONFIG_SPI_SUNXI=y
-+CONFIG_SPI_SUN60IW2=y
-+CONFIG_MTD=y
-+CONFIG_MTD_TESTS=m
-+CONFIG_MTD_CMDLINE_PARTS=y
-+CONFIG_MTD_BLOCK=y
-+CONFIG_MTD_SPI_NOR=y
-+CONFIG_MTD_M25P80=y
-+CONFIG_MTD_SPI_NOR_USE_4K_SECTORS=y
-+
-+# ---------- I2C ----------
-+CONFIG_I2C=y
-+CONFIG_I2C_CHARDEV=y
-+CONFIG_I2C_SUNXI=y
-+CONFIG_I2C_SUN6I=y
-+CONFIG_I2C_SUN6I_PIO=y
-+CONFIG_I2C_SUN6I_DMA=y
-+CONFIG_I2C_MUX=y
-+CONFIG_I2C_GPIO=m
-+
-+# ---------- PWM ----------
-+CONFIG_PWM=y
-+CONFIG_PWM_SYSFS=y
-+CONFIG_PWM_SUNXI=y
-+CONFIG_PWM_SUN60I=y
-+CONFIG_PWM_SUN60I_BACKLIGHT=y
-+
-+# ---------- RTC ----------
-+CONFIG_RTC_CLASS=y
-+CONFIG_RTC_DRV_SUN6I=y
-+CONFIG_RTC_DRV_SUNXI=y
-+CONFIG_RTC_DRV_SUN6I_ALARM=y
-+CONFIG_RTC_DRV_SUNXI_ALARM=y
-+
-+# ---------- Clock ----------
-+CONFIG_TIMER_SUN60I=y
-+CONFIG_TIMER_SUN6I_TWD=y
-+CONFIG_CLK_SUN60IW2=y
-+CONFIG_COMMON_CLK=y
-+CONFIG_COMMON_CLK_SUNXI=y
-+CONFIG_SUN60I_CCU=y
-+CONFIG_SUN60I_R_CCU=y
-+
-+# ---------- Hardware Monitoring ----------
-+CONFIG_HWMON=y
-+CONFIG_SENSORS_SUN60I=y
-+
-+# ---------- MFD ----------
-+CONFIG_MFD_AXP8191=y
-+
-+# ---------- Power Supply ----------
-+CONFIG_POWER_SUPPLY=y
-+CONFIG_POWER_SUPPLY_CLASS=y
-+CONFIG_POWER_SUPPLY_HWMON=y
-+CONFIG_BATTERY_SUNXI=y
-+CONFIG_CHARGER_SUNXI=y
-+CONFIG_BATTERY_SUNXI_SYS=y
-+CONFIG_POWER_SUPPLY_AXP8191=y
-+
-+# ---------- Voltage Regulator ----------
-+CONFIG_REGULATOR=y
-+CONFIG_REGULATOR_FIXED_VOLTAGE=y
-+CONFIG_REGULATOR_SUN60I=y
-+CONFIG_REGULATOR_AW_SUN60IW2=y
-+CONFIG_REGULATOR_AXP8191=y
-+
-+# ---------- Wireless ----------
-+CONFIG_WIRELESS=y
-+CONFIG_WLAN=y
-+CONFIG_WLAN_VENDOR_MICROCHIP=y
-+CONFIG_AIC8800_WLAN=m
-+CONFIG_WLAN_VENDOR_REALTEK=y
-+CONFIG_RTL8189FS=m
-+CONFIG_RTL8192EU=m
-+CONFIG_RTL8XXXU=m
-+CONFIG_IEEE802154=m
-+CONFIG_NET_SWITCHDEV=y
-+
-+# ---------- Bluetooth ----------
-+CONFIG_BT=y
-+CONFIG_BT_BREDR=y
-+CONFIG_BT_HIDP=y
-+CONFIG_BT_HCIBPA10X=m
-+CONFIG_BT_HCIUART=m
-+CONFIG_BT_HCIUART_H4=y
-+CONFIG_BT_HCIUART_BCSP=y
-+CONFIG_BT_HCIUART_3WIRE=y
-+CONFIG_BT_HCIDUSB=m
-+CONFIG_BT_HCIBTUSB=m
-+CONFIG_BT_HCIBPA10X=m
-+CONFIG_BT_RFCOMM=m
-+CONFIG_BT_RFCOMM_TTY=y
-+CONFIG_BT_BNEP=m
-+CONFIG_BT_CMTP=m
-+CONFIG_BT_HIDP=m
-+
-+# ---------- NFC ----------
-+CONFIG_NFC=m
-+
-+# ---------- NPU ----------
-+CONFIG_AW_NPU=y
-+
-+# ---------- Mailbox ----------
-+CONFIG_MAILBOX=y
-+CONFIG_SUN60I_MAILBOX=y
-+
-+# ---------- HWspinlock ----------
-+CONFIG_HWSPINLOCK=y
-+CONFIG_SUN60I_HWSPINLOCK=y
-+
-+# ---------- Interconnect ----------
-+CONFIG_INTERCONNECT=y
-+CONFIG_INTERCONNECT_SUN60IW2=y
-+
-+# ---------- Firmware ----------
-+CONFIG_FIRMWARE_IN_KERNEL=y
-+CONFIG_DMI=y
-+CONFIG_DMIID=y
++# CONFIG_CRYPTO_DEV_SUN60I_CE is not set
 +
 +# ---------- Filesystems ----------
-+CONFIG_EXT2_FS=y
-+CONFIG_EXT3_FS=y
 +CONFIG_EXT4_FS=y
 +CONFIG_EXT4_FS_POSIX_ACL=y
 +CONFIG_EXT4_FS_SECURITY=y
-+CONFIG_EXT4_DEBUG=y
-+CONFIG_BTRFS_FS=m
-+CONFIG_BTRFS_FS_POSIX_ACL=y
-+CONFIG_F2FS_FS=y
-+CONFIG_F2FS_FS_POSIX_ACL=y
-+CONFIG_F2FS_FS_SECURITY=y
-+CONFIG_F2FS_CHECK_FS=y
-+CONFIG_NTFS3_FS=y
-+CONFIG_NTFS3_FS_POSIX_ACL=y
-+CONFIG_NTFS_FS=m
 +CONFIG_VFAT_FS=y
-+CONFIG_VFAT_FS_DEFAULT_IOCHARSET="utf8"
-+CONFIG_FAT_DEFAULT_IOCHARSET="utf8"
-+CONFIG_FAT_DEFAULT_UTF8=y
-+CONFIG_EXFAT_FS=m
 +CONFIG_TMPFS=y
 +CONFIG_TMPFS_POSIX_ACL=y
-+CONFIG_TMPFS_XATTR=y
-+CONFIG_TMPFS_QUOTA=y
 +CONFIG_SQUASHFS=y
-+CONFIG_SQUASHFS_LZ4=y
-+CONFIG_SQUASHFS_ZSTD=y
-+CONFIG_SQUASHFS_XATTR=y
-+CONFIG_SQUASHFS_LZO=y
-+CONFIG_SQUASHFS_XZ=y
-+CONFIG_OVERLAY_FS=y
-+CONFIG_ISO9660_FS=m
-+CONFIG_JOLIET=y
-+CONFIG_ZISOFS=y
-+CONFIG_UDF_FS=m
 +CONFIG_PROC_SYSCTL=y
-+CONFIG_PROC_PAGE_MONITOR=y
 +CONFIG_SYSFS=y
-+CONFIG_DEBUG_FS=y
-+CONFIG_DEBUG_INFO_DWARF5=y
-+CONFIG_GDB_SCRIPTS=y
-+CONFIG_MAGIC_SYSRQ=y
-+CONFIG_STACKTRACE=y
-+CONFIG_DEBUG_KERNEL=y
-+
-+# ---------- Network Filesystems ----------
-+CONFIG_NFS_FS=y
-+CONFIG_NFS_V3=y
-+CONFIG_NFS_V4=y
-+CONFIG_NFSD=m
-+CONFIG_CIFS=y
-+CONFIG_CIFS_STATS=y
-+CONFIG_CIFS_XATTR=y
-+CONFIG_CIFS_POSIX=y
-+CONFIG_SMB_SERVER=m
-+CONFIG_CODA_FS=m
-+CONFIG_AFS_FS=m
++CONFIG_NLS_CODEPAGE_437=y
++CONFIG_NLS_ISO8859_1=y
 +
 +# ---------- Security ----------
 +CONFIG_SECURITY=y
-+CONFIG_SECURITY_NETWORK=y
 +CONFIG_DEFAULT_SECURITY_DAC=y
-+CONFIG_LSM=""
++CONFIG_LSM="landlock,lockdown,yama,integrity,bpf"
 +
-+# ---------- Printk / Console ----------
++# ---------- Logging / debug ----------
 +CONFIG_PRINTK_TIME=y
-+CONFIG_DYNAMIC_DEBUG=y
 +CONFIG_MAGIC_SYSRQ=y
-+CONFIG_MAGIC_SYSRQ_DEFAULT_ENABLE=0x1
-+CONFIG_FRAME_WARN=2048
-+CONFIG_STRIP_ASM_SYMS=y
-+
-+# ---------- Kernel Hacking ----------
-+CONFIG_DEBUG_FS=y
-+CONFIG_DETECT_HUNG_TASK=y
-+CONFIG_DEFAULT_HUNG_TASK_TIMEOUT=120
-+CONFIG_PROVE_LOCKING=y
-+CONFIG_DEBUG_ATOMIC_SLEEP=y
-+CONFIG_DEBUG_LIST=y
-+CONFIG_DEBUG_SG=y
-+CONFIG_DEBUG_NOTIFIERS=y
-+CONFIG_RCU_TRACE=y
-+CONFIG_FTRACE=y
-+CONFIG_KPROBES=y
-+CONFIG_KPROBE_EVENTS=y
-+CONFIG_STACK_TRACER=y
-+CONFIG_BLK_DEV_IO_TRACE=y
-+CONFIG_TRACEPOINTS=y
-+
-+# ---------- Security Framework ----------
-+CONFIG_SECURITY=y
-+CONFIG_SECURITY_NETWORK=y
-+CONFIG_SECURITY_SELINUX=y
-+CONFIG_DEFAULT_SECURITY_DAC=y
-+
-+# ---------- Library routines ----------
-+CONFIG_CRC_CCITT=y
-+CONFIG_CRC16=y
-+CONFIG_CRC32=y
-+CONFIG_ZLIB_INFLATE=y
-+CONFIG_ZLIB_DEFLATE=y
-+CONFIG_LZO_COMPRESS=y
-+CONFIG_LZO_DECOMPRESS=y
-+CONFIG_LZ4_COMPRESS=y
-+CONFIG_LZ4_DECOMPRESS=y
-+CONFIG_ZSTD_COMPRESS=y
-+CONFIG_ZSTD_DECOMPRESS=y
-+CONFIG_XZ_DEC=y
++CONFIG_DEBUG_KERNEL=y
 diff --git a/drivers/clk/sunxi-ng/Kconfig b/drivers/clk/sunxi-ng/Kconfig
 index 6af2d020e..0f5d48935 100644
 --- a/drivers/clk/sunxi-ng/Kconfig
@@ -3229,10 +2817,10 @@ index a1c4087d7..7e2a1b7dd 100644
  obj-$(CONFIG_SUN6I_A31_CCU)	+= sun6i-a31-ccu.o
 diff --git a/drivers/clk/sunxi-ng/clk-sun60i-a733.c b/drivers/clk/sunxi-ng/clk-sun60i-a733.c
 new file mode 100644
-index 000000000..e44883494
+index 000000000..df73bcefc
 --- /dev/null
 +++ b/drivers/clk/sunxi-ng/clk-sun60i-a733.c
-@@ -0,0 +1,1190 @@
+@@ -0,0 +1,1164 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Allwinner A733 Clock Control Unit driver.
@@ -3240,8 +2828,8 @@ index 000000000..e44883494
 + * The A733 CCU manages all module and bus clocks, as well as resets
 + * for the A733 SoC (0x0200 2000, 2 KB register block).
 + *
-+ * Modeled after other sunxi-ng CCU drivers (clk-sun50i-a523.c,
-+ * clk-sun50i-h616.c, etc.).
++ * Modeled after other sunxi-ng CCU drivers (ccu-sun50i-h616.c,
++ * ccu-sun55i-a523.c, etc.).
 + *
 + * -- Kconfig --
 + *   config CLK_SUN60I_A733_CCU
@@ -3261,21 +2849,20 @@ index 000000000..e44883494
 +#include <linux/clk-provider.h>
 +#include <linux/io.h>
 +#include <linux/module.h>
-+#include <linux/of.h>
 +#include <linux/platform_device.h>
 +
 +#include "ccu_common.h"
 +#include "ccu_reset.h"
 +
-+#include "ccu_nkmp.h"
-+#include "ccu_phase.h"
-+#include "ccu_sdm.h"
-+#include "ccu_gate.h"
 +#include "ccu_div.h"
++#include "ccu_gate.h"
++#include "ccu_mult.h"
 +#include "ccu_mux.h"
++#include "ccu_nkmp.h"
++#include "ccu_nm.h"
++#include "ccu_sdm.h"
 +
 +#include <dt-bindings/clock/sun60i-a733-ccu.h>
-+#include <dt-bindings/clock/sun60i-a733-r-ccu.h>
 +
 +/* ---------------------------------------------------------------------
 + * Register map
@@ -3396,197 +2983,231 @@ index 000000000..e44883494
 + * --------------------------------------------------------------------- */
 +
 +/* PLL_CPU – NKMP: N[17:16]+1, K[25:24]+1, M[21:20]+1, P[29:26]+1, EN=31 */
++#define CCU_PLL_CPU_REG		CCU_PLL_CPU_CTRL
 +static struct ccu_nkmp pll_cpu_clk = {
 +	.enable		= BIT(31),
++	.lock		= BIT(28),
 +	.n		= _SUNXI_CCU_MULT_MIN(16, 8, 1),
 +	.k		= _SUNXI_CCU_MULT_MIN(24, 2, 0),
-+	.m		= _SUNXI_CCU_DIV_MIN(20, 2, 0),
-+	.p		= _SUNXI_CCU_DIV_MIN(26, 4, 0),
++	.m		= _SUNXI_CCU_DIV(20, 2),
++	.p		= _SUNXI_CCU_DIV(26, 4),
 +	.common		= {
 +		.reg		= CCU_PLL_CPU_CTRL,
 +		.hw.init	= CLK_HW_INIT("pll-cpu", "osc24m",
 +					&ccu_nkmp_ops,
-+					CLK_SET_RATE_UNGATED),
++					CLK_SET_RATE_UNGATE),
 +	},
 +};
 +
-+/* PLL_AUDIO0 – SDM (fractional / spread-spectrum PLL) */
-+static struct ccu_sdm pll_audio0_clk = {
++/*
++ * PLL_AUDIO0 – sigma-delta modulation (fractional-N) PLL.
++ *
++ * Sigma-delta modulation settings obtained from the vendor SDK driver.
++ * SDM allows providing a fractional-N divider in the PLL, to help
++ * reaching audio frequencies with less error.
++ */
++static struct ccu_sdm_setting pll_audio0_sdm_table[] = {
++	{ .rate = 90316800, .pattern = 0xc001288d, .m = 3, .n = 22 },
++	{ .rate = 98304000, .pattern = 0xc001eb85, .m = 5, .n = 40 },
++};
++
++#define CCU_PLL_AUDIO0_REG	CCU_PLL_AUDIO0_CTRL
++static struct ccu_nm pll_audio0_clk = {
 +	.enable		= BIT(31),
-+	.sdm		= _SUNXI_CCU_SDM_HELPER_WRITABLE(8, 16,
-+					sunxi_ccu_sdm_helper_get_rate,
-+					sunxi_ccu_sdm_helper_set_rate,
-+					sunxi_ccu_sdm_int_mul4),
++	.lock		= BIT(28),
++	.n		= _SUNXI_CCU_MULT_MIN(8, 8, 12),
++	.m		= _SUNXI_CCU_DIV(16, 6),
++	.sdm		= _SUNXI_CCU_SDM(pll_audio0_sdm_table,
++					 BIT(24), 0x104, BIT(31)),
 +	.common		= {
++		.features	= CCU_FEATURE_SIGMA_DELTA_MOD,
 +		.reg		= CCU_PLL_AUDIO0_CTRL,
 +		.hw.init	= CLK_HW_INIT("pll-audio0", "osc24m",
-+					&ccu_sdm_ops,
-+					CLK_SET_RATE_UNGATED),
++					&ccu_nm_ops,
++					CLK_SET_RATE_UNGATE),
 +	},
 +};
 +
-+static SUNXI_CCU_GATE_HW(pll_audio0_4x_clk, "pll-audio0-4x",
++static SUNXI_CCU_GATE(pll_audio0_4x_clk, "pll-audio0-4x",
 +			  "pll-audio0",
 +			  CCU_PLL_AUDIO0X_CTRL, BIT(31), 0);
 +
-+static SUNXI_CCU_GATE_HW(pll_audio0_2x_clk, "pll-audio0-2x",
++static SUNXI_CCU_GATE(pll_audio0_2x_clk, "pll-audio0-2x",
 +			  "pll-audio0-4x",
 +			  CCU_PLL_AUDIO0_2X_CTRL, BIT(31), 0);
 +
-+static SUNXI_CCU_GATE_HW(pll_audio0_1x_clk, "pll-audio0-1x",
++static SUNXI_CCU_GATE(pll_audio0_1x_clk, "pll-audio0-1x",
 +			  "pll-audio0-2x",
 +			  CCU_PLL_AUDIO0_1X_CTRL, BIT(31), 0);
 +
 +/* PLL_VIDEO0 – NKMP */
++#define CCU_PLL_VIDEO0_REG	CCU_PLL_VIDEO0_CTRL
 +static struct ccu_nkmp pll_video0_clk = {
 +	.enable		= BIT(31),
++	.lock		= BIT(28),
 +	.n		= _SUNXI_CCU_MULT_MIN(16, 8, 1),
 +	.k		= _SUNXI_CCU_MULT_MIN(24, 2, 0),
-+	.m		= _SUNXI_CCU_DIV_MIN(20, 2, 0),
-+	.p		= _SUNXI_CCU_DIV_MIN(26, 4, 0),
++	.m		= _SUNXI_CCU_DIV(20, 2),
++	.p		= _SUNXI_CCU_DIV(26, 4),
 +	.common		= {
 +		.reg		= CCU_PLL_VIDEO0_CTRL,
 +		.hw.init	= CLK_HW_INIT("pll-video0", "osc24m",
 +					&ccu_nkmp_ops,
-+					CLK_SET_RATE_UNGATED),
++					CLK_SET_RATE_UNGATE),
 +	},
 +};
 +
-+static SUNXI_CCU_GATE_HW(pll_video0_2x_clk, "pll-video0-2x",
++static SUNXI_CCU_GATE(pll_video0_2x_clk, "pll-video0-2x",
 +			  "pll-video0",
 +			  CCU_PLL_VIDEO0_2X_CTRL, BIT(31), 0);
 +
 +/* PLL_VE – NKMP */
++#define CCU_PLL_VE_REG		CCU_PLL_VE_CTRL
 +static struct ccu_nkmp pll_ve_clk = {
 +	.enable		= BIT(31),
++	.lock		= BIT(28),
 +	.n		= _SUNXI_CCU_MULT_MIN(16, 8, 1),
 +	.k		= _SUNXI_CCU_MULT_MIN(24, 2, 0),
-+	.m		= _SUNXI_CCU_DIV_MIN(20, 2, 0),
-+	.p		= _SUNXI_CCU_DIV_MIN(26, 4, 0),
++	.m		= _SUNXI_CCU_DIV(20, 2),
++	.p		= _SUNXI_CCU_DIV(26, 4),
 +	.common		= {
 +		.reg		= CCU_PLL_VE_CTRL,
 +		.hw.init	= CLK_HW_INIT("pll-ve", "osc24m",
 +					&ccu_nkmp_ops,
-+					CLK_SET_RATE_UNGATED),
++					CLK_SET_RATE_UNGATE),
 +	},
 +};
 +
 +/* PLL_USB – fixed 480 MHz */
-+static SUNXI_CCU_GATE_HW(pll_usb_clk, "pll-usb", "osc24m",
++static SUNXI_CCU_GATE(pll_usb_clk, "pll-usb", "osc24m",
 +			  CCU_PLL_USB_CTRL,
 +			  BIT(31) | BIT(30) | BIT(29) | BIT(24),
 +			  0);
 +
 +/* PLL_CPU_AXI – NKMP */
++#define CCU_PLL_CPU_AXI_REG	CCU_PLL_CPU_AXI_CTRL
 +static struct ccu_nkmp pll_cpu_axi_clk = {
 +	.enable		= BIT(31),
++	.lock		= BIT(28),
 +	.n		= _SUNXI_CCU_MULT_MIN(16, 8, 1),
 +	.k		= _SUNXI_CCU_MULT_MIN(24, 2, 0),
-+	.m		= _SUNXI_CCU_DIV_MIN(20, 2, 0),
-+	.p		= _SUNXI_CCU_DIV_MIN(26, 4, 0),
++	.m		= _SUNXI_CCU_DIV(20, 2),
++	.p		= _SUNXI_CCU_DIV(26, 4),
 +	.common		= {
 +		.reg		= CCU_PLL_CPU_AXI_CTRL,
 +		.hw.init	= CLK_HW_INIT("pll-cpu-axi", "osc24m",
 +					&ccu_nkmp_ops,
-+					CLK_SET_RATE_UNGATED),
++					CLK_SET_RATE_UNGATE),
 +	},
 +};
 +
 +/* PLL_PERIPH0 – NKMP, two fixed output dividers (240/480 MHz) */
++#define CCU_PLL_PERIPH0_REG	CCU_PLL_PERIPH0_CTRL
 +static struct ccu_nkmp pll_periph0_clk = {
 +	.enable		= BIT(31),
++	.lock		= BIT(28),
 +	.n		= _SUNXI_CCU_MULT_MIN(16, 8, 1),
 +	.k		= _SUNXI_CCU_MULT_MIN(24, 2, 0),
-+	.m		= _SUNXI_CCU_DIV_MIN(20, 2, 0),
-+	.p		= _SUNXI_CCU_DIV_MIN(26, 4, 0),
++	.m		= _SUNXI_CCU_DIV(20, 2),
++	.p		= _SUNXI_CCU_DIV(26, 4),
 +	.common		= {
 +		.reg		= CCU_PLL_PERIPH0_CTRL,
 +		.hw.init	= CLK_HW_INIT("pll-periph0", "osc24m",
 +					&ccu_nkmp_ops,
-+					CLK_SET_RATE_UNGATED),
++					CLK_SET_RATE_UNGATE),
 +	},
 +};
 +
-+static SUNXI_CCU_GATE_HW(pll_periph0_2x_clk, "pll-periph0-2x",
++static SUNXI_CCU_GATE(pll_periph0_2x_clk, "pll-periph0-2x",
 +			  "pll-periph0",
 +			  CCU_PLL_PERIPH0_2X_CTRL, BIT(31), 0);
 +
-+static SUNXI_CCU_GATE_HW(pll_periph0_4x_clk, "pll-periph0-4x",
++static SUNXI_CCU_GATE(pll_periph0_4x_clk, "pll-periph0-4x",
 +			  "pll-periph0",
 +			  CCU_PLL_PERIPH0_4X_CTRL, BIT(31), 0);
 +
 +/* PLL_PERIPH1 – NKMP */
++#define CCU_PLL_PERIPH1_REG	CCU_PLL_PERIPH1_CTRL
 +static struct ccu_nkmp pll_periph1_clk = {
 +	.enable		= BIT(31),
++	.lock		= BIT(28),
 +	.n		= _SUNXI_CCU_MULT_MIN(16, 8, 1),
 +	.k		= _SUNXI_CCU_MULT_MIN(24, 2, 0),
-+	.m		= _SUNXI_CCU_DIV_MIN(20, 2, 0),
-+	.p		= _SUNXI_CCU_DIV_MIN(26, 4, 0),
++	.m		= _SUNXI_CCU_DIV(20, 2),
++	.p		= _SUNXI_CCU_DIV(26, 4),
 +	.common		= {
 +		.reg		= CCU_PLL_PERIPH1_CTRL,
 +		.hw.init	= CLK_HW_INIT("pll-periph1", "osc24m",
 +					&ccu_nkmp_ops,
-+					CLK_SET_RATE_UNGATED),
++					CLK_SET_RATE_UNGATE),
 +	},
 +};
 +
 +/* PLL_GPU – NKMP */
++#define CCU_PLL_GPU_REG		CCU_PLL_GPU_CTRL
 +static struct ccu_nkmp pll_gpu_clk = {
 +	.enable		= BIT(31),
++	.lock		= BIT(28),
 +	.n		= _SUNXI_CCU_MULT_MIN(16, 8, 1),
 +	.k		= _SUNXI_CCU_MULT_MIN(24, 2, 0),
-+	.m		= _SUNXI_CCU_DIV_MIN(20, 2, 0),
-+	.p		= _SUNXI_CCU_DIV_MIN(26, 4, 0),
++	.m		= _SUNXI_CCU_DIV(20, 2),
++	.p		= _SUNXI_CCU_DIV(26, 4),
 +	.common		= {
 +		.reg		= CCU_PLL_GPU_CTRL,
 +		.hw.init	= CLK_HW_INIT("pll-gpu", "osc24m",
 +					&ccu_nkmp_ops,
-+					CLK_SET_RATE_UNGATED),
++					CLK_SET_RATE_UNGATE),
 +	},
 +};
 +
 +/* PLL_DE – NKMP */
++#define CCU_PLL_DE_REG		CCU_PLL_DE_CTRL
 +static struct ccu_nkmp pll_de_clk = {
 +	.enable		= BIT(31),
++	.lock		= BIT(28),
 +	.n		= _SUNXI_CCU_MULT_MIN(16, 8, 1),
 +	.k		= _SUNXI_CCU_MULT_MIN(24, 2, 0),
-+	.m		= _SUNXI_CCU_DIV_MIN(20, 2, 0),
-+	.p		= _SUNXI_CCU_DIV_MIN(26, 4, 0),
++	.m		= _SUNXI_CCU_DIV(20, 2),
++	.p		= _SUNXI_CCU_DIV(26, 4),
 +	.common		= {
 +		.reg		= CCU_PLL_DE_CTRL,
 +		.hw.init	= CLK_HW_INIT("pll-de", "osc24m",
 +					&ccu_nkmp_ops,
-+					CLK_SET_RATE_UNGATED),
++					CLK_SET_RATE_UNGATE),
 +	},
 +};
 +
 +/* PLL_PCIE – NKMP */
++#define CCU_PLL_PCIE_REG	CCU_PLL_PCIE_CTRL
 +static struct ccu_nkmp pll_pcie_clk = {
 +	.enable		= BIT(31),
++	.lock		= BIT(28),
 +	.n		= _SUNXI_CCU_MULT_MIN(16, 8, 1),
 +	.k		= _SUNXI_CCU_MULT_MIN(24, 2, 0),
-+	.m		= _SUNXI_CCU_DIV_MIN(20, 2, 0),
-+	.p		= _SUNXI_CCU_DIV_MIN(26, 4, 0),
++	.m		= _SUNXI_CCU_DIV(20, 2),
++	.p		= _SUNXI_CCU_DIV(26, 4),
 +	.common		= {
 +		.reg		= CCU_PLL_PCIE_CTRL,
 +		.hw.init	= CLK_HW_INIT("pll-pcie", "osc24m",
 +					&ccu_nkmp_ops,
-+					CLK_SET_RATE_UNGATED),
++					CLK_SET_RATE_UNGATE),
 +	},
 +};
 +
 +/* PLL_DDR – NKMP */
++#define CCU_PLL_DDR_REG		CCU_PLL_DDR_CTRL
 +static struct ccu_nkmp pll_ddr_clk = {
 +	.enable		= BIT(31),
++	.lock		= BIT(28),
 +	.n		= _SUNXI_CCU_MULT_MIN(16, 8, 1),
 +	.k		= _SUNXI_CCU_MULT_MIN(24, 2, 0),
-+	.m		= _SUNXI_CCU_DIV_MIN(20, 2, 0),
-+	.p		= _SUNXI_CCU_DIV_MIN(26, 4, 0),
++	.m		= _SUNXI_CCU_DIV(20, 2),
++	.p		= _SUNXI_CCU_DIV(26, 4),
 +	.common		= {
 +		.reg		= CCU_PLL_DDR_CTRL,
 +		.hw.init	= CLK_HW_INIT("pll-ddr", "osc24m",
 +					&ccu_nkmp_ops,
-+					CLK_SET_RATE_UNGATED),
++					CLK_SET_RATE_UNGATE),
 +	},
 +};
 +
@@ -3626,10 +3247,6 @@ index 000000000..e44883494
 +	"pll-video0-2x", "pll-periph0-2x", "pll-periph1", "pll-periph0-4x"
 +};
 +
-+static const char *const usb_parents[] = {
-+	"pll-periph0-2x", "pll-periph0-4x"
-+};
-+
 +static const char *const audio_parents[] = {
 +	"pll-audio0-4x", "pll-audio0-2x", "pll-audio0-1x"
 +};
@@ -3642,10 +3259,6 @@ index 000000000..e44883494
 +	"osc24m", "pll-periph0-2x", "pll-periph0-4x", "pll-periph1"
 +};
 +
-+static const char *const i2c_parents[] = {
-+	"osc24m", "pll-periph0-2x", "pll-periph0-4x", "pll-periph1"
-+};
-+
 +/* ---------------------------------------------------------------------
 + * Bus / AHB / APB clocks
 + * --------------------------------------------------------------------- */
@@ -3654,17 +3267,11 @@ index 000000000..e44883494
 + * CCU_CPU_AXI_CFG: mux[25:24], divider[3:0]
 + * bus_mclk = parents[mux] / (div + 1)
 + */
-+static struct ccu_div cpu_axi_cfg = {
-+	.div	= _SUNXI_CCU_DIV(0, 4),
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_CPU_AXI_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("cpu-axi",
-+					cpu_parents,
-+					&ccu_div_ops,
-+					CLK_SET_RATE_PARENT),
-+	},
-+};
++static SUNXI_CCU_M_WITH_MUX(cpu_axi_cfg, "cpu-axi", cpu_parents,
++			    CCU_CPU_AXI_CFG,
++			    0, 4,	/* M */
++			    24, 2,	/* mux */
++			    CLK_SET_RATE_PARENT);
 +
 +/* CCU_AHB2_APB1_DIV: AHB = parent / (div[3:0] + 1) */
 +static struct ccu_div ahb2_apb1_div = {
@@ -3678,63 +3285,30 @@ index 000000000..e44883494
 +	},
 +};
 +
-+static SUNXI_CCU_GATE_HW(ahb_clk, "ahb", "ahb2-apb1-div",
++static SUNXI_CCU_GATE(ahb_clk, "ahb", "ahb2-apb1-div",
 +			  CCU_AHB2_APB1_DIV, 0, CLK_SET_RATE_PARENT);
 +
-+static struct ccu_div apb1_clk = {
-+	.div	= _SUNXI_CCU_DIV(0, 4),
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_APB1_DIV_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("apb1",
-+					apb1_parents,
-+					&ccu_div_ops,
-+					CLK_SET_RATE_PARENT),
-+	},
-+};
++static SUNXI_CCU_M_WITH_MUX(apb1_clk, "apb1", apb1_parents,
++			    CCU_APB1_DIV_CFG,
++			    0, 4,	/* M */
++			    24, 2,	/* mux */
++			    CLK_SET_RATE_PARENT);
 +
-+static struct ccu_div apb2_clk = {
-+	.div	= _SUNXI_CCU_DIV(0, 4),
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_APB2_DIV_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("apb2",
-+					apb2_parents,
-+					&ccu_div_ops,
-+					CLK_SET_RATE_PARENT),
-+	},
-+};
++static SUNXI_CCU_M_WITH_MUX(apb2_clk, "apb2", apb2_parents,
++			    CCU_APB2_DIV_CFG,
++			    0, 4,	/* M */
++			    24, 2,	/* mux */
++			    CLK_SET_RATE_PARENT);
 +
 +/* PLL-derived bus clocks (simple dividers) */
-+static struct ccu_div pll_cpu_axi_div = {
-+	.div	= _SUNXI_CCU_DIV(0, 4),
-+	.common	= {
-+		.reg		= CCU_PLL_CPU_AXI_DIV,
-+		.hw.init	= CLK_HW_INIT("pll-cpu-axi-div",
-+					"pll-cpu-axi",
-+					&ccu_div_ops, 0),
-+	},
-+};
++static SUNXI_CCU_M(pll_cpu_axi_div, "pll-cpu-axi-div", "pll-cpu-axi",
++		   CCU_PLL_CPU_AXI_DIV, 0, 4, 0);
 +
-+static struct ccu_div cci_div = {
-+	.div	= _SUNXI_CCU_DIV(0, 4),
-+	.common	= {
-+		.reg		= CCU_PLL_CCI_DIV,
-+		.hw.init	= CLK_HW_INIT("cci-div",
-+					"pll-cpu-axi",
-+					&ccu_div_ops, 0),
-+	},
-+};
++static SUNXI_CCU_M(cci_div, "cci-div", "pll-cpu-axi",
++		   CCU_PLL_CCI_DIV, 0, 4, 0);
 +
-+static struct ccu_div dsp_div = {
-+	.div	= _SUNXI_CCU_DIV(0, 4),
-+	.common	= {
-+		.reg		= CCU_DSP_CFG,
-+		.hw.init	= CLK_HW_INIT("dsp-div",
-+					"pll-cpu-axi",
-+					&ccu_div_ops, 0),
-+	},
-+};
++static SUNXI_CCU_M(dsp_div, "dsp-div", "pll-cpu-axi",
++		   CCU_DSP_CFG, 0, 4, 0);
 +
 +/* ---------------------------------------------------------------------
 + * Bus-gate clocks
@@ -3746,115 +3320,112 @@ index 000000000..e44883494
 + * reset controller tables below.
 + * --------------------------------------------------------------------- */
 +
-+/* Utility: declare a simple gate inside a bus-BGR register.
-+ * Each BGR register packs multiple modules – one gate bit each. */
-+
 +/* ---- UART ---- */
-+static SUNXI_CCU_GATE_HW(clk_bus_uart0, "bus-uart0", "apb2",
++static SUNXI_CCU_GATE(clk_bus_uart0, "bus-uart0", "apb2",
 +			  CCU_UART_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_uart1, "bus-uart1", "apb2",
++static SUNXI_CCU_GATE(clk_bus_uart1, "bus-uart1", "apb2",
 +			  CCU_UART_BGR, BIT(30), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_uart2, "bus-uart2", "apb2",
++static SUNXI_CCU_GATE(clk_bus_uart2, "bus-uart2", "apb2",
 +			  CCU_UART_BGR, BIT(29), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_uart3, "bus-uart3", "apb2",
++static SUNXI_CCU_GATE(clk_bus_uart3, "bus-uart3", "apb2",
 +			  CCU_UART_BGR, BIT(28), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_uart4, "bus-uart4", "apb2",
++static SUNXI_CCU_GATE(clk_bus_uart4, "bus-uart4", "apb2",
 +			  CCU_UART_BGR, BIT(27), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_uart5, "bus-uart5", "apb2",
++static SUNXI_CCU_GATE(clk_bus_uart5, "bus-uart5", "apb2",
 +			  CCU_UART_BGR, BIT(26), 0);
 +
 +/* ---- SPI ---- */
-+static SUNXI_CCU_GATE_HW(clk_bus_spi0, "bus-spi0", "apb2",
++static SUNXI_CCU_GATE(clk_bus_spi0, "bus-spi0", "apb2",
 +			  CCU_SPI_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_spi1, "bus-spi1", "apb2",
++static SUNXI_CCU_GATE(clk_bus_spi1, "bus-spi1", "apb2",
 +			  CCU_SPI_BGR, BIT(30), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_spi2, "bus-spi2", "apb2",
++static SUNXI_CCU_GATE(clk_bus_spi2, "bus-spi2", "apb2",
 +			  CCU_SPI_BGR, BIT(29), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_spi3, "bus-spi3", "apb2",
++static SUNXI_CCU_GATE(clk_bus_spi3, "bus-spi3", "apb2",
 +			  CCU_SPI_BGR, BIT(28), 0);
 +
 +/* ---- I2C ---- */
-+static SUNXI_CCU_GATE_HW(clk_bus_i2c0, "bus-i2c0", "apb2",
++static SUNXI_CCU_GATE(clk_bus_i2c0, "bus-i2c0", "apb2",
 +			  CCU_I2C_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_i2c1, "bus-i2c1", "apb2",
++static SUNXI_CCU_GATE(clk_bus_i2c1, "bus-i2c1", "apb2",
 +			  CCU_I2C_BGR, BIT(30), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_i2c2, "bus-i2c2", "apb2",
++static SUNXI_CCU_GATE(clk_bus_i2c2, "bus-i2c2", "apb2",
 +			  CCU_I2C_BGR, BIT(29), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_i2c3, "bus-i2c3", "apb2",
++static SUNXI_CCU_GATE(clk_bus_i2c3, "bus-i2c3", "apb2",
 +			  CCU_I2C_BGR, BIT(28), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_i2c4, "bus-i2c4", "apb2",
++static SUNXI_CCU_GATE(clk_bus_i2c4, "bus-i2c4", "apb2",
 +			  CCU_I2C_BGR, BIT(27), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_i2c5, "bus-i2c5", "apb2",
++static SUNXI_CCU_GATE(clk_bus_i2c5, "bus-i2c5", "apb2",
 +			  CCU_I2C_BGR, BIT(26), 0);
 +
 +/* ---- USB ---- */
-+static SUNXI_CCU_GATE_HW(clk_bus_usb, "bus-usb", "ahb",
++static SUNXI_CCU_GATE(clk_bus_usb, "bus-usb", "ahb",
 +			  CCU_USB_BGR, BIT(31), 0);
 +
 +/* ---- GMAC ---- */
-+static SUNXI_CCU_GATE_HW(clk_bus_gmac, "bus-gmac", "ahb",
++static SUNXI_CCU_GATE(clk_bus_gmac, "bus-gmac", "ahb",
 +			  CCU_GMAC_BGR, BIT(31), 0);
 +
 +/* ---- MMC ---- */
-+static SUNXI_CCU_GATE_HW(clk_bus_mmc0, "bus-mmc0", "ahb",
++static SUNXI_CCU_GATE(clk_bus_mmc0, "bus-mmc0", "ahb",
 +			  CCU_MMC_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_mmc1, "bus-mmc1", "ahb",
++static SUNXI_CCU_GATE(clk_bus_mmc1, "bus-mmc1", "ahb",
 +			  CCU_MMC_BGR, BIT(30), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_mmc2, "bus-mmc2", "ahb",
++static SUNXI_CCU_GATE(clk_bus_mmc2, "bus-mmc2", "ahb",
 +			  CCU_MMC_BGR, BIT(29), 0);
 +
 +/* ---- CE ---- */
-+static SUNXI_CCU_GATE_HW(clk_bus_ce, "bus-ce", "ahb",
++static SUNXI_CCU_GATE(clk_bus_ce, "bus-ce", "ahb",
 +			  CCU_CE_BGR, BIT(31), 0);
 +
 +/* ---- DMA ---- */
-+static SUNXI_CCU_GATE_HW(clk_bus_dma, "bus-dma", "ahb",
++static SUNXI_CCU_GATE(clk_bus_dma, "bus-dma", "ahb",
 +			  CCU_DMA_BGR, BIT(31), 0);
 +
 +/* ---- THERMAL ---- */
-+static SUNXI_CCU_GATE_HW(clk_bus_thermal, "bus-thermal", "apb2",
++static SUNXI_CCU_GATE(clk_bus_thermal, "bus-thermal", "apb2",
 +			  CCU_THERMAL_BGR, BIT(31), 0);
 +
 +/* ---- HDMI ---- */
-+static SUNXI_CCU_GATE_HW(clk_bus_hdmi, "bus-hdmi", "ahb",
++static SUNXI_CCU_GATE(clk_bus_hdmi, "bus-hdmi", "ahb",
 +			  CCU_HDMI_BGR, BIT(31), 0);
 +
 +/* ---- DE ---- */
-+static SUNXI_CCU_GATE_HW(clk_bus_de, "bus-de", "ahb",
++static SUNXI_CCU_GATE(clk_bus_de, "bus-de", "ahb",
 +			  CCU_DE_BGR, BIT(31), 0);
 +
 +/* ---- GPU ---- */
-+static SUNXI_CCU_GATE_HW(clk_bus_gpu, "bus-gpu", "ahb",
++static SUNXI_CCU_GATE(clk_bus_gpu, "bus-gpu", "ahb",
 +			  CCU_GPU_BGR, BIT(31), 0);
 +
 +/* ---- Audio ---- */
-+static SUNXI_CCU_GATE_HW(clk_bus_daudio, "bus-daudio", "apb2",
++static SUNXI_CCU_GATE(clk_bus_daudio, "bus-daudio", "apb2",
 +			  CCU_DAUDIO_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_owa, "bus-owa", "apb2",
++static SUNXI_CCU_GATE(clk_bus_owa, "bus-owa", "apb2",
 +			  CCU_OWA_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_dmic, "bus-dmic", "apb2",
++static SUNXI_CCU_GATE(clk_bus_dmic, "bus-dmic", "apb2",
 +			  CCU_DMIC_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_audioc, "bus-audioc", "apb2",
++static SUNXI_CCU_GATE(clk_bus_audioc, "bus-audioc", "apb2",
 +			  CCU_AUDIOC_BGR, BIT(31), 0);
 +
 +/* ---- Misc ---- */
-+static SUNXI_CCU_GATE_HW(clk_bus_ths, "bus-ths", "apb2",
++static SUNXI_CCU_GATE(clk_bus_ths, "bus-ths", "apb2",
 +			  CCU_THS_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_gpadc, "bus-gpadc", "apb2",
++static SUNXI_CCU_GATE(clk_bus_gpadc, "bus-gpadc", "apb2",
 +			  CCU_GPADC_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_lradc, "bus-lradc", "apb2",
++static SUNXI_CCU_GATE(clk_bus_lradc, "bus-lradc", "apb2",
 +			  CCU_LRADC_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_cec, "bus-cec", "apb2",
++static SUNXI_CCU_GATE(clk_bus_cec, "bus-cec", "apb2",
 +			  CCU_CEC_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_pwm, "bus-pwm", "apb2",
++static SUNXI_CCU_GATE(clk_bus_pwm, "bus-pwm", "apb2",
 +			  CCU_PWM_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_spinlock, "bus-spinlock", "ahb",
++static SUNXI_CCU_GATE(clk_bus_spinlock, "bus-spinlock", "ahb",
 +			  CCU_SPINLOCK_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_drc, "bus-drc", "ahb",
++static SUNXI_CCU_GATE(clk_bus_drc, "bus-drc", "ahb",
 +			  CCU_DRC_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_msgbox, "bus-msgbox", "ahb",
++static SUNXI_CCU_GATE(clk_bus_msgbox, "bus-msgbox", "ahb",
 +			  CCU_MSGBOX_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(clk_bus_rom, "bus-rom", "ahb",
++static SUNXI_CCU_GATE(clk_bus_rom, "bus-rom", "ahb",
 +			  CCU_ROM_BGR, BIT(31), 0);
 +
 +/* ---------------------------------------------------------------------
@@ -3862,141 +3433,71 @@ index 000000000..e44883494
 + * --------------------------------------------------------------------- */
 +
 +/* ---- UART module clocks: mux[25:24] selects parent ---- */
-+static struct ccu_mux uart0_clk = {
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_UART0_CLK_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("uart0",
-+				uart_parents, &ccu_mux_ops,
-+				CLK_SET_RATE_PARENT),
-+	},
-+};
-+
-+static struct ccu_mux uart1_clk = {
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_UART1_CLK_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("uart1",
-+				uart_parents, &ccu_mux_ops,
-+				CLK_SET_RATE_PARENT),
-+	},
-+};
-+
-+static struct ccu_mux uart2_clk = {
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_UART2_CLK_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("uart2",
-+				uart_parents, &ccu_mux_ops,
-+				CLK_SET_RATE_PARENT),
-+	},
-+};
-+
-+static struct ccu_mux uart3_clk = {
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_UART3_CLK_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("uart3",
-+				uart_parents, &ccu_mux_ops,
-+				CLK_SET_RATE_PARENT),
-+	},
-+};
-+
-+static struct ccu_mux uart4_clk = {
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_UART4_CLK_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("uart4",
-+				uart_parents, &ccu_mux_ops,
-+				CLK_SET_RATE_PARENT),
-+	},
-+};
-+
-+static struct ccu_mux uart5_clk = {
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_UART5_CLK_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("uart5",
-+				uart_parents, &ccu_mux_ops,
-+				CLK_SET_RATE_PARENT),
-+	},
-+};
++static SUNXI_CCU_MUX(uart0_clk, "uart0", uart_parents,
++		     CCU_UART0_CLK_CFG, 24, 2, CLK_SET_RATE_PARENT);
++static SUNXI_CCU_MUX(uart1_clk, "uart1", uart_parents,
++		     CCU_UART1_CLK_CFG, 24, 2, CLK_SET_RATE_PARENT);
++static SUNXI_CCU_MUX(uart2_clk, "uart2", uart_parents,
++		     CCU_UART2_CLK_CFG, 24, 2, CLK_SET_RATE_PARENT);
++static SUNXI_CCU_MUX(uart3_clk, "uart3", uart_parents,
++		     CCU_UART3_CLK_CFG, 24, 2, CLK_SET_RATE_PARENT);
++static SUNXI_CCU_MUX(uart4_clk, "uart4", uart_parents,
++		     CCU_UART4_CLK_CFG, 24, 2, CLK_SET_RATE_PARENT);
++static SUNXI_CCU_MUX(uart5_clk, "uart5", uart_parents,
++		     CCU_UART5_CLK_CFG, 24, 2, CLK_SET_RATE_PARENT);
 +
 +/* ---- SPI module clocks: mux[25:24], divider[3:0] ---- */
-+static struct ccu_div spi0_mod_clk = {
-+	.div	= _SUNXI_CCU_DIV(0, 4),
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_SPI0_CLK_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("spi0-mod",
-+				spi_parents, &ccu_div_ops,
-+				CLK_SET_RATE_PARENT),
-+	},
-+};
-+
-+static struct ccu_div spi1_mod_clk = {
-+	.div	= _SUNXI_CCU_DIV(0, 4),
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_SPI1_CLK_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("spi1-mod",
-+				spi_parents, &ccu_div_ops,
-+				CLK_SET_RATE_PARENT),
-+	},
-+};
-+
-+static struct ccu_div spi2_mod_clk = {
-+	.div	= _SUNXI_CCU_DIV(0, 4),
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_SPI2_CLK_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("spi2-mod",
-+				spi_parents, &ccu_div_ops,
-+				CLK_SET_RATE_PARENT),
-+	},
-+};
-+
-+static struct ccu_div spi3_mod_clk = {
-+	.div	= _SUNXI_CCU_DIV(0, 4),
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_SPI3_CLK_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("spi3-mod",
-+				spi_parents, &ccu_div_ops,
-+				CLK_SET_RATE_PARENT),
-+	},
-+};
++static SUNXI_CCU_M_WITH_MUX(spi0_mod_clk, "spi0-mod", spi_parents,
++			    CCU_SPI0_CLK_CFG,
++			    0, 4,	/* M */
++			    24, 2,	/* mux */
++			    CLK_SET_RATE_PARENT);
++static SUNXI_CCU_M_WITH_MUX(spi1_mod_clk, "spi1-mod", spi_parents,
++			    CCU_SPI1_CLK_CFG,
++			    0, 4,	/* M */
++			    24, 2,	/* mux */
++			    CLK_SET_RATE_PARENT);
++static SUNXI_CCU_M_WITH_MUX(spi2_mod_clk, "spi2-mod", spi_parents,
++			    CCU_SPI2_CLK_CFG,
++			    0, 4,	/* M */
++			    24, 2,	/* mux */
++			    CLK_SET_RATE_PARENT);
++static SUNXI_CCU_M_WITH_MUX(spi3_mod_clk, "spi3-mod", spi_parents,
++			    CCU_SPI3_CLK_CFG,
++			    0, 4,	/* M */
++			    24, 2,	/* mux */
++			    CLK_SET_RATE_PARENT);
 +
 +/* ---- I2C module clocks: simple gates (default PLL_PERIPH0_2X) ---- */
-+static SUNXI_CCU_GATE_HW(i2c0_clk, "i2c0", "pll-periph0-2x",
++static SUNXI_CCU_GATE(i2c0_clk, "i2c0", "pll-periph0-2x",
 +			  CCU_I2C0_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(i2c1_clk, "i2c1", "pll-periph0-2x",
++static SUNXI_CCU_GATE(i2c1_clk, "i2c1", "pll-periph0-2x",
 +			  CCU_I2C1_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(i2c2_clk, "i2c2", "pll-periph0-2x",
++static SUNXI_CCU_GATE(i2c2_clk, "i2c2", "pll-periph0-2x",
 +			  CCU_I2C2_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(i2c3_clk, "i2c3", "pll-periph0-2x",
++static SUNXI_CCU_GATE(i2c3_clk, "i2c3", "pll-periph0-2x",
 +			  CCU_I2C3_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(i2c4_clk, "i2c4", "pll-periph0-2x",
++static SUNXI_CCU_GATE(i2c4_clk, "i2c4", "pll-periph0-2x",
 +			  CCU_I2C4_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(i2c5_clk, "i2c5", "pll-periph0-2x",
++static SUNXI_CCU_GATE(i2c5_clk, "i2c5", "pll-periph0-2x",
 +			  CCU_I2C5_CLK_CFG, BIT(31), 0);
 +
 +/* ---- USB module clocks ---- */
-+static SUNXI_CCU_GATE_HW(usb_480_clk, "usb-480m", "pll-usb",
++static SUNXI_CCU_GATE(usb_480_clk, "usb-480m", "pll-usb",
 +			  CCU_USB_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(usb_12_clk, "usb-12m", "pll-periph0-2x",
++static SUNXI_CCU_GATE(usb_12_clk, "usb-12m", "pll-periph0-2x",
 +			  CCU_USB_CLK_CFG, BIT(29), 0);
-+static SUNXI_CCU_GATE_HW(usb_ref_clk, "usb-ref", "usb-480m",
++static SUNXI_CCU_GATE(usb_ref_clk, "usb-ref", "usb-480m",
 +			  CCU_USB_REF_CLK, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(usb_suspend_clk, "usb-suspend", "osc32k",
++static SUNXI_CCU_GATE(usb_suspend_clk, "usb-suspend", "osc32k",
 +			  CCU_USB_SUSPEND_CLK, BIT(31), 0);
 +
 +/* USB PHYs */
-+static SUNXI_CCU_GATE_HW(usb_phy0_clk, "usb-phy0", "usb-480m",
++static SUNXI_CCU_GATE(usb_phy0_clk, "usb-phy0", "usb-480m",
 +			  CCU_USB_PHY_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(usb_phy1_clk, "usb-phy1", "usb-480m",
++static SUNXI_CCU_GATE(usb_phy1_clk, "usb-phy1", "usb-480m",
 +			  CCU_USB_PHY_CFG, BIT(30), 0);
-+static SUNXI_CCU_GATE_HW(usb_phy2_clk, "usb-phy2", "usb-480m",
++static SUNXI_CCU_GATE(usb_phy2_clk, "usb-phy2", "usb-480m",
 +			  CCU_USB_PHY_CFG, BIT(29), 0);
 +
 +/* ---- MMC module clocks ----
@@ -4007,177 +3508,235 @@ index 000000000..e44883494
 + *   M[3:0]+1    – M divider
 + * Effective: clk = source / (N * (Q + 1) * (M + 1))
 + */
-+static struct ccu_div mmc0_mod_clk = {
-+	.div	= _SUNXI_CCU_DIV(0, 4),
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_MMC0_CLK_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("mmc0-mod",
-+				mmc_parents, &ccu_div_ops,
-+				CLK_SET_RATE_PARENT),
-+	},
-+};
-+
-+static struct ccu_div mmc1_mod_clk = {
-+	.div	= _SUNXI_CCU_DIV(0, 4),
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_MMC1_CLK_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("mmc1-mod",
-+				mmc_parents, &ccu_div_ops,
-+				CLK_SET_RATE_PARENT),
-+	},
-+};
-+
-+static struct ccu_div mmc2_mod_clk = {
-+	.div	= _SUNXI_CCU_DIV(0, 4),
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_MMC2_CLK_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("mmc2-mod",
-+				mmc_parents, &ccu_div_ops,
-+				CLK_SET_RATE_PARENT),
-+	},
-+};
++static SUNXI_CCU_M_WITH_MUX(mmc0_mod_clk, "mmc0-mod", mmc_parents,
++			    CCU_MMC0_CLK_CFG,
++			    0, 4,	/* M */
++			    24, 2,	/* mux */
++			    CLK_SET_RATE_PARENT);
++static SUNXI_CCU_M_WITH_MUX(mmc1_mod_clk, "mmc1-mod", mmc_parents,
++			    CCU_MMC1_CLK_CFG,
++			    0, 4,	/* M */
++			    24, 2,	/* mux */
++			    CLK_SET_RATE_PARENT);
++static SUNXI_CCU_M_WITH_MUX(mmc2_mod_clk, "mmc2-mod", mmc_parents,
++			    CCU_MMC2_CLK_CFG,
++			    0, 4,	/* M */
++			    24, 2,	/* mux */
++			    CLK_SET_RATE_PARENT);
 +
 +/* MMC sub-clocks: sample, detect, bus (gates derived from mod clock) */
-+static SUNXI_CCU_GATE_HW(mmc0_det, "mmc0-det", "mmc0-mod",
++static SUNXI_CCU_GATE(mmc0_det, "mmc0-det", "mmc0-mod",
 +			  CCU_MMC0_CLK_CFG, BIT(27), 0);
-+static SUNXI_CCU_GATE_HW(mmc0_bus, "mmc0-bus", "mmc0-mod",
++static SUNXI_CCU_GATE(mmc0_bus, "mmc0-bus", "mmc0-mod",
 +			  CCU_MMC0_CLK_CFG, BIT(26), 0);
 +
-+static SUNXI_CCU_GATE_HW(mmc1_det, "mmc1-det", "mmc1-mod",
++static SUNXI_CCU_GATE(mmc1_det, "mmc1-det", "mmc1-mod",
 +			  CCU_MMC1_CLK_CFG, BIT(27), 0);
-+static SUNXI_CCU_GATE_HW(mmc1_bus, "mmc1-bus", "mmc1-mod",
++static SUNXI_CCU_GATE(mmc1_bus, "mmc1-bus", "mmc1-mod",
 +			  CCU_MMC1_CLK_CFG, BIT(26), 0);
 +
-+static SUNXI_CCU_GATE_HW(mmc2_det, "mmc2-det", "mmc2-mod",
++static SUNXI_CCU_GATE(mmc2_det, "mmc2-det", "mmc2-mod",
 +			  CCU_MMC2_CLK_CFG, BIT(27), 0);
-+static SUNXI_CCU_GATE_HW(mmc2_bus, "mmc2-bus", "mmc2-mod",
++static SUNXI_CCU_GATE(mmc2_bus, "mmc2-bus", "mmc2-mod",
 +			  CCU_MMC2_CLK_CFG, BIT(26), 0);
 +
 +/* ---- GMAC module clocks ---- */
-+static SUNXI_CCU_GATE_HW(gmac_phy_clk, "gmac-phy", "pll-periph0-2x",
++static SUNXI_CCU_GATE(gmac_phy_clk, "gmac-phy", "pll-periph0-2x",
 +			  CCU_GMAC_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(gmac_ptp_clk, "gmac-ptp", "pll-periph0-2x",
++static SUNXI_CCU_GATE(gmac_ptp_clk, "gmac-ptp", "pll-periph0-2x",
 +			  CCU_GMAC_CLK_CFG, BIT(30), 0);
 +
 +/* ---- HDMI ---- */
-+static struct ccu_div hdmi_mod_clk = {
-+	.div	= _SUNXI_CCU_DIV(0, 4),
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_HDMI_CLK_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("hdmi-mod",
-+				hdmi_parents, &ccu_div_ops,
-+				CLK_SET_RATE_PARENT),
-+	},
-+};
++static SUNXI_CCU_M_WITH_MUX(hdmi_mod_clk, "hdmi-mod", hdmi_parents,
++			    CCU_HDMI_CLK_CFG,
++			    0, 4,	/* M */
++			    24, 2,	/* mux */
++			    CLK_SET_RATE_PARENT);
 +
-+static SUNXI_CCU_GATE_HW(hdmi_ddc_clk, "hdmi-ddc", "osc24m",
++static SUNXI_CCU_GATE(hdmi_ddc_clk, "hdmi-ddc", "osc24m",
 +			  CCU_HDMI_DDC_CLK, BIT(31), 0);
 +
 +/* ---- DE (display engine) ---- */
-+static struct ccu_div de_mod_clk = {
-+	.div	= _SUNXI_CCU_DIV(0, 4),
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_DE_CLK_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("de-mod",
-+				de_parents, &ccu_div_ops,
-+				CLK_SET_RATE_PARENT),
-+	},
-+};
++static SUNXI_CCU_M_WITH_MUX(de_mod_clk, "de-mod", de_parents,
++			    CCU_DE_CLK_CFG,
++			    0, 4,	/* M */
++			    24, 2,	/* mux */
++			    CLK_SET_RATE_PARENT);
 +
 +/* ---- GPU ---- */
-+static struct ccu_div gpu_mod_clk = {
-+	.div	= _SUNXI_CCU_DIV(0, 4),
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_GPU_CLK_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("gpu-mod",
-+				gpu_parents, &ccu_div_ops,
-+				CLK_SET_RATE_PARENT),
-+	},
-+};
++static SUNXI_CCU_M_WITH_MUX(gpu_mod_clk, "gpu-mod", gpu_parents,
++			    CCU_GPU_CLK_CFG,
++			    0, 4,	/* M */
++			    24, 2,	/* mux */
++			    CLK_SET_RATE_PARENT);
 +
 +/* ---- Misc functional clocks ---- */
-+static SUNXI_CCU_GATE_HW(ths_clk, "ths", "osc24m",
++static SUNXI_CCU_GATE(ths_clk, "ths", "osc24m",
 +			  CCU_THS_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(gpadc_clk, "gpadc", "osc24m",
++static SUNXI_CCU_GATE(gpadc_clk, "gpadc", "osc24m",
 +			  CCU_GPADC_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(lradc_clk, "lradc", "osc24m",
++static SUNXI_CCU_GATE(lradc_clk, "lradc", "osc24m",
 +			  CCU_LRADC_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(cec_clk, "cec", "osc32k",
++static SUNXI_CCU_GATE(cec_clk, "cec", "osc32k",
 +			  CCU_CEC_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(pwm_clk, "pwm", "osc24m",
++static SUNXI_CCU_GATE(pwm_clk, "pwm", "osc24m",
 +			  CCU_PWM_CLK_CFG, BIT(31), 0);
 +
 +/* ---- Audio module clocks ---- */
-+static struct ccu_mux daudio_clk = {
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_DAUDIO_CLK_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("daudio",
-+				audio_parents, &ccu_mux_ops,
-+				CLK_SET_RATE_PARENT),
-+	},
-+};
++static SUNXI_CCU_MUX(daudio_clk, "daudio", audio_parents,
++		     CCU_DAUDIO_CLK_CFG, 24, 2, CLK_SET_RATE_PARENT);
++static SUNXI_CCU_MUX(owa_clk, "owa", audio_parents,
++		     CCU_OWA_CLK_CFG, 24, 2, CLK_SET_RATE_PARENT);
++static SUNXI_CCU_MUX(dmic_clk, "dmic", audio_parents,
++		     CCU_DMIC_CLK_CFG, 24, 2, CLK_SET_RATE_PARENT);
++static SUNXI_CCU_MUX(audioc_clk, "audioc", audio_parents,
++		     CCU_AUDIOC_CLK_CFG, 24, 2, CLK_SET_RATE_PARENT);
 +
-+static struct ccu_mux owa_clk = {
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_OWA_CLK_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("owa",
-+				audio_parents, &ccu_mux_ops,
-+				CLK_SET_RATE_PARENT),
-+	},
-+};
-+
-+static struct ccu_mux dmic_clk = {
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_DMIC_CLK_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("dmic",
-+				audio_parents, &ccu_mux_ops,
-+				CLK_SET_RATE_PARENT),
-+	},
-+};
-+
-+static struct ccu_mux audioc_clk = {
-+	.mux	= _SUNXI_CCU_MUX(24, 2),
-+	.common	= {
-+		.reg		= CCU_AUDIOC_CLK_CFG,
-+		.hw.init	= CLK_HW_INIT_PARENTS("audioc",
-+				audio_parents, &ccu_mux_ops,
-+				CLK_SET_RATE_PARENT),
-+	},
-+};
-+
-+static SUNXI_CCU_GATE_HW(spinlock_clk, "spinlock", "osc24m",
++static SUNXI_CCU_GATE(spinlock_clk, "spinlock", "osc24m",
 +			  CCU_SPINLOCK_CLK, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(drc_clk, "drc", "osc24m",
++static SUNXI_CCU_GATE(drc_clk, "drc", "osc24m",
 +			  CCU_DRC_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(msgbox_clk, "msgbox", "osc24m",
++static SUNXI_CCU_GATE(msgbox_clk, "msgbox", "osc24m",
 +			  CCU_MSGBOX_CLK, BIT(31), 0);
-+static SUNXI_CCU_GATE_HW(rom_clk, "rom", "osc24m",
++static SUNXI_CCU_GATE(rom_clk, "rom", "osc24m",
 +			  CCU_ROM_CLK, BIT(31), 0);
++
++/* ---------------------------------------------------------------------
++ * Clock registration table (for the CCU core to assign bases)
++ * --------------------------------------------------------------------- */
++
++static struct ccu_common *sun60i_a733_ccu_clks[] = {
++	&pll_cpu_clk.common,
++	&pll_audio0_clk.common,
++	&pll_audio0_4x_clk.common,
++	&pll_audio0_2x_clk.common,
++	&pll_audio0_1x_clk.common,
++	&pll_video0_clk.common,
++	&pll_video0_2x_clk.common,
++	&pll_ve_clk.common,
++	&pll_usb_clk.common,
++	&pll_cpu_axi_clk.common,
++	&pll_periph0_clk.common,
++	&pll_periph0_2x_clk.common,
++	&pll_periph0_4x_clk.common,
++	&pll_periph1_clk.common,
++	&pll_gpu_clk.common,
++	&pll_de_clk.common,
++	&pll_pcie_clk.common,
++	&pll_ddr_clk.common,
++
++	&cpu_axi_cfg.common,
++	&ahb2_apb1_div.common,
++	&ahb_clk.common,
++	&apb1_clk.common,
++	&apb2_clk.common,
++	&pll_cpu_axi_div.common,
++	&cci_div.common,
++	&dsp_div.common,
++
++	&clk_bus_uart0.common,
++	&clk_bus_uart1.common,
++	&clk_bus_uart2.common,
++	&clk_bus_uart3.common,
++	&clk_bus_uart4.common,
++	&clk_bus_uart5.common,
++	&clk_bus_spi0.common,
++	&clk_bus_spi1.common,
++	&clk_bus_spi2.common,
++	&clk_bus_spi3.common,
++	&clk_bus_i2c0.common,
++	&clk_bus_i2c1.common,
++	&clk_bus_i2c2.common,
++	&clk_bus_i2c3.common,
++	&clk_bus_i2c4.common,
++	&clk_bus_i2c5.common,
++	&clk_bus_usb.common,
++	&clk_bus_gmac.common,
++	&clk_bus_mmc0.common,
++	&clk_bus_mmc1.common,
++	&clk_bus_mmc2.common,
++	&clk_bus_ce.common,
++	&clk_bus_dma.common,
++	&clk_bus_thermal.common,
++	&clk_bus_hdmi.common,
++	&clk_bus_de.common,
++	&clk_bus_gpu.common,
++	&clk_bus_daudio.common,
++	&clk_bus_owa.common,
++	&clk_bus_dmic.common,
++	&clk_bus_audioc.common,
++	&clk_bus_ths.common,
++	&clk_bus_gpadc.common,
++	&clk_bus_lradc.common,
++	&clk_bus_cec.common,
++	&clk_bus_pwm.common,
++	&clk_bus_spinlock.common,
++	&clk_bus_drc.common,
++	&clk_bus_msgbox.common,
++	&clk_bus_rom.common,
++
++	&uart0_clk.common,
++	&uart1_clk.common,
++	&uart2_clk.common,
++	&uart3_clk.common,
++	&uart4_clk.common,
++	&uart5_clk.common,
++	&spi0_mod_clk.common,
++	&spi1_mod_clk.common,
++	&spi2_mod_clk.common,
++	&spi3_mod_clk.common,
++	&i2c0_clk.common,
++	&i2c1_clk.common,
++	&i2c2_clk.common,
++	&i2c3_clk.common,
++	&i2c4_clk.common,
++	&i2c5_clk.common,
++	&usb_480_clk.common,
++	&usb_12_clk.common,
++	&usb_ref_clk.common,
++	&usb_suspend_clk.common,
++	&usb_phy0_clk.common,
++	&usb_phy1_clk.common,
++	&usb_phy2_clk.common,
++	&mmc0_mod_clk.common,
++	&mmc0_det.common,
++	&mmc0_bus.common,
++	&mmc1_mod_clk.common,
++	&mmc1_det.common,
++	&mmc1_bus.common,
++	&mmc2_mod_clk.common,
++	&mmc2_det.common,
++	&mmc2_bus.common,
++	&gmac_phy_clk.common,
++	&gmac_ptp_clk.common,
++	&hdmi_mod_clk.common,
++	&hdmi_ddc_clk.common,
++	&de_mod_clk.common,
++	&gpu_mod_clk.common,
++	&ths_clk.common,
++	&gpadc_clk.common,
++	&lradc_clk.common,
++	&cec_clk.common,
++	&pwm_clk.common,
++	&daudio_clk.common,
++	&owa_clk.common,
++	&dmic_clk.common,
++	&audioc_clk.common,
++	&spinlock_clk.common,
++	&drc_clk.common,
++	&msgbox_clk.common,
++	&rom_clk.common,
++};
 +
 +/* ---------------------------------------------------------------------
 + * Hardware-clock registration table
 + *
 + * Indices correspond to CLK_* constants from the DT binding header.
-+ * NULL entries indicate clocks provided by fixed-clock or other nodes.
++ * Missing entries indicate clocks provided by fixed-clock or other nodes.
 + * --------------------------------------------------------------------- */
 +
 +static struct clk_hw_onecell_data sun60i_a733_hw_clks = {
-+	.num	= CLK_DSP + 1,
 +	.hws	= {
-+		/* Root / oscillator clocks (NULL = fixed-clock nodes) */
-+		[CLK_OSC24M]		= NULL,
-+		[CLK_OSC32K]		= NULL,
-+		[CLK_IOSC]		= NULL,
-+
 +		/* PLLs */
 +		[CLK_PLL_CPU]		= &pll_cpu_clk.common.hw,
 +		[CLK_PLL_AUDIO0]	= &pll_audio0_clk.common.hw,
@@ -4271,6 +3830,8 @@ index 000000000..e44883494
 +		[CLK_I2C5]		= &i2c5_clk.common.hw,
 +		[CLK_USB_480]		= &usb_480_clk.common.hw,
 +		[CLK_USB_12]		= &usb_12_clk.common.hw,
++		[CLK_USB_REF]		= &usb_ref_clk.common.hw,
++		[CLK_USB_SUSPEND]	= &usb_suspend_clk.common.hw,
 +		[CLK_USB_PHY]		= &usb_phy0_clk.common.hw,
 +		[CLK_MMC0]		= &mmc0_mod_clk.common.hw,
 +		[CLK_MMC0_DET]		= &mmc0_det.common.hw,
@@ -4301,17 +3862,18 @@ index 000000000..e44883494
 +		[CLK_MSGBOX]		= &msgbox_clk.common.hw,
 +		[CLK_ROM]		= &rom_clk.common.hw,
 +	},
++	.num	= CLK_DSP + 1,
 +};
 +
 +/* ---------------------------------------------------------------------
 + * Reset controller
 + *
 + * Reset bit positions must match the RST_* constants from the DT
-+ * binding header.  The sunxi_ccu_reset_init() function walks this
-+ * table and registers a reset domain for each entry.
++ * binding header.  devm_sunxi_ccu_probe() walks this table and
++ * registers a reset domain for each entry.
 + * --------------------------------------------------------------------- */
 +
-+static struct ccu_reset_map sun60i_a733_ccu_resets[] = {
++static const struct ccu_reset_map sun60i_a733_ccu_resets[] = {
 +	[RST_BUS_UART0]		= { CCU_UART_BGR,  BIT(23) },
 +	[RST_BUS_UART1]		= { CCU_UART_BGR,  BIT(22) },
 +	[RST_BUS_UART2]		= { CCU_UART_BGR,  BIT(21) },
@@ -4352,77 +3914,77 @@ index 000000000..e44883494
 +	[RST_BUS_MSGBOX]	= { CCU_MSGBOX_BGR, BIT(23) },
 +};
 +
++static const struct sunxi_ccu_desc sun60i_a733_ccu_desc = {
++	.ccu_clks	= sun60i_a733_ccu_clks,
++	.num_ccu_clks	= ARRAY_SIZE(sun60i_a733_ccu_clks),
++
++	.hw_clks	= &sun60i_a733_hw_clks,
++
++	.resets		= sun60i_a733_ccu_resets,
++	.num_resets	= ARRAY_SIZE(sun60i_a733_ccu_resets),
++};
++
++static const u32 pll_regs[] = {
++	CCU_PLL_CPU_REG,
++	CCU_PLL_AUDIO0_REG,
++	CCU_PLL_VIDEO0_REG,
++	CCU_PLL_VE_REG,
++	CCU_PLL_CPU_AXI_REG,
++	CCU_PLL_PERIPH0_REG,
++	CCU_PLL_PERIPH1_REG,
++	CCU_PLL_GPU_REG,
++	CCU_PLL_DE_REG,
++	CCU_PLL_PCIE_REG,
++	CCU_PLL_DDR_REG,
++};
++
 +/* ---------------------------------------------------------------------
 + * Platform driver
 + * --------------------------------------------------------------------- */
++
++static int sun60i_a733_ccu_probe(struct platform_device *pdev)
++{
++	void __iomem *reg;
++	u32 val;
++	int ret, i;
++
++	reg = devm_platform_ioremap_resource(pdev, 0);
++	if (IS_ERR(reg))
++		return PTR_ERR(reg);
++
++	/* Enable the lock bits and the output enable bits on all PLLs */
++	for (i = 0; i < ARRAY_SIZE(pll_regs); i++) {
++		val = readl(reg + pll_regs[i]);
++		val |= BIT(29) | BIT(27);
++		writel(val, reg + pll_regs[i]);
++	}
++
++	ret = devm_sunxi_ccu_probe(&pdev->dev, reg, &sun60i_a733_ccu_desc);
++	if (ret)
++		return ret;
++
++	return 0;
++}
 +
 +static const struct of_device_id sun60i_a733_ccu_ids[] = {
 +	{ .compatible = "allwinner,sun60i-a733-ccu" },
 +	{ }
 +};
-+
-+static int sun60i_a733_ccu_probe(struct platform_device *pdev)
-+{
-+	void __iomem *reg;
-+	struct resource *res;
-+	int ret;
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	if (!res)
-+		return -ENODEV;
-+
-+	reg = devm_ioremap_resource(&pdev->dev, res);
-+	if (IS_ERR(reg))
-+		return PTR_ERR(reg);
-+
-+	/* Register all hardware clocks */
-+	ret = devm_clk_hw_register_clk_data(&pdev->dev, NULL,
-+					     sun60i_a733_hw_clks.hws,
-+					     sun60i_a733_hw_clks.num);
-+	if (ret) {
-+		dev_err(&pdev->dev, "failed to register CCU clocks: %d\n",
-+			ret);
-+		return ret;
-+	}
-+
-+	ret = devm_of_clk_add_hw_provider(&pdev->dev,
-+					   of_clk_hw_onecell_get,
-+					   &sun60i_a733_hw_clks);
-+	if (ret) {
-+		dev_err(&pdev->dev, "failed to add clock provider: %d\n",
-+			ret);
-+		return ret;
-+	}
-+
-+	ret = sunxi_ccu_reset_init(pdev, reg, sun60i_a733_ccu_resets,
-+				   ARRAY_SIZE(sun60i_a733_ccu_resets));
-+	if (ret) {
-+		dev_err(&pdev->dev,
-+			"failed to register reset controller: %d\n", ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int sun60i_a733_ccu_remove(struct platform_device *pdev)
-+{
-+	return 0;
-+}
++MODULE_DEVICE_TABLE(of, sun60i_a733_ccu_ids);
 +
 +static struct platform_driver sun60i_a733_ccu_driver = {
 +	.probe	= sun60i_a733_ccu_probe,
-+	.remove	= sun60i_a733_ccu_remove,
 +	.driver	= {
-+		.name			= "clk-sun60i-a733",
++		.name			= "sun60i-a733-ccu",
++		.suppress_bind_attrs	= true,
 +		.of_match_table		= sun60i_a733_ccu_ids,
 +	},
 +};
 +module_platform_driver(sun60i_a733_ccu_driver);
 +
-+MODULE_AUTHOR("Allwinner");
++MODULE_IMPORT_NS("SUNXI_CCU");
++MODULE_DESCRIPTION("Support for the Allwinner A733 CCU");
 +MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("Allwinner A733 CCU driver");
 diff --git a/drivers/crypto/allwinner/Kconfig b/drivers/crypto/allwinner/Kconfig
 index 1048f8e95..fd02db793 100644
 --- a/drivers/crypto/allwinner/Kconfig
@@ -6967,10 +6529,10 @@ index e75e8045c..46df0ee68 100644
  obj-$(CONFIG_MFD_LP8788)	+= lp8788.o lp8788-irq.o
 diff --git a/drivers/mfd/mfd-axp8191.c b/drivers/mfd/mfd-axp8191.c
 new file mode 100644
-index 000000000..d5613c15a
+index 000000000..31909d601
 --- /dev/null
 +++ b/drivers/mfd/mfd-axp8191.c
-@@ -0,0 +1,384 @@
+@@ -0,0 +1,391 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
 + * Allwinner AXP8191 MFD driver
@@ -7133,10 +6695,14 @@ index 000000000..d5613c15a
 +	},
 +};
 +
++static struct axp8191_dev *axp8191_global_dev;
++
 +static void axp8191_power_off(void)
 +{
-+	struct axp8191_dev *axp = container_of(
-+		&__this_module, struct axp8191_dev, dev);
++	struct axp8191_dev *axp = axp8191_global_dev;
++
++	if (!axp)
++		return;
 +
 +	/* Trigger a power off sequence */
 +	regmap_write(axp->regmap, AXP8191_POWER_OFF, AXP8191_POWER_OFF_MAGIC);
@@ -7268,7 +6834,7 @@ index 000000000..d5613c15a
 +	struct axp8191_dev *axp;
 +	int ret;
 +
-+	if (!i2c_verify_functionality(client->adapter,
++	if (!i2c_check_functionality(client->adapter,
 +				      I2C_FUNC_I2C | I2C_FUNC_SMBUS_BYTE_DATA))
 +		return -ENODEV;
 +
@@ -7312,8 +6878,11 @@ index 000000000..d5613c15a
 +	 * The power-off callback uses regmap so the PMIC is functional by
 +	 * the time the system calls it.
 +	 */
++	axp8191_global_dev = axp;
 +	if (pm_power_off)
 +		dev_warn(dev, "pm_power_off already registered\n");
++	else
++		pm_power_off = axp8191_power_off;
 +
 +	return 0;
 +}
@@ -10001,10 +9570,10 @@ index 000000000..f4e38e44f
 +MODULE_DESCRIPTION("Allwinner sun60i PCIe PHY driver for A733");
 diff --git a/drivers/phy/allwinner/phy-sun60i-serdes.c b/drivers/phy/allwinner/phy-sun60i-serdes.c
 new file mode 100644
-index 000000000..b7d6032a0
+index 000000000..342d16cb0
 --- /dev/null
 +++ b/drivers/phy/allwinner/phy-sun60i-serdes.c
-@@ -0,0 +1,380 @@
+@@ -0,0 +1,355 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
 + * Allwinner sun60i SerDes PHY driver
@@ -10135,7 +9704,7 @@ index 000000000..b7d6032a0
 +	sun60i_serdes_write(serdes->base, SERDES_POWERDOWN, val);
 +}
 +
-+static int sun60i_serdes_wait_ready(struct sun60i_serdes *serdes)
++static int __maybe_unused sun60i_serdes_wait_ready(struct sun60i_serdes *serdes)
 +{
 +	u32 val;
 +	int ret;
@@ -10253,8 +9822,8 @@ index 000000000..b7d6032a0
 +	return 0;
 +}
 +
-+static int sun60i_serdes_configure(struct phy *phy, enum phy_mode mode,
-+				   int submode)
++static int sun60i_serdes_configure(struct phy *phy,
++				   union phy_configure_opts *opts)
 +{
 +	struct sun60i_serdes *serdes = phy_get_drvdata(phy);
 +	int lane = phy->id;
@@ -10262,36 +9831,13 @@ index 000000000..b7d6032a0
 +	if (lane < 0 || lane >= SERDES_NUM_LANES)
 +		return -EINVAL;
 +
-+	return sun60i_serdes_configure_lane(serdes, lane, mode);
-+}
-+
-+static int sun60i_serdes_verify(struct phy *phy, enum phy_mode mode,
-+				int submode)
-+{
-+	struct sun60i_serdes *serdes = phy_get_drvdata(phy);
-+	int lane = phy->id;
-+	u32 val;
-+
-+	val = sun60i_serdes_read(serdes->base, SERDES_LANECTRL0 + (lane * 4));
-+	val &= LANECTRL_MODE_MASK;
-+
-+	switch (mode) {
-+	case PHY_MODE_USB_HOST_SS:
-+		return (val == LANECTRL_MODE_USB3) ? 0 : -EINVAL;
-+	case PHY_MODE_PCIE:
-+		return (val == LANECTRL_MODE_PCIE) ? 0 : -EINVAL;
-+	case PHY_MODE_DP:
-+		return (val == LANECTRL_MODE_DP) ? 0 : -EINVAL;
-+	default:
-+		return -EINVAL;
-+	}
++	return sun60i_serdes_configure_lane(serdes, lane, phy->attrs.mode);
 +}
 +
 +static const struct phy_ops sun60i_serdes_ops = {
 +	.init		= sun60i_serdes_init,
 +	.exit		= sun60i_serdes_exit,
 +	.configure	= sun60i_serdes_configure,
-+	.verify		= sun60i_serdes_verify,
 +	.owner		= THIS_MODULE,
 +};
 +
@@ -10348,7 +9894,6 @@ index 000000000..b7d6032a0
 +		phy_set_bus_width(phy, 0);
 +		phy_set_drvdata(phy, serdes);
 +		phy->id = lane;
-+		phy->init_args = 0;
 +
 +		serdes->lane_in_use[lane] = false;
 +	}
@@ -10361,9 +9906,8 @@ index 000000000..b7d6032a0
 +	return 0;
 +}
 +
-+static int sun60i_serdes_remove(struct platform_device *pdev)
++static void sun60i_serdes_remove(struct platform_device *pdev)
 +{
-+	return 0;
 +}
 +
 +static const struct of_device_id sun60i_serdes_of_match[] = {
@@ -12292,10 +11836,10 @@ index 35639f311..2de0ad179 100644
  obj-$(CONFIG_REGULATOR_BD71828) += bd71828-regulator.o
 diff --git a/drivers/regulator/regulator-axp8191.c b/drivers/regulator/regulator-axp8191.c
 new file mode 100644
-index 000000000..a819e6c64
+index 000000000..d48fb75b5
 --- /dev/null
 +++ b/drivers/regulator/regulator-axp8191.c
-@@ -0,0 +1,275 @@
+@@ -0,0 +1,287 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
 + * AXP8191 Regulator driver
@@ -12310,6 +11854,7 @@ index 000000000..a819e6c64
 +
 +#include <linux/module.h>
 +#include <linux/of.h>
++#include <linux/ctype.h>
 +#include <linux/platform_device.h>
 +#include <linux/regmap.h>
 +#include <linux/regulator/driver.h>
@@ -12526,6 +12071,7 @@ index 000000000..a819e6c64
 +	for (i = 0; i < ARRAY_SIZE(axp8191_regs); i++) {
 +		const struct axp8191_reg_info *info = &axp8191_regs[i];
 +		struct regulator_desc *desc;
++		struct regulator_config config = {};
 +
 +		desc = devm_kzalloc(dev, sizeof(*desc), GFP_KERNEL);
 +		if (!desc)
@@ -12537,11 +12083,21 @@ index 000000000..a819e6c64
 +		desc->owner = THIS_MODULE;
 +		desc->of_match = devm_kasprintf(dev, GFP_KERNEL,
 +						"axp8191-%s-ldo",
-+						strtolower(info->name));
++						info->name);
 +		if (!desc->of_match)
 +			return -ENOMEM;
++		{
++			char *p = (char *)desc->of_match;
++			while (*p) {
++				*p = tolower(*p);
++				p++;
++			}
++		}
 +
-+		rdev = devm_regulator_register(dev, desc, &info);
++		config.dev = dev;
++		config.regmap = regmap;
++
++		rdev = devm_regulator_register(dev, desc, &config);
 +		if (IS_ERR(rdev)) {
 +			ret = dev_err_probe(dev, PTR_ERR(rdev),
 +					    "Failed to register %s\n",
