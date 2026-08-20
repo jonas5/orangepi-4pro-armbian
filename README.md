@@ -1,6 +1,6 @@
 # Orange Pi 4 Pro — Armbian Build Overlay
 
-[![Build](https://github.com/jonas5/orangepi-4pro-armbian-build/actions/workflows/release.yml/badge.svg)](https://github.com/jonas5/orangepi-4pro-armbian-build/actions/workflows/release.yml)
+[![Build](https://github.com/jonas5/orangepi-4pro-armbian/actions/workflows/release.yml/badge.svg)](https://github.com/jonas5/orangepi-4pro-armbian/actions/workflows/release.yml)
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-jonas5-yellow?logo=buy-me-a-coffee&logoColor=white)](https://buymeacoffee.com/jonas5)
 
 Build Armbian images for the **Orange Pi 4 Pro** with mainline Linux 7.1.5 kernel on Allwinner A733 (sun60iw2).
@@ -24,7 +24,7 @@ Build Armbian images for the **Orange Pi 4 Pro** with mainline Linux 7.1.5 kerne
 
 ## Pre-built Images
 
-Download from [GitHub Releases](https://github.com/jonas5/orangepi-4pro-armbian-build/releases):
+Download from [GitHub Releases](https://github.com/jonas5/orangepi-4pro-armbian/releases):
 
 | Image | Size | Flavor |
 |-------|------|--------|
@@ -74,7 +74,7 @@ cd armbian-build
 ### Step 2: Clone This Overlay
 
 ```bash
-git clone https://github.com/jonas5/orangepi-4pro-armbian-build.git orangepi4pro-overlay
+git clone https://github.com/jonas5/orangepi-4pro-armbian.git orangepi4pro-overlay
 ```
 
 ### Step 3: Apply the Overlay
@@ -153,7 +153,7 @@ Images are written to `output/images/`.
 ## Repository Structure
 
 ```
-orangepi-4pro-armbian-build/
+orangepi-4pro-armbian/
 ├── config/
 │   ├── boards/
 │   │   └── orangepi4pro.conf          # Board definition + hooks
