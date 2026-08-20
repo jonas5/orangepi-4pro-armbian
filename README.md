@@ -366,7 +366,7 @@ To boot entirely from NVMe without a persistent SD card:
 
 The kernel patch and standalone build instructions are in the companion repo:
 
-**[jonas5/orangepi-4pro-armbian](https://github.com/jonas5/orangepi-4pro-armbian/tree/linux-7.1.5-opi4pro)**
+**[jonas5/orangepi-4pro-kernel](https://github.com/jonas5/orangepi-4pro-kernel)**
 
 This contains:
 - Unified patch: `opi4pro-7.1.5.patch` (46 files, DTS/DTSI, defconfig, drivers)
@@ -380,7 +380,7 @@ To build the kernel standalone (without Armbian):
 ```bash
 git clone --depth=1 --branch v7.1.5 https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git linux-7.1.5
 cd linux-7.1.5
-git clone https://github.com/jonas5/orangepi-4pro-armbian.git --branch linux-7.1.5-opi4pro --depth=1 repo
+git clone https://github.com/jonas5/orangepi-4pro-kernel.git --depth=1 repo
 patch -p1 < repo/patch/opi4pro-7.1.5.patch
 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- orangepi_4pro_defconfig
 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
