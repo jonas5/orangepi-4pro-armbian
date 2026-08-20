@@ -8,7 +8,7 @@ Build Armbian images for the **Orange Pi 4 Pro** with mainline Linux 7.1.5 kerne
 |-----------|---------|
 | SoC | Allwinner A733 — 2× Cortex-A76 + 6× Cortex-A55, Mali Bifrost GPU |
 | RAM | 2/4/8/16 GB LPDDR4X |
-| Storage | eMMC (MMC2, 8-bit), microSD (MMC0), SPI NOR flash (16MB) |
+| Storage | eMMC (MMC2, 8-bit), microSD (MMC0), SPI NOR flash (16MB), NVMe (PCIe x1 Gen3) |
 | Ethernet | Gigabit (GMAC0, RGMII, RTL8211F) |
 | WiFi/BT | AIC8800D80 (SDIO + UART HCI) |
 | USB | 1× USB3 Type-C (OTG), 2× USB2 Type-A (EHCI/OHCI) |
@@ -23,20 +23,23 @@ Build Armbian images for the **Orange Pi 4 Pro** with mainline Linux 7.1.5 kerne
 
 Download from [GitHub Releases](https://github.com/jonas5/orangepi-4pro-armbian-build/releases):
 
-| Image | Size | Release |
-|-------|------|---------|
-| `Orangepi4pro_1.0.7_debian_bookworm_server_linux7.1.5.img.xz` | 752 MB | Bookworm server |
-| `Orangepi4pro_1.0.7_ubuntu_noble_server_linux7.1.5.img.xz` | 673 MB | Noble server |
+| Image | Size | Flavor |
+|-------|------|--------|
+| Bookworm Server | ~370 MB | Debian 12 minimal |
+| Noble Server | ~370 MB | Ubuntu 24.04 LTS minimal |
+| Noble GNOME Desktop | ~1.7 GB | Ubuntu 24.04 LTS + GNOME |
+| Trixie GNOME Desktop | ~1.7 GB | Debian 13 + GNOME |
+| Plucky Server | ~370 MB | Ubuntu 25.04 minimal |
+| Forky Server | ~370 MB | Debian 14 minimal |
 
-Flash to SD card with `dd` or [balenaEtcher](https://etcher.balena.io/).
+All images use mainline Linux 7.1.5 kernel. Flash to SD card with `dd` or [balenaEtcher](https://etcher.balena.io/).
 
 ## Building Your Own Image
 
 ### Prerequisites
 
-- x86_64 Linux host (Debian/Ubuntu recommended)
+- x86_64 or arm64 Linux host (Debian/Ubuntu recommended)
 - ~25 GB free disk space (more for desktop builds)
-- Root access or `sudo` (for loopback mounts and chroot)
 - Internet connection
 
 Install dependencies:
@@ -84,7 +87,7 @@ This copies board config, kernel config, kernel patch, and firmware into the Arm
 **Server image (Bookworm):**
 
 ```bash
-sudo ./compile.sh \
+./compile.sh \
     BOARD=orangepi4pro \
     BRANCH=next \
     RELEASE=bookworm \
@@ -99,7 +102,7 @@ sudo ./compile.sh \
 **Server image (Noble):**
 
 ```bash
-sudo ./compile.sh \
+./compile.sh \
     BOARD=orangepi4pro \
     BRANCH=next \
     RELEASE=noble \
@@ -111,15 +114,16 @@ sudo ./compile.sh \
     BUILD_OPT=image
 ```
 
-**Desktop image (Bookworm, GNOME):**
+**Desktop image (Trixie, GNOME):**
 
 ```bash
-sudo ./compile.sh \
+./compile.sh \
     BOARD=orangepi4pro \
     BRANCH=next \
-    RELEASE=bookworm \
+    RELEASE=trixie \
     BUILD_DESKTOP=yes \
     DESKTOP_ENVIRONMENT=gnome \
+    DESKTOP_ENVIRONMENT_CONFIG_NAME=config_base \
     DESKTOP_APPGROUPS_SELECTED="browsers editors multimedia" \
     KERNEL_CONFIGURE=no \
     NO_HOST_RELEASE_CHECK=yes \
@@ -135,7 +139,7 @@ Images are written to `output/images/`.
 |--------|-------------|
 | `BOARD=orangepi4pro` | Board name |
 | `BRANCH=next` | Use mainline Linux 7.1.5 (`current` = vendor 5.15 kernel) |
-| `RELEASE=bookworm\|noble` | Debian Bookworm or Ubuntu Noble |
+| `RELEASE=bookworm\|noble\|trixie\|plucky\|forky` | Debian/Ubuntu release |
 | `BUILD_DESKTOP=no\|yes` | Server or desktop image |
 | `BUILD_MINIMAL=yes` | Minimal server image (smaller, fewer packages) |
 | `KERNEL_CONFIGURE=no` | Use pre-made defconfig (recommended) |
@@ -149,16 +153,14 @@ Images are written to `output/images/`.
 orangepi-4pro-armbian-build/
 ├── config/
 │   ├── boards/
-│   │   └── orangepi4pro.conf          # Board definition
+│   │   └── orangepi4pro.conf          # Board definition + hooks
 │   ├── kernel/
 │   │   └── linux-sun60iw2-next-a733.config  # Kernel config (all drivers built-in)
 │   └── sources/families/
-│       └── sun60iw2.conf              # Family config (kernel source, U-Boot, tweaks)
+│       └── sun60iw2.conf              # Reference copy (not used by overlay; upstream has its own)
 ├── patch/
-│   ├── kernel/sun60iw2-next/
-│   │   └── opi4pro-7.1.5.patch        # Kernel patch (46 files, ~12K lines)
-│   └── u-boot/u-boot-sunxi/
-│       └── 0001-u-boot-disable-werror-gcc14.patch  # U-Boot GCC14 compat fix
+│   └── kernel/sun60iw2-next/
+│       └── opi4pro-7.1.5.patch        # Kernel patch (46 files, DTS, drivers)
 ├── firmware/
 │   ├── install-firmware.sh            # Firmware installer for target system
 │   ├── aic8800d80/                    # AIC8800 WiFi + BT firmware (8 files)
@@ -166,6 +168,8 @@ orangepi-4pro-armbian-build/
 │   └── bt-tools/
 │       ├── brcm_patchram_plus         # Broadcom BT UART firmware loader
 │       └── hciattach_opi              # Orange Pi BT HCI attach utility
+├── .github/workflows/
+│   └── release.yml                    # CI: builds 6 distro flavors on release
 └── scripts/
     └── apply-overlay.sh               # Overlay installer
 ```
@@ -313,6 +317,47 @@ This installs:
 - `/usr/lib/libVIPhal.so` — Allwinner NPU HAL library
 - `/usr/bin/brcm_patchram_plus` — Broadcom BT UART firmware loader
 - `/usr/bin/hciattach_opi` — Orange Pi BT HCI attach utility
+
+## NVMe Support
+
+NVMe is fully supported in both the kernel and U-Boot (built-in, no modules). However, the Allwinner BL2 bootloader **cannot boot directly from NVMe** — it only searches SD, eMMC, and SPI NOR. NVMe is used for the rootfs, not the bootloader.
+
+### Installing Rootfs to NVMe
+
+1. Flash any Armbian image to a microSD card
+2. Boot from the SD card
+3. Run the installer:
+   ```bash
+   sudo armbian-install
+   ```
+4. Select **"Boot from SD, system on NVMe"** — this copies rootfs + bootloader to the NVMe drive
+5. Remove the SD card and reboot
+
+### Direct NVMe Boot (No SD Card)
+
+To boot entirely from NVMe without a persistent SD card:
+
+1. Boot from SD card with the Armbian image
+2. Write the bootloader to NVMe:
+   ```bash
+   # Bootloader offsets (same for all media on this board)
+   dd if=/usr/lib/linux-u-boot-next-orangepi4pro*/boot0_sdcard.fex of=/dev/nvme0n1 bs=8k seek=1 conv=fsync
+   dd if=/usr/lib/linux-u-boot-next-orangepi4pro*/boot_package.fex of=/dev/nvme0n1 bs=8k seek=2050 conv=fsync
+   ```
+3. Partition NVMe (root partition + optional swap)
+4. Copy rootfs to the NVMe root partition
+5. Update `/boot/armbianEnv.txt` or `extlinux.conf` to set `root=UUID=<nvme-partition-uuid>`
+6. Remove SD card and reboot
+
+### What Works on NVMe
+
+| Feature | Status |
+|---------|--------|
+| NVMe boot (via SD/eMMC/SPI-NOR) | ✅ |
+| NVMe rootfs with SD bootloader | ✅ |
+| Direct NVMe boot (no SD) | ✅ |
+| NVMe TRIM/DISCARD | ✅ (kernel built-in) |
+| PCIe Gen3 x1 speeds | ✅ |
 
 ## Kernel Source Tree
 
