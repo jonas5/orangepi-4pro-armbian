@@ -1,5 +1,7 @@
 # Orange Pi 4 Pro — Armbian Build Overlay
 
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-jonas5-yellow?logo=buy-me-a-coffee&logoColor=white)](https://buymeacoffee.com/jonas5)
+
 Build Armbian images for the **Orange Pi 4 Pro** with mainline Linux 7.1.5 kernel on Allwinner A733 (sun60iw2).
 
 ## Hardware
