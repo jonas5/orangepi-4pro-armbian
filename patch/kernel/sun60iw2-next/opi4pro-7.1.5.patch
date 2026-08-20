@@ -12,7 +12,7 @@ diff --git a/arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts b/arch
 new file mode 100644
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts
-@@ -0,0 +1,834 @@
+@@ -0,0 +1,832 @@
 +// SPDX-License-Identifier: (GPL-2.0-or-later OR MIT)
 +/*
 + * Device Tree Source for Orange Pi 4 Pro
@@ -138,35 +138,33 @@ new file mode 100644
 +};
 +
 +&r_pio {
-+	pio: pinctrl@2000000 {
-+		/* Redeclare to add board-specific pin groups */
++	/* Board-specific pin groups */
 +
-+		/* UART2 pins */
-+			uart2_pins: uart2-pins {
-+				pins = "PB0", "PB1";
-+				function = "uart2";
-+			};
++	/* UART2 pins */
++	uart2_pins: uart2-pins {
++		pins = "PB0", "PB1";
++		function = "uart2";
++	};
 +
-+			/* R_PIO pins */
-+		r_i2c0_pins: r-i2c0-pins {
-+			pins = "PL0", "PL1";
-+			function = "r_i2c0";
-+			drive-strength = <40>;
-+		};
++	/* R_PIO pins */
++	r_i2c0_pins: r-i2c0-pins {
++		pins = "PL0", "PL1";
++		function = "r_i2c0";
++		drive-strength = <40>;
++	};
 +
-+		wifi_enable_pin: wifi-enable-pin {
-+			pins = "PI9";
-+			function = "gpio";
-+			drive-strength = <10>;
-+			output-low;
-+		};
++	wifi_enable_pin: wifi-enable-pin {
++		pins = "PI9";
++		function = "gpio";
++		drive-strength = <10>;
++		output-low;
++	};
 +
-+		gmac_rst_pin: gmac-rst-pin {
-+			pins = "PB13";
-+			function = "gpio";
-+			drive-strength = <10>;
-+			output-high;
-+		};
++	gmac_rst_pin: gmac-rst-pin {
++		pins = "PB13";
++		function = "gpio";
++		drive-strength = <10>;
++		output-high;
 +	};
 +};
 +
@@ -847,12 +845,11 @@ new file mode 100644
 +&cpu5 { cpu-supply = <&reg_dcdc5>; };
 +&cpu6 { cpu-supply = <&reg_dcdc3>; };
 +&cpu7 { cpu-supply = <&reg_dcdc3>; };
-
 diff --git a/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi b/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi
 new file mode 100644
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi
-@@ -0,0 +1,1672 @@
+@@ -0,0 +1,1673 @@
 +// SPDX-License-Identifier: (GPL-2.0-or-later OR MIT)
 +/*
 + * Device Tree Source for Allwinner Sun60i A733 SoC
@@ -865,8 +862,10 @@ new file mode 100644
 +#include <dt-bindings/interrupt-controller/arm-gic.h>
 +#include <dt-bindings/clock/sun60i-a733-ccu.h>
 +#include <dt-bindings/clock/sun60i-a733-r-ccu.h>
++#include <dt-bindings/gpio/gpio.h>
 +#include <dt-bindings/gpio/sun60i-a733-gpio.h>
 +#include <dt-bindings/thermal/sun60i-a733-thermal.h>
++#include <dt-bindings/phy/phy.h>
 +
 +/ {
 +	interrupt-parent = <&gic>;
@@ -1610,13 +1609,12 @@ new file mode 100644
 +			resets = <&ccu RST_BUS_TIMER0>;
 +		};
 +
-+		gpufreq: gpu-freq@1800000 {
-+			compatible = "allwinner,sun60i-a733-gpufreq";
-+			reg = <0x01800000 0x8ffff>;
-+			nvmem-cells = <&speed_bin>;
-+			nvmem-cell-names = "opp-speed-bin";
-+			#freq-domain-cells = <0>;
-+		};
++	gpufreq: gpu-freq@1800000 {
++		compatible = "allwinner,sun60i-a733-gpufreq";
++		reg = <0x01800000 0x8ffff>;
++		#freq-domain-cells = <0>;
++		status = "disabled";
++	};
 +
 +		ledc: led-controller@2520000 {
 +			compatible = "allwinner,sun60i-a733-ledc",
@@ -2332,11 +2330,11 @@ new file mode 100644
 +				     <GIC_SPI 64 IRQ_TYPE_LEVEL_HIGH>,
 +				     <GIC_SPI 64 IRQ_TYPE_LEVEL_HIGH>;
 +			interrupt-names = "gp", "gpmmu", "pp0";
-+			clocks = <&ccu CLK_PLL_GPU0>, <&ccu CLK_GPU0>,
-+				 <&ccu CLK_BUS_GPU0>;
++			clocks = <&ccu CLK_PLL_GPU>, <&ccu CLK_GPU>,
++				 <&ccu CLK_BUS_GPU>;
 +			clock-names = "clk_mali", "clk_mali_bus",
 +				      "clk_bus_mali";
-+			resets = <&ccu RST_BUS_GPU0>;
++			resets = <&ccu RST_BUS_GPU>;
 +			operating-points-v2 = <&gpu_opp_table>;
 +			power-domains = <&pck 2>;
 +
@@ -2467,16 +2465,16 @@ new file mode 100644
 +			pck_de: power-domain@1 {
 +				compatible = "allwinner,sun60i-a733-pd-de";
 +				#power-domain-cells = <0>;
-+				clocks = <&ccu CLK_DE0>,
-+					 <&ccu CLK_BUS_DE0>;
-+				resets = <&ccu RST_BUS_DE0>;
++				clocks = <&ccu CLK_DE>,
++					 <&ccu CLK_BUS_DE>;
++				resets = <&ccu RST_BUS_DE>;
 +			};
 +
 +			pck_gpu: power-domain@2 {
 +				compatible = "allwinner,sun60i-a733-pd-gpu";
 +				#power-domain-cells = <0>;
-+				clocks = <&ccu CLK_GPU0>;
-+				resets = <&ccu RST_BUS_GPU0>;
++				clocks = <&ccu CLK_GPU>;
++				resets = <&ccu RST_BUS_GPU>;
 +			};
 +
 +			pck_pcie: power-domain@3 {
@@ -2511,7 +2509,7 @@ new file mode 100644
 +		sunxi-dram-freq@2020000 {
 +			compatible = "allwinner,sun60i-a733-dramfreq";
 +			reg = <0x02020000 0x10000>;
-+			clocks = <&ccu CLK_PLL_DDR0>, <&ccu CLK_PLL_DDR1>;
++			clocks = <&ccu CLK_PLL_DDR>, <&ccu CLK_PLL_DDR1>;
 +			clock-names = "pll-ddr0", "pll-ddr1";
 +			status = "disabled";
 +		};
@@ -2525,13 +2523,12 @@ new file mode 100644
 +			     <GIC_PPI 10 IRQ_TYPE_LEVEL_LOW>;
 +	};
 +};
-
 diff --git a/arch/arm64/configs/orangepi_4pro_defconfig b/arch/arm64/configs/orangepi_4pro_defconfig
 new file mode 100644
 index 000000000..466c60e37
 --- /dev/null
 +++ b/arch/arm64/configs/orangepi_4pro_defconfig
-@@ -0,0 +1,662 @@
+@@ -0,0 +1,668 @@
 +#
 +# Automatically generated file; DO NOT EDIT.
 +# Linux/arm64 7.1.5 Kernel Configuration
@@ -3019,18 +3016,24 @@ index 000000000..466c60e37
 +CONFIG_HWMON=y
 +CONFIG_SENSORS_SUN60I=y
 +
++# ---------- MFD ----------
++CONFIG_MFD_AXP8191=y
++
 +# ---------- Power Supply ----------
 +CONFIG_POWER_SUPPLY=y
 +CONFIG_POWER_SUPPLY_CLASS=y
++CONFIG_POWER_SUPPLY_HWMON=y
 +CONFIG_BATTERY_SUNXI=y
 +CONFIG_CHARGER_SUNXI=y
 +CONFIG_BATTERY_SUNXI_SYS=y
++CONFIG_POWER_SUPPLY_AXP8191=y
 +
 +# ---------- Voltage Regulator ----------
 +CONFIG_REGULATOR=y
 +CONFIG_REGULATOR_FIXED_VOLTAGE=y
 +CONFIG_REGULATOR_SUN60I=y
 +CONFIG_REGULATOR_AW_SUN60IW2=y
++CONFIG_REGULATOR_AXP8191=y
 +
 +# ---------- Wireless ----------
 +CONFIG_WIRELESS=y
@@ -12141,21 +12144,21 @@ new file mode 100644
 index 000000000..a455afa01
 --- /dev/null
 +++ b/include/dt-bindings/clock/sun60i-a733-ccu.h
-@@ -0,0 +1,180 @@
+@@ -0,0 +1,365 @@
 +/* SPDX-License-Identifier: GPL-2.0-only */
 +/*
-+ * Device Tree binding constants for Allwinner A733 CCU
++ * Copyright (C) 2024 The Linux Foundation. All rights reserved.
++ *
++ * Allwinner A733 Clock Control Unit (CCU) bindings.
 + */
 +
 +#ifndef _DT_BINDINGS_CLK_SUN60I_A733_CCU_H_
 +#define _DT_BINDINGS_CLK_SUN60I_A733_CCU_H_
 +
-+/* Root / oscillator clocks (index 0-2, provided by fixed-clock nodes) */
++/* Root clocks (from oscillator / PLLs) */
 +#define CLK_OSC24M		0
 +#define CLK_OSC32K		1
 +#define CLK_IOSC		2
-+
-+/* PLLs (index 3-14) */
 +#define CLK_PLL_CPU		3
 +#define CLK_PLL_AUDIO0		4
 +#define CLK_PLL_VIDEO0		5
@@ -12169,117 +12172,161 @@ index 000000000..a455afa01
 +#define CLK_PLL_PCIE		13
 +#define CLK_PLL_DDR		14
 +
-+/* PLL derived clocks (index 15-20) */
-+#define CLK_PLL_AUDIO0_4X	15
-+#define CLK_PLL_AUDIO0_2X	16
-+#define CLK_PLL_AUDIO0_1X	17
-+#define CLK_PLL_VIDEO0_2X	18
-+#define CLK_PLL_PERIPH0_2X	19
-+#define CLK_PLL_PERIPH0_4X	20
++/* HOSC-gated sources */
++#define CLK_HOSC		15
++#define CLK_PLL_HOSC		16
 +
-+/* PLL-divided bus clocks (index 21-23) */
-+#define CLK_CPU_AXI		21
-+#define CLK_CCI			22
-+#define CLK_DSP			23
++/* Audio PLL output divider */
++#define CLK_PLL_AUDIO0_4X	17
++#define CLK_PLL_AUDIO0_2X	18
++#define CLK_PLL_AUDIO0_1X	19
 +
-+/* Bus hierarchy (index 24-26) */
-+#define CLK_AHB			24
-+#define CLK_APB1		25
-+#define CLK_APB2		26
++/* Video PLL output divider */
++#define CLK_PLL_VIDEO0_4X	20
++#define CLK_PLL_VIDEO0_2X	21
 +
-+/* Bus gates (index 27-61) */
-+#define CLK_BUS_UART0		27
-+#define CLK_BUS_UART1		28
-+#define CLK_BUS_UART2		29
-+#define CLK_BUS_UART3		30
-+#define CLK_BUS_UART4		31
-+#define CLK_BUS_UART5		32
-+#define CLK_BUS_SPI0		33
-+#define CLK_BUS_SPI1		34
-+#define CLK_BUS_SPI2		35
-+#define CLK_BUS_SPI3		36
-+#define CLK_BUS_I2C0		37
-+#define CLK_BUS_I2C1		38
-+#define CLK_BUS_I2C2		39
-+#define CLK_BUS_I2C3		40
-+#define CLK_BUS_I2C4		41
-+#define CLK_BUS_I2C5		42
-+#define CLK_BUS_USB		43
-+#define CLK_BUS_GMAC		44
-+#define CLK_BUS_MMC0		45
-+#define CLK_BUS_MMC1		46
-+#define CLK_BUS_MMC2		47
-+#define CLK_BUS_CE		48
-+#define CLK_BUS_DMA		49
-+#define CLK_BUS_THERMAL		50
-+#define CLK_BUS_HDMI		51
-+#define CLK_BUS_DE		52
-+#define CLK_BUS_GPU		53
-+#define CLK_BUS_DAUDIO		54
-+#define CLK_BUS_OWA		55
-+#define CLK_BUS_DMIC		56
-+#define CLK_BUS_AUDIOC		57
-+#define CLK_BUS_THS		58
-+#define CLK_BUS_GPADC		59
-+#define CLK_BUS_LRADC		60
-+#define CLK_BUS_CEC		61
-+#define CLK_BUS_PWM		62
-+#define CLK_BUS_SPINLOCK	63
-+#define CLK_BUS_DRC		64
-+#define CLK_BUS_MSGBOX		65
-+#define CLK_BUS_ROM		66
++/* PERIPH0 fixed dividers */
++#define CLK_PLL_PERIPH0_2X	22
++#define CLK_PLL_PERIPH0_4X	23
 +
-+/* Module (functional) clocks (index 67-...) */
-+#define CLK_UART0		67
-+#define CLK_UART1		68
-+#define CLK_UART2		69
-+#define CLK_UART3		70
-+#define CLK_UART4		71
-+#define CLK_UART5		72
-+#define CLK_SPI0		73
-+#define CLK_SPI1		74
-+#define CLK_SPI2		75
-+#define CLK_SPI3		76
-+#define CLK_I2C0		77
-+#define CLK_I2C1		78
-+#define CLK_I2C2		79
-+#define CLK_I2C3		80
-+#define CLK_I2C4		81
-+#define CLK_I2C5		82
-+#define CLK_USB_480		83
-+#define CLK_USB_12		84
-+#define CLK_USB_PHY		85
-+#define CLK_MMC0		86
-+#define CLK_MMC0_DET		87
-+#define CLK_MMC0_BUS		88
-+#define CLK_MMC1		89
-+#define CLK_MMC1_DET		90
-+#define CLK_MMC1_BUS		91
-+#define CLK_MMC2		92
-+#define CLK_MMC2_DET		93
-+#define CLK_MMC2_BUS		94
-+#define CLK_GMAC		95
-+#define CLK_GMAC_PTP		96
-+#define CLK_HDMI		97
-+#define CLK_HDMI_DDC		98
-+#define CLK_DE			99
-+#define CLK_GPU			100
-+#define CLK_THS			101
-+#define CLK_GPADC		102
-+#define CLK_LRADC		103
-+#define CLK_CEC			104
-+#define CLK_PWM			105
-+#define CLK_DAUDIO		106
-+#define CLK_OWA			107
-+#define CLK_DMIC		108
-+#define CLK_AUDIOC		109
-+#define CLK_SPINLOCK		110
-+#define CLK_DRC			111
-+#define CLK_MSGBOX		112
-+#define CLK_ROM			113
-+#define CLK_USB_REF		114
-+#define CLK_USB_SUSPEND		115
++/* Clock source mux + divider: CPU */
++#define CLK_CPU			24
++
++/* AHB / APB (bus hierarchy) */
++#define CLK_AHB			25
++#define CLK_APB1		26
++#define CLK_APB2		27
++
++/* Bus gates (enable/disable bus clock to peripherals) */
++#define CLK_BUS_UART0		28
++#define CLK_BUS_UART1		29
++#define CLK_BUS_UART2		30
++#define CLK_BUS_UART3		31
++#define CLK_BUS_UART4		32
++#define CLK_BUS_UART5		33
++
++#define CLK_BUS_SPI0		34
++#define CLK_BUS_SPI1		35
++#define CLK_BUS_SPI2		36
++#define CLK_BUS_SPI3		37
++
++#define CLK_BUS_I2C0		38
++#define CLK_BUS_I2C1		39
++#define CLK_BUS_I2C2		40
++#define CLK_BUS_I2C3		41
++#define CLK_BUS_I2C4		42
++#define CLK_BUS_I2C5		43
++
++#define CLK_BUS_USB		44
++#define CLK_BUS_GMAC		45
++#define CLK_BUS_MMC0		46
++#define CLK_BUS_MMC1		47
++#define CLK_BUS_MMC2		48
++#define CLK_BUS_CE		49
++#define CLK_BUS_DMA		50
++#define CLK_BUS_THERMAL		51
++#define CLK_BUS_HDMI		52
++#define CLK_BUS_DE		53
++#define CLK_BUS_GPU		54
++#define CLK_BUS_DAUDIO		55
++#define CLK_BUS_OWA		56
++#define CLK_BUS_DMIC		57
++#define CLK_BUS_AUDIOC		58
++#define CLK_BUS_THS		59
++#define CLK_BUS_GPADC		60
++#define CLK_BUS_LRADC		61
++#define CLK_BUS_CEC		62
++#define CLK_BUS_PWM		63
++#define CLK_BUS_SPINLOCK	64
++#define CLK_BUS_DRC		65
++#define CLK_BUS_MSGBOX		66
++#define CLK_BUS_ROM		67
++
++/* Module (functional) clocks */
++#define CLK_UART0		68
++#define CLK_UART1		69
++#define CLK_UART2		70
++#define CLK_UART3		71
++#define CLK_UART4		72
++#define CLK_UART5		73
++
++#define CLK_SPI0		74
++#define CLK_SPI1		75
++#define CLK_SPI2		76
++#define CLK_SPI3		77
++
++#define CLK_I2C0		78
++#define CLK_I2C1		79
++#define CLK_I2C2		80
++#define CLK_I2C3		81
++#define CLK_I2C4		82
++#define CLK_I2C5		83
++
++#define CLK_USB_480		84
++#define CLK_USB_12		85
++#define CLK_USB_PHY		86
++
++#define CLK_MMC0		87
++#define CLK_MMC0_SAMPLE		88
++#define CLK_MMC0_DET		89
++#define CLK_MMC0_BUS		90
++
++#define CLK_MMC1		91
++#define CLK_MMC1_SAMPLE		92
++#define CLK_MMC1_DET		93
++#define CLK_MMC1_BUS		94
++
++#define CLK_MMC2		95
++#define CLK_MMC2_SAMPLE		96
++#define CLK_MMC2_DET		97
++#define CLK_MMC2_BUS		98
++
++#define CLK_GMAC		99
++#define CLK_GMAC_TX		100
++#define CLK_GMAC_PTP		101
++
++#define CLK_HDMI		102
++#define CLK_HDMI_DDC		103
++
++#define CLK_DE			104
++#define CLK_DE_DIV		105
++
++#define CLK_GPU			106
++#define CLK_GPU_DIV		107
++
++#define CLK_THS			108
++#define CLK_GPADC		109
++#define CLK_LRADC		110
++#define CLK_CEC			111
++#define CLK_PWM			112
++
++#define CLK_DAUDIO		113
++#define CLK_OWA			114
++#define CLK_DMIC		115
++#define CLK_AUDIOC		116
++
++/* Vendor alias */
 +#define CLK_AUDIO		CLK_PLL_AUDIO0_4X
++
++#define CLK_SPINLOCK		117
++#define CLK_DRC			118
++#define CLK_MSGBOX		119
++#define CLK_ROM			120
++
++#define CLK_USB_REF		121
++#define CLK_USB_SUSPEND		122
++
++/* /2 clocks */
++#define CLK_CPU_AXI		123
++#define CLK_CCI			124
++#define CLK_DSP			125
++
++/* PLL DDR1 (second DDR PLL) */
++#define CLK_PLL_DDR1		126
++
++/* PCIe clocks */
++#define CLK_PCIE0_AUX		127
++#define CLK_PCIE0_AXI_SLV	128
 +
 +/* Resets (active-low, bit positions in reset register) */
 +#define RST_BUS_UART0		0
@@ -12288,16 +12335,19 @@ index 000000000..a455afa01
 +#define RST_BUS_UART3		3
 +#define RST_BUS_UART4		4
 +#define RST_BUS_UART5		5
++
 +#define RST_BUS_SPI0		6
 +#define RST_BUS_SPI1		7
 +#define RST_BUS_SPI2		8
 +#define RST_BUS_SPI3		9
++
 +#define RST_BUS_I2C0		10
 +#define RST_BUS_I2C1		11
 +#define RST_BUS_I2C2		12
 +#define RST_BUS_I2C3		13
 +#define RST_BUS_I2C4		14
 +#define RST_BUS_I2C5		15
++
 +#define RST_BUS_USB		16
 +#define RST_BUS_GMAC		17
 +#define RST_BUS_MMC0		18
@@ -12305,21 +12355,159 @@ index 000000000..a455afa01
 +#define RST_BUS_MMC2		20
 +#define RST_BUS_CE		21
 +#define RST_BUS_DMA		22
-+#define RST_BUS_THERMAL		23
-+#define RST_BUS_HDMI		24
-+#define RST_BUS_DE		25
-+#define RST_BUS_GPU		26
++#define RST_BUS_HDMI		23
++#define RST_BUS_DE		24
++#define RST_BUS_GPU		25
++#define RST_BUS_THS		26
 +#define RST_BUS_DAUDIO		27
 +#define RST_BUS_OWA		28
 +#define RST_BUS_DMIC		29
 +#define RST_BUS_AUDIOC		30
-+#define RST_BUS_THS		31
-+#define RST_BUS_GPADC		32
-+#define RST_BUS_LRADC		33
-+#define RST_BUS_PWM		34
-+#define RST_BUS_SPINLOCK	35
-+#define RST_BUS_DRC		36
-+#define RST_BUS_MSGBOX		37
++#define RST_BUS_SPINLOCK	31
++#define RST_BUS_DRC		32
++#define RST_BUS_MSGBOX		33
++#define RST_BUS_GPADC		34
++#define RST_BUS_LRADC		35
++#define RST_BUS_PWM		36
++
++/* PCIe reset */
++#define RST_BUS_PCIE0		37
++
++/*
++ * Vendor-name aliases (DTSI uses these names, which map to the
++ * canonical indices above).
++ */
++
++/* TWI / I2C aliases */
++#define CLK_BUS_TWI0		CLK_BUS_I2C0
++#define CLK_BUS_TWI1		CLK_BUS_I2C1
++#define CLK_BUS_TWI2		CLK_BUS_I2C2
++#define CLK_BUS_TWI3		CLK_BUS_I2C3
++#define CLK_BUS_TWI4		CLK_BUS_I2C4
++#define CLK_BUS_TWI5		CLK_BUS_I2C5
++
++/* SMHC / MMC aliases */
++#define CLK_SMHC0		CLK_MMC0
++#define CLK_SMHC1		CLK_MMC1
++#define CLK_SMHC2		CLK_MMC2
++
++#define CLK_BUS_SMHC0		CLK_BUS_MMC0
++#define CLK_BUS_SMHC1		CLK_BUS_MMC1
++#define CLK_BUS_SMHC2		CLK_BUS_MMC2
++
++#define RST_BUS_SMHC0		RST_BUS_MMC0
++#define RST_BUS_SMHC1		RST_BUS_MMC1
++#define RST_BUS_SMHC2		RST_BUS_MMC2
++
++/* TWI / I2C reset aliases */
++#define RST_BUS_TWI0		RST_BUS_I2C0
++#define RST_BUS_TWI1		RST_BUS_I2C1
++#define RST_BUS_TWI2		RST_BUS_I2C2
++#define RST_BUS_TWI3		RST_BUS_I2C3
++#define RST_BUS_TWI4		RST_BUS_I2C4
++#define RST_BUS_TWI5		RST_BUS_I2C5
++
++/* MSGBOX aliases */
++#define CLK_MSGBOX0		CLK_MSGBOX
++#define RST_BUS_MSGBOX0		RST_BUS_MSGBOX
++
++/* PLL VE alias */
++#define CLK_PLL_VE0		CLK_PLL_VE
++
++/* GMAC aliases */
++#define CLK_GMAC0		CLK_GMAC
++#define RST_BUS_GMAC0		RST_BUS_GMAC
++
++/* GPADC aliases */
++#define CLK_GPADC0		CLK_GPADC
++#define RST_BUS_GPADC0		RST_BUS_GPADC
++
++/* PWM aliases */
++#define CLK_PWM0		CLK_PWM
++#define RST_BUS_PWM0		RST_BUS_PWM
++
++/* VE / NPU bus clock placeholders */
++#define CLK_BUS_VE_DEC		CLK_BUS_DMA
++#define CLK_BUS_VE_ENC		CLK_BUS_DMA
++#define CLK_BUS_NPU		CLK_BUS_DMA
++
++/* Timer / LEDC / TWI7-9 bus clocks */
++#define CLK_BUS_TIMER		129
++#define CLK_TIMER0		130
++#define CLK_TIMER1		131
++#define CLK_BUS_LEDC		132
++#define CLK_LEDC			133
++#define CLK_BUS_TWI7		134
++#define CLK_BUS_TWI8		135
++#define CLK_BUS_TWI9		136
++
++/* USB clocks */
++#define CLK_USB0			137
++#define CLK_USB0_DEVICE		138
++#define CLK_USB0_EHCI		139
++#define CLK_USB0_OHCI		140
++#define CLK_USB1			141
++#define CLK_USB1_EHCI		142
++#define CLK_USB1_OHCI		143
++#define CLK_USB2			144
++#define CLK_USB2_MF		145
++
++/* DMA / MBUS / CE clocks */
++#define CLK_DMA			146
++#define CLK_MBUS_DMA		147
++#define CLK_MBUS_CE		148
++#define CLK_CE			149
++
++/* VE (video engine) clocks */
++#define CLK_PLL_VE1		150
++#define CLK_VE_AHB_GATE		151
++#define CLK_VE_DEC			152
++#define CLK_VE_DEC_MBUS		153
++#define CLK_DEC_MBUS_GATE		154
++#define CLK_VE_ENC_AHB_GATE	155
++#define CLK_VE_ENC0		156
++#define CLK_MBUS_VE_GATE		157
++#define CLK_MBUS_VE		158
++
++/* NPU clocks */
++#define CLK_NPU			159
++#define CLK_PLL_NPU		160
++
++/* PERI0 derived clocks */
++#define CLK_PLL_PERI0_800M	161
++#define CLK_PLL_PERI0_600M	162
++#define CLK_PLL_PERI0_300M	163
++#define CLK_PLL_PERI0_200M	164
++#define CLK_PLL_PERI0_400M	CLK_PLL_PERIPH0_4X
++
++/* GMAC derived clocks */
++#define CLK_GMAC0_MBUS		165
++#define CLK_GMAC0_PHY		166
++
++/* GPADC derived clock */
++#define CLK_GPADC0_24M		167
++
++/* UART6 */
++#define CLK_UART6			168
++
++/* New reset indices */
++#define RST_BUS_TWI7		55
++#define RST_BUS_TWI8		56
++#define RST_BUS_TWI9		57
++#define RST_USB0			58
++#define RST_USB0_EHCI		59
++#define RST_USB0_OHCI		60
++#define RST_USB1			61
++#define RST_USB1_EHCI		62
++#define RST_USB1_OHCI		63
++#define RST_USB2			64
++#define RST_BUS_GMAC0_AXI	65
++#define RST_BUS_TIMER0		66
++#define RST_BUS_LEDC		67
++#define RST_BUS_NPU		68
++#define RST_BUS_VE_DEC		69
++#define RST_BUS_VE_ENC0		70
++#define RST_BUS_UART6		71
 +
 +#endif /* _DT_BINDINGS_CLK_SUN60I_A733_CCU_H_ */
 diff --git a/include/dt-bindings/clock/sun60i-a733-r-ccu.h b/include/dt-bindings/clock/sun60i-a733-r-ccu.h
@@ -12327,7 +12515,7 @@ new file mode 100644
 index 000000000..431623835
 --- /dev/null
 +++ b/include/dt-bindings/clock/sun60i-a733-r-ccu.h
-@@ -0,0 +1,56 @@
+@@ -0,0 +1,80 @@
 +/* SPDX-License-Identifier: GPL-2.0-only */
 +/*
 + * Copyright (C) 2024 The Linux Foundation. All rights reserved.
@@ -12340,53 +12528,102 @@ index 000000000..431623835
 +
 +/* R-CCU / PRCM clock IDs (logical; used in DTS and driver) */
 +
-+#define R_CLK_OSC32K	
-+#define R_CLK_IOSC	
-+#define R_CLK_PLL_AUDIO0
++#define R_CLK_OSC32K		0
++#define R_CLK_IOSC		1
++#define R_CLK_PLL_AUDIO0	2
 +
 +/* RTC domain */
-+#define R_CLK_RTC_32K	
-+#define R_CLK_RTC_1K	
-+#define R_CLK_CEC_32K	
++#define R_CLK_RTC_32K		3
++#define R_CLK_RTC_1K		4
++#define R_CLK_CEC_32K		5
 +
 +/* Reset- / low-power-domain bus clocks */
-+#define R_CLK_R_PIO	
-+#define R_CLK_R_APB1	
++#define R_CLK_R_PIO		6
++#define R_CLK_R_APB1		7
 +
 +/* Peripheral clocks in the R domain */
-+#define R_CLK_R_UART	
-+#define R_CLK_R_I2C	
-+#define R_CLK_R_PWM	
-+#define R_CLK_R_SPINLOCK
-+#define R_CLK_R_THERMAL	
-+#define R_CLK_R_SID	
-+#define R_CLK_R_CPUCFG	
++#define R_CLK_R_UART		8
++#define R_CLK_R_I2C		9
++#define R_CLK_R_PWM		10
++#define R_CLK_R_SPINLOCK	11
++#define R_CLK_R_THERMAL		12
++#define R_CLK_R_SID		13
++#define R_CLK_R_CPUCFG		14
 +
 +/* Module clocks inside R domain */
-+#define R_CLK_R_UART_CK	
-+#define R_CLK_R_I2C_CK	
-+#define R_CLK_THERMAL_SENSOR
-+#define R_CLK_R_SID_CK	
++#define R_CLK_R_UART_CK		15
++#define R_CLK_R_I2C_CK		16
++#define R_CLK_THERMAL_SENSOR	17
++#define R_CLK_R_SID_CK		18
 +
 +/* Fixed dividers */
-+#define R_CLK_R_AHB	
-+#define R_CLK_R_APB1_DIV
++#define R_CLK_R_AHB		19
++#define R_CLK_R_APB1_DIV	20
++
++/* R-PPU clocks */
++#define R_CLK_R_PPU		21
 +
 +/* R-CCU resets */
-+#define R_RST_RTC	
-+#define R_RST_R_PIO	
-+#define R_RST_R_UART	
-+#define R_RST_R_I2C	
-+#define R_RST_R_PWM	
-+#define R_RST_R_SPINLOCK
-+#define R_RST_R_THERMAL	
-+#define R_RST_R_SID	
-+#define R_RST_R_CPUCFG	
++#define R_RST_RTC		0
++#define R_RST_R_PIO		1
++#define R_RST_R_UART		2
++#define R_RST_R_I2C		3
++#define R_RST_R_PWM		4
++#define R_RST_R_SPINLOCK	5
++#define R_RST_R_THERMAL		6
++#define R_RST_R_SID		7
++#define R_RST_R_CPUCFG		8
++
++/* R-PPU resets */
++#define R_RST_R_PPU0		9
++#define R_RST_R_PPU1		10
++
++/*
++ * Vendor-name aliases (DTSI uses these names, which map to the
++ * canonical indices above).
++ */
++#define CLK_R_AHB		R_CLK_R_AHB
++#define CLK_R_APB0		R_CLK_R_APB1
++#define CLK_R_TWI0		R_CLK_R_I2C
++#define RST_BUS_R_TWI0		R_RST_R_I2C
++#define RST_BUS_RTC		R_RST_RTC
++#define CLK_R_PPU		R_CLK_R_PPU
++#define RST_BUS_R_PPU0		R_RST_R_PPU0
++#define RST_BUS_R_PPU1		R_RST_R_PPU1
++
++/* New clock defines */
++#define CLK_RTC_1K		22
++#define CLK_RTC_SPI		23
 +
 +#endif /* _DT_BINDINGS_CLK_SUN60I_A733_R_CCU_H_ */
+diff --git a/include/dt-bindings/thermal/sun60i-a733-thermal.h b/include/dt-bindings/thermal/sun60i-a733-thermal.h
+new file mode 100644
+--- /dev/null
++++ b/include/dt-bindings/thermal/sun60i-a733-thermal.h
+@@ -0,0 +1,21 @@
++/* SPDX-License-Identifier: (GPL-2.0-or-later OR MIT) */
++/*
++ * Device Tree binding constants for Allwinner A733 thermal sensor
++ */
++
++#ifndef _DT_BINDINGS_THERMAL_SUN60I_A733_H
++#define _DT_BINDINGS_THERMAL_SUN60I_A733_H
++
++#define SUN60I_THERMAL_ACTIVE_LOW	0
++#define SUN60I_THERMAL_ACTIVE_HIGH	1
++
++#define SUN60I_THERMAL_TRIP_PASSIVE	0
++#define SUN60I_THERMAL_TRIP_ACTIVE	1
++#define SUN60I_THERMAL_TRIP_HOT	2
++#define SUN60I_THERMAL_TRIP_CRITICAL	3
++
++#ifndef THERMAL_NO_LIMIT
++#define THERMAL_NO_LIMIT		(~0)
++#endif
++
++#endif /* _DT_BINDINGS_THERMAL_SUN60I_A733_H */
 diff --git a/include/dt-bindings/gpio/sun60i-a733-gpio.h b/include/dt-bindings/gpio/sun60i-a733-gpio.h
 new file mode 100644
-index 000000000..f1449a18b
 --- /dev/null
 +++ b/include/dt-bindings/gpio/sun60i-a733-gpio.h
 @@ -0,0 +1,25 @@
@@ -12415,29 +12652,6 @@ index 000000000..f1449a18b
 +#define GPIO_BANK(letter, offset)	(GPIO_BANK_ ## letter + (offset))
 +
 +#endif /* _DT_BINDINGS_GPIO_SUN60I_A733_H */
-diff --git a/include/dt-bindings/thermal/sun60i-a733-thermal.h b/include/dt-bindings/thermal/sun60i-a733-thermal.h
-new file mode 100644
-index 000000000..8c9d10f53
---- /dev/null
-+++ b/include/dt-bindings/thermal/sun60i-a733-thermal.h
-@@ -0,0 +1,17 @@
-+/* SPDX-License-Identifier: (GPL-2.0-or-later OR MIT) */
-+/*
-+ * Device Tree binding constants for Allwinner A733 thermal sensor
-+ */
-+
-+#ifndef _DT_BINDINGS_THERMAL_SUN60I_A733_H
-+#define _DT_BINDINGS_THERMAL_SUN60I_A733_H
-+
-+#define SUN60I_THERMAL_ACTIVE_LOW	0
-+#define SUN60I_THERMAL_ACTIVE_HIGH	1
-+
-+#define SUN60I_THERMAL_TRIP_PASSIVE	0
-+#define SUN60I_THERMAL_TRIP_ACTIVE	1
-+#define SUN60I_THERMAL_TRIP_HOT	2
-+#define SUN60I_THERMAL_TRIP_CRITICAL	3
-+
-+#endif /* _DT_BINDINGS_THERMAL_SUN60I_A733_H */
 diff --git a/sound/soc/sunxi/Kconfig b/sound/soc/sunxi/Kconfig
 index 205f422d9..9aa62da24 100644
 --- a/sound/soc/sunxi/Kconfig
@@ -12684,3 +12898,907 @@ index 000000000..aecdd4858
 +MODULE_LICENSE("GPL v2");
 +MODULE_AUTHOR("Allwinner Technology Co., Ltd.");
 +MODULE_DESCRIPTION("Allwinner A733 Audio Machine driver");
+diff --git a/drivers/power/supply/Kconfig b/drivers/power/supply/Kconfig
+--- a/drivers/power/supply/Kconfig
++++ b/drivers/power/supply/Kconfig
+@@ -405,6 +405,19 @@ config BATTERY_AXP20X
+ 	  This driver can also be built as a module. If so, the module will be
+ 	  called axp20x_battery.
+ 
++config POWER_SUPPLY_AXP8191
++	tristate "X-Powers AXP8191 power supply driver"
++	depends on MFD_AXP8191
++	help
++	  Say Y here to enable support for X-Powers AXP8191 PMIC power supply
++	  features: VBUS/AC adapter detection, battery voltage/current/health
++	  monitoring, and temperature reporting.
++
++	  This driver registers two power supplies: axp8191-usb (VBUS) and
++	  axp8191-ac (AC adapter), plus axp8191-battery for battery status.
++
++	  This driver can also be built as a module.
++
+ config AXP20X_POWER
+ 	tristate "AXP20x power supply driver"
+ 	depends on MFD_AXP20X
+diff --git a/drivers/power/supply/Makefile b/drivers/power/supply/Makefile
+--- a/drivers/power/supply/Makefile
++++ b/drivers/power/supply/Makefile
+@@ -28,6 +28,7 @@ obj-$(CONFIG_CHARGER_AXP20X)	+= axp20x_ac_power.o
+ obj-$(CONFIG_BATTERY_CPCAP)	+= cpcap-battery.o
+ obj-$(CONFIG_BATTERY_CW2015)	+= cw2015_battery.o
+ obj-$(CONFIG_BATTERY_DS2760)	+= ds2760_battery.o
++obj-$(CONFIG_POWER_SUPPLY_AXP8191)	+= axp8191-power-supply.o axp8191-battery.o axp8191-onkey.o
+ obj-$(CONFIG_BATTERY_DS2780)	+= ds2780_battery.o
+ obj-$(CONFIG_BATTERY_DS2781)	+= ds2781_battery.o
+ obj-$(CONFIG_BATTERY_DS2782)	+= ds2782_battery.o
+diff --git a/drivers/power/supply/axp8191-power-supply.c b/drivers/power/supply/axp8191-power-supply.c
+new file mode 100644
+index 000000000..000000001
+--- /dev/null
++++ b/drivers/power/supply/axp8191-power-supply.c
+@@ -0,0 +1,275 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * AXP8191 Power Supply driver
++ *
++ * Reports VBUS/AC adapter online status, voltage, and current.
++ * The AXP8191 has ADC channels for VBUS voltage/current monitoring
++ * and status registers for power source detection.
++ *
++ * Supports charger_mode=kernel parameter:
++ *   powerbank - limit input current to 500mA (safe for USB power banks)
++ *   fast      - allow up to 1500mA input current (wall adapter)
++ *   (empty)  - default 1000mA
++ */
++
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_device.h>
++#include <linux/platform_device.h>
++#include <linux/regmap.h>
++#include <linux/power_supply.h>
++#include <linux/delay.h>
++#include <linux/moduleparam.h>
++
++/* Register definitions (from MFD) */
++#define AXP8191_POWER_STATUS	0x02
++#define AXP8191_VBUS_STATUS	0x03
++#define AXP8191_CHARGER_CTRL1	0x40
++#define AXP8191_ADC_EN1		0x50
++#define AXP8191_VBUS_VOLT_H	0x56
++#define AXP8191_VBUS_VOLT_L	0x57
++#define AXP8191_VBUS_CUR_H	0x58
++#define AXP8191_VBUS_CUR_L	0x59
++#define AXP8191_ADC_SPEED	0x53
++
++/* ADC enable bits */
++#define AXP8191_ADC_EN_VBUS_VOLT	BIT(7)
++#define AXP8191_ADC_EN_VBUS_CUR		BIT(6)
++
++/* POWER_STATUS bits */
++#define AXP8191_PS_VBUS_PRESENT		BIT(7)
++#define AXP8191_PS_ACIN_PRESENT		BIT(6)
++
++/* Charger CTRL1 bits */
++#define AXP8191_CC1_CHARGE_ENABLE	BIT(7)
++#define AXP8191_CC1_IINLIM_MASK	GENMASK(6, 4)
++#define AXP8191_CC1_IINLIM_100MA	0
++#define AXP8191_CC1_IINLIM_500MA	BIT(4)
++#define AXP8191_CC1_IINLIM_1000MA	BIT(5)
++#define AXP8191_CC1_IINLIM_1500MA	(BIT(5) | BIT(4))
++
++static char *charger_mode;
++module_param(charger_mode, charp, 0444);
++MODULE_PARM_DESC(charger_mode, "Charger mode: powerbank (500mA), fast (1500mA)");
++
++struct axp8191_psy {
++	struct device *dev;
++	struct regmap *regmap;
++	struct power_supply *ac;
++	struct power_supply *usb;
++};
++
++static int axp8191_psy_get_vbus_voltage(struct axp8191_psy *psy)
++{
++	unsigned int h, l;
++	int ret;
++
++	ret = regmap_read(psy->regmap, AXP8191_VBUS_VOLT_H, &h);
++	if (ret)
++		return ret;
++
++	ret = regmap_read(psy->regmap, AXP8191_VBUS_VOLT_L, &l);
++	if (ret)
++		return ret;
++
++	/* 13-bit value, 1.7mV per step */
++	return ((h & 0x1f) << 8 | l) * 1700;
++}
++
++static int axp8191_psy_get_vbus_current(struct axp8191_psy *psy)
++{
++	unsigned int h, l;
++	int ret;
++
++	ret = regmap_read(psy->regmap, AXP8191_VBUS_CUR_H, &h);
++	if (ret)
++		return ret;
++
++	ret = regmap_read(psy->regmap, AXP8191_VBUS_CUR_L, &l);
++	if (ret)
++		return ret;
++
++	/* 13-bit value, 0.375mA per step */
++	return ((h & 0x1f) << 8 | l) * 375;
++}
++
++static int axp8191_psy_is_online(struct axp8191_psy *psy)
++{
++	unsigned int val;
++	int ret;
++
++	ret = regmap_read(psy->regmap, AXP8191_POWER_STATUS, &val);
++	if (ret)
++		return 0;
++
++	return !!(val & AXP8191_PS_VBUS_PRESENT);
++}
++
++static enum power_supply_property axp8191_usb_props[] = {
++	POWER_SUPPLY_PROP_ONLINE,
++	POWER_SUPPLY_PROP_VOLTAGE_NOW,
++	POWER_SUPPLY_PROP_CURRENT_NOW,
++	POWER_SUPPLY_PROP_VOLTAGE_MIN_DESIGN,
++};
++
++static int axp8191_usb_get_property(struct power_supply *psy,
++				    enum power_supply_property psp,
++				    union power_supply_propval *val)
++{
++	struct axp8191_psy *psy_data = power_supply_get_drvdata(psy);
++
++	switch (psp) {
++	case POWER_SUPPLY_PROP_ONLINE:
++		val->intval = axp8191_psy_is_online(psy_data);
++		return 0;
++	case POWER_SUPPLY_PROP_VOLTAGE_NOW:
++		val->intval = axp8191_psy_get_vbus_voltage(psy_data);
++		return 0;
++	case POWER_SUPPLY_PROP_CURRENT_NOW:
++		val->intval = axp8191_psy_get_vbus_current(psy_data);
++		return 0;
++	case POWER_SUPPLY_PROP_VOLTAGE_MIN_DESIGN:
++		val->intval = 4200000; /* USB standard */
++		return 0;
++	default:
++		return -EINVAL;
++	}
++}
++
++static enum power_supply_property axp8191_ac_props[] = {
++	POWER_SUPPLY_PROP_ONLINE,
++	POWER_SUPPLY_PROP_VOLTAGE_NOW,
++	POWER_SUPPLY_PROP_CURRENT_NOW,
++};
++
++static int axp8191_ac_get_property(struct power_supply *psy,
++				   enum power_supply_property psp,
++				   union power_supply_propval *val)
++{
++	struct axp8191_psy *psy_data = power_supply_get_drvdata(psy);
++	unsigned int reg;
++	int ret;
++
++	switch (psp) {
++	case POWER_SUPPLY_PROP_ONLINE:
++		ret = regmap_read(psy_data->regmap, AXP8191_POWER_STATUS, &reg);
++		if (ret)
++			return ret;
++		val->intval = !!(reg & AXP8191_PS_ACIN_PRESENT);
++		return 0;
++	case POWER_SUPPLY_PROP_VOLTAGE_NOW:
++		val->intval = axp8191_psy_get_vbus_voltage(psy_data);
++		return 0;
++	case POWER_SUPPLY_PROP_CURRENT_NOW:
++		val->intval = axp8191_psy_get_vbus_current(psy_data);
++		return 0;
++	default:
++		return -EINVAL;
++	}
++}
++
++static const struct power_supply_desc axp8191_usb_desc = {
++	.name = "axp8191-usb",
++	.type = POWER_SUPPLY_TYPE_USB,
++	.properties = axp8191_usb_props,
++	.num_properties = ARRAY_SIZE(axp8191_usb_props),
++	.get_property = axp8191_usb_get_property,
++};
++
++static const struct power_supply_desc axp8191_ac_desc = {
++	.name = "axp8191-ac",
++	.type = POWER_SUPPLY_TYPE_MAINS,
++	.properties = axp8191_ac_props,
++	.num_properties = ARRAY_SIZE(axp8191_ac_props),
++	.get_property = axp8191_ac_get_property,
++};
++
++static void axp8191_psy_set_charger_current(struct axp8191_psy *psy)
++{
++	u32 iinlim;
++
++	if (!charger_mode)
++		return;
++
++	if (strcmp(charger_mode, "powerbank") == 0) {
++		iinlim = AXP8191_CC1_IINLIM_500MA;
++		dev_info(psy->dev, "charger_mode=powerbank: limiting input to 500mA\n");
++	} else if (strcmp(charger_mode, "fast") == 0) {
++		iinlim = AXP8191_CC1_IINLIM_1500MA;
++		dev_info(psy->dev, "charger_mode=fast: allowing input up to 1500mA\n");
++	} else {
++		dev_warn(psy->dev, "unknown charger_mode='%s', using default\n",
++			 charger_mode);
++		return;
++	}
++
++	regmap_update_bits(psy->regmap, AXP8191_CHARGER_CTRL1,
++			   AXP8191_CC1_IINLIM_MASK, iinlim);
++}
++
++static int axp8191_power_supply_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct axp8191_psy *psy_data;
++	struct power_supply_config usb_cfg = {}, ac_cfg = {};
++
++	psy_data = devm_kzalloc(dev, sizeof(*psy_data), GFP_KERNEL);
++	if (!psy_data)
++		return -ENOMEM;
++
++	psy_data->dev = dev;
++	psy_data->regmap = dev_get_regmap(dev->parent, NULL);
++	if (!psy_data->regmap)
++		return -ENODEV;
++
++	platform_set_drvdata(pdev, psy_data);
++
++	/* Enable VBUS ADC channels */
++	regmap_update_bits(psy_data->regmap, AXP8191_ADC_EN1,
++			   AXP8191_ADC_EN_VBUS_VOLT | AXP8191_ADC_EN_VBUS_CUR,
++			   AXP8191_ADC_EN_VBUS_VOLT | AXP8191_ADC_EN_VBUS_CUR);
++
++	/* Apply charger mode from kernel command line */
++	axp8191_psy_set_charger_current(psy_data);
++
++	usb_cfg.drv_data = psy_data;
++	usb_cfg.fwnode = dev_fwnode(dev);
++
++	psy_data->usb = devm_power_supply_register(dev, &axp8191_usb_desc,
++						   &usb_cfg);
++	if (IS_ERR(psy_data->usb))
++		return dev_err_probe(dev, PTR_ERR(psy_data->usb),
++				     "Failed to register USB supply\n");
++
++	ac_cfg.drv_data = psy_data;
++	ac_cfg.fwnode = dev_fwnode(dev);
++
++	psy_data->ac = devm_power_supply_register(dev, &axp8191_ac_desc,
++						  &ac_cfg);
++	if (IS_ERR(psy_data->ac))
++		return dev_err_probe(dev, PTR_ERR(psy_data->ac),
++				     "Failed to register AC supply\n");
++
++	dev_dbg(dev, "AXP8191 power supply driver registered\n");
++	return 0;
++}
++
++static const struct of_device_id axp8191_power_supply_of_match[] = {
++	{ .compatible = "allwinner,axp8191-power-supply" },
++	{ /* sentinel */ }
++};
++MODULE_DEVICE_TABLE(of, axp8191_power_supply_of_match);
++
++static struct platform_driver axp8191_power_supply_driver = {
++	.driver = {
++		.name = "axp8191-power-supply",
++		.of_match_table = axp8191_power_supply_of_match,
++	},
++	.probe = axp8191_power_supply_probe,
++};
++module_platform_driver(axp8191_power_supply_driver);
++
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Allwinner");
++MODULE_DESCRIPTION("AXP8191 Power Supply driver");
++MODULE_PARM_DESC(charger_mode, "Charger mode: powerbank (500mA), fast (1500mA)");
+
+diff --git a/drivers/power/supply/axp8191-battery.c b/drivers/power/supply/axp8191-battery.c
+new file mode 100644
+index 000000000..000000001
+--- /dev/null
++++ b/drivers/power/supply/axp8191-battery.c
+@@ -0,0 +1,427 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * AXP8191 Battery driver
++ *
++ * Reports battery voltage, current, SOC, health, temperature, and
++ * charge status via the Linux power_supply framework.
++ *
++ * The AXP8191 has ADC channels for battery voltage/current and
++ * temperature monitoring, plus charger control/status registers.
++ */
++
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_device.h>
++#include <linux/platform_device.h>
++#include <linux/regmap.h>
++#include <linux/power_supply.h>
++#include <linux/delay.h>
++#include <linux/jiffies.h>
++
++/* Register definitions (from MFD) */
++#define AXP8191_CHARGER_CTRL1	0x40
++#define AXP8191_CHARGER_CTRL2	0x41
++#define AXP8191_CHARGER_CTRL3	0x42
++#define AXP8191_CHARGER_STATUS	0x43
++#define AXP8191_BATTERY_STATUS	0x44
++#define AXP8191_CHARGE_CTL	0x45
++#define AXP8191_ADC_EN1		0x50
++#define AXP8191_ADC_EN2		0x51
++#define AXP8191_ADC_EN3		0x52
++#define AXP8191_VBUS_VOLT_H	0x56
++#define AXP8191_VBUS_VOLT_L	0x57
++#define AXP8191_BATT_VOLT_H	0x5a
++#define AXP8191_BATT_VOLT_L	0x5b
++#define AXP8191_BATT_CUR_H	0x5c
++#define AXP8191_BATT_CUR_L	0x5d
++#define AXP8191_TEMP_H		0x62
++#define AXP8191_TEMP_L		0x63
++#define AXP8191_INT_ENABLE1	0x70
++#define AXP8191_INT_STATUS1	0x74
++
++/* ADC enable bits */
++#define AXP8191_ADC_EN_BATT_VOLT	BIT(7)
++#define AXP8191_ADC_EN_BATT_CUR		BIT(6)
++#define AXP8191_ADC_EN_TEMP		BIT(5)
++
++/* Charger status bits */
++#define AXP8191_CS_CHARGE_DONE		BIT(7)
++#define AXP8191_CS_CHARGING		BIT(6)
++#define AXP8191_CS_BATTERY_PRESENT	BIT(5)
++
++/* Battery status bits */
++#define AXP8191_BS_BATT_OV		BIT(7)
++#define AXP8191_BS_BATT_UN		BIT(6)
++
++/* Charger control bits */
++#define AXP8191_CC1_CHARGE_ENABLE	BIT(7)
++#define AXP8191_CC1_INPUT_CUR_MASK	GENMASK(6, 4)
++
++/* Interrupt bits */
++#define AXP8191_IRQ_VBUS_IN		BIT(2)
++#define AXP8191_IRQ_VBUS_OUT		BIT(3)
++#define AXP8191_IRQ_BATT_LOW		BIT(4)
++
++struct axp8191_bat {
++	struct device *dev;
++	struct regmap *regmap;
++	struct power_supply *bat;
++	struct delayed_work work;
++	unsigned int poll_interval;
++};
++
++static int axp8191_bat_get_vbat_voltage(struct axp8191_bat *bat)
++{
++	unsigned int h, l;
++	int ret;
++
++	ret = regmap_read(bat->regmap, AXP8191_BATT_VOLT_H, &h);
++	if (ret)
++		return ret;
++
++	ret = regmap_read(bat->regmap, AXP8191_BATT_VOLT_L, &l);
++	if (ret)
++		return ret;
++
++	/* 13-bit value, 1.1mV per step */
++	return ((h & 0x1f) << 8 | l) * 1100;
++}
++
++static int axp8191_bat_get_current(struct axp8191_bat *bat)
++{
++	unsigned int h, l;
++	int ret;
++
++	ret = regmap_read(bat->regmap, AXP8191_BATT_CUR_H, &h);
++	if (ret)
++		return ret;
++
++	ret = regmap_read(bat->regmap, AXP8191_BATT_CUR_L, &l);
++	if (ret)
++		return ret;
++
++	/* 13-bit signed value, 0.5mA per step */
++	int raw = (h & 0x1f) << 8 | l;
++
++	/* Sign extend from 13-bit */
++	if (raw & 0x1000)
++		raw -= 0x2000;
++
++	return raw * 500; /* microamps */
++}
++
++static int axp8191_bat_get_temp(struct axp8191_bat *bat)
++{
++	unsigned int h, l;
++	int raw, ret;
++
++	ret = regmap_read(bat->regmap, AXP8191_TEMP_H, &h);
++	if (ret)
++		return ret;
++
++	ret = regmap_read(bat->regmap, AXP8191_TEMP_L, &l);
++	if (ret)
++		return ret;
++
++	raw = ((h & 0x0f) << 8) | l;
++
++	/* Convert to 0.1°C: common X-Powers formula is raw * 0.1 - 273.15 */
++	return (raw - 264) * 10; /* Approximate: offset 264 = 0°C */
++}
++
++static int axp8191_bat_is_present(struct axp8191_bat *bat)
++{
++	unsigned int val;
++	int ret;
++
++	ret = regmap_read(bat->regmap, AXP8191_CHARGER_STATUS, &val);
++	if (ret)
++		return 1; /* Assume present if we can't read */
++
++	return !(val & AXP8191_CS_BATTERY_PRESENT) ? 0 : 1;
++}
++
++static int axp8191_bat_get_charge_status(struct axp8191_bat *bat)
++{
++	unsigned int val;
++	int ret;
++
++	ret = regmap_read(bat->regmap, AXP8191_CHARGER_STATUS, &val);
++	if (ret)
++		return POWER_SUPPLY_STATUS_DISCHARGING;
++
++	if (val & AXP8191_CS_CHARGE_DONE)
++		return POWER_SUPPLY_STATUS_FULL;
++	if (val & AXP8191_CS_CHARGING)
++		return POWER_SUPPLY_STATUS_CHARGING;
++
++	return POWER_SUPPLY_STATUS_DISCHARGING;
++}
++
++/*
++ * Simple SOC estimation from voltage using a 2-point linear approximation
++ * for a single-cell Li-ion battery (3.0V empty, 4.2V full).
++ * For production use, this should be replaced with a proper fuel gauge
++ * algorithm or the AXP515's SOC voltage curve from the DTS.
++ */
++static int axp8191_bat_get_soc(struct axp8191_bat *bat, int vbat_uv)
++{
++	int soc;
++
++	/* Clamp to Li-ion voltage range */
++	if (vbat_uv < 3000000)
++		return 0;
++	if (vbat_uv >= 4200000)
++		return 100;
++
++	/* Linear interpolation: 3.0V = 0%, 4.2V = 100% */
++	soc = (vbat_uv - 3000000) * 100 / (4200000 - 3000000);
++
++	/* Clamp */
++	if (soc < 0)
++		soc = 0;
++	if (soc > 100)
++		soc = 100;
++
++	return soc;
++}
++
++static int axp8191_bat_get_capacity_level(struct axp8191_bat *bat, int soc)
++{
++	if (soc <= 5)
++		return POWER_SUPPLY_CAPACITY_LEVEL_CRITICAL;
++	if (soc <= 15)
++		return POWER_SUPPLY_CAPACITY_LEVEL_LOW;
++	if (soc >= 95)
++		return POWER_SUPPLY_CAPACITY_LEVEL_FULL;
++	return POWER_SUPPLY_CAPACITY_LEVEL_NORMAL;
++}
++
++static int axp8191_bat_get_health(struct axp8191_bat *bat)
++{
++	int temp = axp8191_bat_get_temp(bat);
++
++	/* Temperature in 0.1°C */
++	if (temp > 600)  /* > 60°C */
++		return POWER_SUPPLY_HEALTH_OVERHEAT;
++	if (temp < 0)   /* < 0°C */
++		return POWER_SUPPLY_HEALTH_COLD;
++	if (temp > 450) /* > 45°C */
++		return POWER_SUPPLY_HEALTH_WARM;
++
++	return POWER_SUPPLY_HEALTH_GOOD;
++}
++
++enum bat_properties {
++	PROP_STATUS,
++	PROP_PRESENT,
++	PROP_VOLTAGE_NOW,
++	PROP_CURRENT_NOW,
++	PROP_CAPACITY,
++	PROP_CAPACITY_LEVEL,
++	PROP_TEMP,
++	PROP_TECHNOLOGY,
++	PROP_HEALTH,
++	PROP_CHARGE_CONTROL_LIMIT,
++	PROP_CHARGE_CONTROL_LIMIT_MAX,
++};
++
++static enum power_supply_property axp8191_bat_props[] = {
++	[PROP_STATUS] = POWER_SUPPLY_PROP_STATUS,
++	[PROP_PRESENT] = POWER_SUPPLY_PROP_PRESENT,
++	[PROP_VOLTAGE_NOW] = POWER_SUPPLY_PROP_VOLTAGE_NOW,
++	[PROP_CURRENT_NOW] = POWER_SUPPLY_PROP_CURRENT_NOW,
++	[PROP_CAPACITY] = POWER_SUPPLY_PROP_CAPACITY,
++	[PROP_CAPACITY_LEVEL] = POWER_SUPPLY_PROP_CAPACITY_LEVEL,
++	[PROP_TEMP] = POWER_SUPPLY_PROP_TEMP,
++	[PROP_TECHNOLOGY] = POWER_SUPPLY_PROP_TECHNOLOGY,
++	[PROP_HEALTH] = POWER_SUPPLY_PROP_HEALTH,
++	[PROP_CHARGE_CONTROL_LIMIT] = POWER_SUPPLY_PROP_CHARGE_CONTROL_LIMIT,
++	[PROP_CHARGE_CONTROL_LIMIT_MAX] = POWER_SUPPLY_PROP_CHARGE_CONTROL_LIMIT_MAX,
++};
++
++static int axp8191_bat_get_property(struct power_supply *psy,
++				    enum power_supply_property psp,
++				    union power_supply_propval *val)
++{
++	struct axp8191_bat *bat = power_supply_get_drvdata(psy);
++	int vbat, ret;
++
++	switch (psp) {
++	case POWER_SUPPLY_PROP_STATUS:
++		val->intval = axp8191_bat_get_charge_status(bat);
++		return 0;
++
++	case POWER_SUPPLY_PROP_PRESENT:
++		val->intval = axp8191_bat_is_present(bat);
++		return 0;
++
++	case POWER_SUPPLY_PROP_VOLTAGE_NOW:
++		val->intval = axp8191_bat_get_vbat_voltage(bat);
++		return 0;
++
++	case POWER_SUPPLY_PROP_CURRENT_NOW:
++		val->intval = axp8191_bat_get_current(bat);
++		return 0;
++
++	case POWER_SUPPLY_PROP_CAPACITY:
++		vbat = axp8191_bat_get_vbat_voltage(bat);
++		val->intval = axp8191_bat_get_soc(bat, vbat);
++		return 0;
++
++	case POWER_SUPPLY_PROP_CAPACITY_LEVEL:
++		vbat = axp8191_bat_get_vbat_voltage(bat);
++		val->intval = axp8191_bat_get_capacity_level(
++			bat, axp8191_bat_get_soc(bat, vbat));
++		return 0;
++
++	case POWER_SUPPLY_PROP_TEMP:
++		val->intval = axp8191_bat_get_temp(bat);
++		return 0;
++
++	case POWER_SUPPLY_PROP_TECHNOLOGY:
++		val->intval = POWER_SUPPLY_TECHNOLOGY_LIION;
++		return 0;
++
++	case POWER_SUPPLY_PROP_HEALTH:
++		val->intval = axp8191_bat_get_health(bat);
++		return 0;
++
++	case POWER_SUPPLY_PROP_CHARGE_CONTROL_LIMIT:
++		/* Read charger enable status */
++		ret = regmap_read(bat->regmap, AXP8191_CHARGER_CTRL1, &val->intval);
++		if (ret)
++			return ret;
++		val->intval = !!(val->intval & AXP8191_CC1_CHARGE_ENABLE);
++		return 0;
++
++	case POWER_SUPPLY_PROP_CHARGE_CONTROL_LIMIT_MAX:
++		val->intval = 1; /* 0=disable, 1=enable */
++		return 0;
++
++	default:
++		return -EINVAL;
++	}
++}
++
++static int axp8191_bat_set_property(struct power_supply *psy,
++				    enum power_supply_property psp,
++				    const union power_supply_propval *val)
++{
++	struct axp8191_bat *bat = power_supply_get_drvdata(psy);
++
++	switch (psp) {
++	case POWER_SUPPLY_PROP_CHARGE_CONTROL_LIMIT:
++		regmap_update_bits(bat->regmap, AXP8191_CHARGER_CTRL1,
++				   AXP8191_CC1_CHARGE_ENABLE,
++				   val->intval ? AXP8191_CC1_CHARGE_ENABLE : 0);
++		return 0;
++	default:
++		return -EINVAL;
++	}
++}
++
++static int axp8191_bat_property_is_writeable(struct power_supply *psy,
++					     enum power_supply_property psp)
++{
++	switch (psp) {
++	case POWER_SUPPLY_PROP_CHARGE_CONTROL_LIMIT:
++		return 1;
++	default:
++		return 0;
++	}
++}
++
++static void axp8191_bat_work_func(struct work_struct *work)
++{
++	struct axp8191_bat *bat = container_of(work, struct axp8191_bat,
++					      work.work);
++
++	power_supply_changed(bat->bat);
++
++	schedule_delayed_work(&bat->bat->work,
++			      msecs_to_jiffies(bat->poll_interval));
++}
++
++static const struct power_supply_desc axp8191_bat_desc = {
++	.name = "axp8191-battery",
++	.type = POWER_SUPPLY_TYPE_BATTERY,
++	.properties = axp8191_bat_props,
++	.num_properties = ARRAY_SIZE(axp8191_bat_props),
++	.get_property = axp8191_bat_get_property,
++	.set_property = axp8191_bat_set_property,
++	.property_is_writeable = axp8191_bat_property_is_writeable,
++	.no_thermal = true,
++};
++
++static int axp8191_battery_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct axp8191_bat *bat;
++	struct power_supply_config psy_cfg = {};
++	unsigned int val;
++
++	bat = devm_kzalloc(dev, sizeof(*bat), GFP_KERNEL);
++	if (!bat)
++		return -ENOMEM;
++
++	bat->dev = dev;
++	bat->regmap = dev_get_regmap(dev->parent, NULL);
++	if (!bat->regmap)
++		return -ENODEV;
++
++	bat->poll_interval = 30000; /* 30 seconds */
++
++	platform_set_drvdata(pdev, bat);
++
++	/* Enable battery voltage, current, and temperature ADC channels */
++	regmap_update_bits(bat->regmap, AXP8191_ADC_EN2,
++			   AXP8191_ADC_EN_BATT_VOLT |
++			   AXP8191_ADC_EN_BATT_CUR |
++			   AXP8191_ADC_EN_TEMP,
++			   AXP8191_ADC_EN_BATT_VOLT |
++			   AXP8191_ADC_EN_BATT_CUR |
++			   AXP8191_ADC_EN_TEMP);
++
++	/* Read initial charger status */
++	regmap_read(bat->regmap, AXP8191_CHARGER_STATUS, &val);
++	dev_info(dev, "AXP8191 battery: charger_status=0x%02x\n", val);
++
++	/* Read chip version for debug */
++	regmap_read(bat->regmap, AXP8191_CHARGER_CTRL1, &val);
++	dev_dbg(dev, "AXP8191 battery: charger_ctrl1=0x%02x\n", val);
++
++	psy_cfg.drv_data = bat;
++	psy_cfg.fwnode = dev_fwnode(dev);
++
++	bat->bat = devm_power_supply_register(dev, &axp8191_bat_desc,
++					      &psy_cfg);
++	if (IS_ERR(bat->bat))
++		return dev_err_probe(dev, PTR_ERR(bat->bat),
++				     "Failed to register battery supply\n");
++
++	INIT_DELAYED_WORK(&bat->bat->work, axp8191_bat_work_func);
++
++	dev_dbg(dev, "AXP8191 battery driver registered (poll=%ums)\n",
++		bat->poll_interval);
++	return 0;
++}
++
++static const struct of_device_id axp8191_battery_of_match[] = {
++	{ .compatible = "allwinner,axp8191-battery" },
++	{ /* sentinel */ }
++};
++MODULE_DEVICE_TABLE(of, axp8191_battery_of_match);
++
++static struct platform_driver axp8191_battery_driver = {
++	.driver = {
++		.name = "axp8191-battery",
++		.of_match_table = axp8191_battery_of_match,
++	},
++	.probe = axp8191_battery_probe,
++};
++module_platform_driver(axp8191_battery_driver);
++
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Allwinner");
++MODULE_DESCRIPTION("AXP8191 Battery driver");
+diff --git a/drivers/power/supply/axp8191-onkey.c b/drivers/power/supply/axp8191-onkey.c
+new file mode 100644
+index 000000000..000000002
+--- /dev/null
++++ b/drivers/power/supply/axp8191-onkey.c
+@@ -0,0 +1,134 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * AXP8191 Onkey driver
++ *
++ * Handles power button events on AXP8191 PMIC:
++ *   - Short press: triggers KEY_POWER event (can be used for shutdown)
++ *   - Long press: triggers KEY_SUSPEND event (can be used for suspend)
++ */
++
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_device.h>
++#include <linux/platform_device.h>
++#include <linux/input.h>
++#include <linux/interrupt.h>
++#include <linux/regmap.h>
++#include <linux/delay.h>
++
++/* Register definitions */
++#define AXP8191_INT_ENABLE2	0x71
++#define AXP8191_INT_STATUS2	0x75
++
++/* Interrupt bits */
++#define AXP8191_IRQ_BTN_SHORT	BIT(0)
++#define AXP8191_IRQ_BTN_LONG	BIT(1)
++
++struct axp8191_onkey {
++	struct device *dev;
++	struct regmap *regmap;
++	struct input_dev *input;
++	int irq;
++};
++
++static irqreturn_t axp8191_onkey_irq(int irq, void *data)
++{
++	struct axp8191_onkey *onkey = data;
++	unsigned int val;
++	int ret;
++
++	ret = regmap_read(onkey->regmap, AXP8191_INT_STATUS2, &val);
++	if (ret)
++		return IRQ_NONE;
++
++	if (val & AXP8191_IRQ_BTN_SHORT) {
++		dev_dbg(onkey->dev, "Power button short press\n");
++		input_report_key(onkey->input, KEY_POWER, 1);
++		input_sync(onkey->input);
++		input_report_key(onkey->input, KEY_POWER, 0);
++		input_sync(onkey->input);
++		regmap_write(onkey->regmap, AXP8191_INT_STATUS2,
++			     AXP8191_IRQ_BTN_SHORT);
++	}
++
++	if (val & AXP8191_IRQ_BTN_LONG) {
++		dev_dbg(onkey->dev, "Power button long press\n");
++		input_report_key(onkey->input, KEY_SUSPEND, 1);
++		input_sync(onkey->input);
++		input_report_key(onkey->input, KEY_SUSPEND, 0);
++		input_sync(onkey->input);
++		regmap_write(onkey->regmap, AXP8191_INT_STATUS2,
++			     AXP8191_IRQ_BTN_LONG);
++	}
++
++	return IRQ_HANDLED;
++}
++
++static int axp8191_onkey_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct axp8191_onkey *onkey;
++	int ret;
++
++	onkey = devm_kzalloc(dev, sizeof(*onkey), GFP_KERNEL);
++	if (!onkey)
++		return -ENOMEM;
++
++	onkey->dev = dev;
++	onkey->regmap = dev_get_regmap(dev->parent, NULL);
++	if (!onkey->regmap)
++		return -ENODEV;
++
++	onkey->irq = platform_get_irq(pdev, 0);
++	if (onkey->irq < 0)
++		return dev_err_probe(dev, onkey->irq, "Failed to get IRQ\n");
++
++	/* Setup input device */
++	onkey->input = devm_input_allocate_device(dev);
++	if (!onkey->input)
++		return -ENOMEM;
++
++	onkey->input->name = "axp8191-onkey";
++	onkey->input->phys = "axp8191-onkey/input0";
++	onkey->input->id.bustype = BUS_I2C;
++	onkey->input->id.vendor = 0x0001;
++	onkey->input->id.product = 0x0001;
++
++	input_set_capability(onkey->input, EV_KEY, KEY_POWER);
++	input_set_capability(onkey->input, EV_KEY, KEY_SUSPEND);
++
++	ret = devm_request_threaded_irq(dev, onkey->irq, NULL,
++					axp8191_onkey_irq,
++					IRQF_TRIGGER_LOW | IRQF_ONESHOT,
++					"axp8191-onkey", onkey);
++	if (ret)
++		return dev_err_probe(dev, ret, "Failed to request IRQ\n");
++
++	ret = input_register_device(onkey->input);
++	if (ret)
++		return dev_err_probe(dev, ret, "Failed to register input\n");
++
++	platform_set_drvdata(pdev, onkey);
++
++	dev_dbg(dev, "AXP8191 onkey driver registered\n");
++	return 0;
++}
++
++static const struct of_device_id axp8191_onkey_of_match[] = {
++	{ .compatible = "allwinner,axp8191-onkey" },
++	{ /* sentinel */ }
++};
++MODULE_DEVICE_TABLE(of, axp8191_onkey_of_match);
++
++static struct platform_driver axp8191_onkey_driver = {
++	.driver = {
++		.name = "axp8191-onkey",
++		.of_match_table = axp8191_onkey_of_match,
++	},
++	.probe = axp8191_onkey_probe,
++};
++module_platform_driver(axp8191_onkey_driver);
++
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Allwinner");
++MODULE_DESCRIPTION("AXP8191 Onkey driver");
+
+diff --git a/scripts/Makefile.dtbs b/scripts/Makefile.dtbs
+index c4e466390..a86cdff32 100644
+--- a/scripts/Makefile.dtbs
++++ b/scripts/Makefile.dtbs
+@@ -124,7 +124,7 @@ DTC_FLAGS += $(if $(filter $(patsubst $(obj)/%,%,$@), $(base-dtb-y)), -@)
+ 
+ DTC_INCLUDE := $(srctree)/scripts/dtc/include-prefixes
+ 
+-dtc_cpp_flags = -Wp,-MMD,$(depfile).pre.tmp -nostdinc -I $(DTC_INCLUDE) -undef -D__DTS__
++dtc_cpp_flags = -Wp,-MMD,$(depfile).pre.tmp -nostdinc -I $(DTC_INCLUDE) -I $(srctree)/include -undef -D__DTS__
+ 
+ dtc-tmp = $(subst $(comma),_,$(dot-target).dts.tmp)
+ 
+
