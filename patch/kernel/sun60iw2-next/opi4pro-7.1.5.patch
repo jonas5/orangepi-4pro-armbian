@@ -12,7 +12,7 @@ diff --git a/arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts b/arch
 new file mode 100644
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts
-@@ -0,0 +1,835 @@
+@@ -0,0 +1,834 @@
 +// SPDX-License-Identifier: (GPL-2.0-or-later OR MIT)
 +/*
 + * Device Tree Source for Orange Pi 4 Pro
@@ -852,7 +852,7 @@ diff --git a/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi b/arch/arm64/boot/dt
 new file mode 100644
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi
-@@ -0,0 +1,1674 @@
+@@ -0,0 +1,1673 @@
 +// SPDX-License-Identifier: (GPL-2.0-or-later OR MIT)
 +/*
 + * Device Tree Source for Allwinner Sun60i A733 SoC
@@ -12747,7 +12747,7 @@ new file mode 100644
 index 000000000..000000001
 --- /dev/null
 +++ b/drivers/power/supply/axp8191-power-supply.c
-@@ -0,0 +1,276 @@
+@@ -0,0 +1,275 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
 + * AXP8191 Power Supply driver
@@ -13462,7 +13462,7 @@ new file mode 100644
 index 000000000..000000002
 --- /dev/null
 +++ b/drivers/power/supply/axp8191-onkey.c
-@@ -0,0 +1,135 @@
+@@ -0,0 +1,134 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
 + * AXP8191 Onkey driver
