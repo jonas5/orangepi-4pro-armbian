@@ -12711,7 +12711,7 @@ index 000000000..aecdd4858
 diff --git a/drivers/power/supply/Kconfig b/drivers/power/supply/Kconfig
 --- a/drivers/power/supply/Kconfig
 +++ b/drivers/power/supply/Kconfig
-@@ -340,6 +340,19 @@ config BATTERY_AXP20X
+@@ -405,6 +405,19 @@ config BATTERY_AXP20X
  	  This driver can also be built as a module. If so, the module will be
  	  called axp20x_battery.
  
@@ -12734,14 +12734,14 @@ diff --git a/drivers/power/supply/Kconfig b/drivers/power/supply/Kconfig
 diff --git a/drivers/power/supply/Makefile b/drivers/power/supply/Makefile
 --- a/drivers/power/supply/Makefile
 +++ b/drivers/power/supply/Makefile
-@@ -25,6 +25,7 @@ obj-$(CONFIG_CHARGER_AXP20X)	+= axp20x_ac_power.o
+@@ -28,6 +28,7 @@ obj-$(CONFIG_CHARGER_AXP20X)	+= axp20x_ac_power.o
  obj-$(CONFIG_BATTERY_CPCAP)	+= cpcap-battery.o
  obj-$(CONFIG_BATTERY_CW2015)	+= cw2015_battery.o
  obj-$(CONFIG_BATTERY_DS2760)	+= ds2760_battery.o
 +obj-$(CONFIG_POWER_SUPPLY_AXP8191)	+= axp8191-power-supply.o axp8191-battery.o axp8191-onkey.o
- obj-$(CONFIG_BATTERY_GOLDFISH)	+= goldfish_battery.o
- obj-$(CONFIG_BATTERY_IDTECH)	+= idtech700_battery.o
- obj-$(CONFIG_BATTERY_MAX17040)	+= max17040_battery.o
+ obj-$(CONFIG_BATTERY_DS2780)	+= ds2780_battery.o
+ obj-$(CONFIG_BATTERY_DS2781)	+= ds2781_battery.o
+ obj-$(CONFIG_BATTERY_DS2782)	+= ds2782_battery.o
 diff --git a/drivers/power/supply/axp8191-power-supply.c b/drivers/power/supply/axp8191-power-supply.c
 new file mode 100644
 index 000000000..000000001
