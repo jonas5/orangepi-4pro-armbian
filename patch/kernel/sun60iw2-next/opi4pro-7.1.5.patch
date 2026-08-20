@@ -10,6 +10,7 @@ index d116864b6..be98abfa1 100644
  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-a64-nanopi-a64.dtb
 diff --git a/arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts b/arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts
 new file mode 100644
+index 000000000..c71c26ae6
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts
 @@ -0,0 +1,832 @@
@@ -847,6 +848,7 @@ new file mode 100644
 +&cpu7 { cpu-supply = <&reg_dcdc3>; };
 diff --git a/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi b/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi
 new file mode 100644
+index 000000000..d42b25944
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi
 @@ -0,0 +1,1673 @@
@@ -2525,7 +2527,7 @@ new file mode 100644
 +};
 diff --git a/arch/arm64/configs/orangepi_4pro_defconfig b/arch/arm64/configs/orangepi_4pro_defconfig
 new file mode 100644
-index 000000000..466c60e37
+index 000000000..b727ffcb5
 --- /dev/null
 +++ b/arch/arm64/configs/orangepi_4pro_defconfig
 @@ -0,0 +1,668 @@
@@ -3227,10 +3229,10 @@ index a1c4087d7..7e2a1b7dd 100644
  obj-$(CONFIG_SUN6I_A31_CCU)	+= sun6i-a31-ccu.o
 diff --git a/drivers/clk/sunxi-ng/clk-sun60i-a733.c b/drivers/clk/sunxi-ng/clk-sun60i-a733.c
 new file mode 100644
-index 000000000..ec5814bb1
+index 000000000..e44883494
 --- /dev/null
 +++ b/drivers/clk/sunxi-ng/clk-sun60i-a733.c
-@@ -0,0 +1,1298 @@
+@@ -0,0 +1,1190 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Allwinner A733 Clock Control Unit driver.
@@ -3265,9 +3267,7 @@ index 000000000..ec5814bb1
 +#include "ccu_common.h"
 +#include "ccu_reset.h"
 +
-+#include "ccu_mult.h"
 +#include "ccu_nkmp.h"
-+#include "ccu_nm.h"
 +#include "ccu_phase.h"
 +#include "ccu_sdm.h"
 +#include "ccu_gate.h"
@@ -3278,24 +3278,6 @@ index 000000000..ec5814bb1
 +#include <dt-bindings/clock/sun60i-a733-r-ccu.h>
 +
 +/* ---------------------------------------------------------------------
-+ * Vendor BSP compatibility shims
-+ *
-+ * The following macros/tables come from the Allwinner vendor kernel and
-+ * have no mainline equivalent.  We provide thin shims so the driver
-+ * compiles against mainline headers.
-+ * --------------------------------------------------------------------- */
-+
-+/* Vendor _SUNXI_CCU_DIV_MIN: minimum divider value via offset field */
-+#define _SUNXI_CCU_DIV_MIN(_shift, _width, _min) \
-+	_SUNXI_CCU_DIV_OFFSET_MAX_FLAGS(_shift, _width, _min, 0, 0)
-+
-+/* Vendor SDM helper macro – map to mainline _SUNXI_CCU_SDM */
-+static struct ccu_sdm_setting sunxi_ccu_sdm_int_mul4[] = {};
-+
-+#define _SUNXI_CCU_SDM_HELPER_WRITABLE(_shift, _width, _get, _set, _tbl) \
-+	_SUNXI_CCU_SDM(_tbl, BIT(_shift), 0, 0)
-+
-+/* ---------------------------------------------------------------------
 + * Register map
 + * --------------------------------------------------------------------- */
 +
@@ -3303,19 +3285,19 @@ index 000000000..ec5814bb1
 +#define CCU_PLL_CPU_CTRL	0x000
 +#define CCU_PLL_AUDIO0_CTRL	0x004
 +#define CCU_PLL_VIDEO0_CTRL	0x008
-+#define CCU_PLL_VE_CTRL		0x00c
++#define CCU_PLL_VE_CTRL		0x00C
 +#define CCU_PLL_USB_CTRL	0x010
 +#define CCU_PLL_CPU_AXI_CTRL	0x014
 +#define CCU_PLL_PERIPH0_CTRL	0x018
-+#define CCU_PLL_PERIPH1_CTRL	0x01c
++#define CCU_PLL_PERIPH1_CTRL	0x01C
 +#define CCU_PLL_GPU_CTRL	0x020
 +#define CCU_PLL_DE_CTRL		0x024
 +#define CCU_PLL_PCIE_CTRL	0x028
-+#define CCU_PLL_DDR_CTRL	0x02c
++#define CCU_PLL_DDR_CTRL	0x02C
 +#define CCU_PLL_AUDIO0X_CTRL	0x030
 +#define CCU_PLL_AUDIO0_2X_CTRL	0x034
 +#define CCU_PLL_AUDIO0_1X_CTRL	0x038
-+#define CCU_PLL_VIDEO0_2X_CTRL	0x03c
++#define CCU_PLL_VIDEO0_2X_CTRL	0x03C
 +#define CCU_PLL_PERIPH0_2X_CTRL	0x040
 +#define CCU_PLL_PERIPH0_4X_CTRL	0x044
 +
@@ -3323,91 +3305,91 @@ index 000000000..ec5814bb1
 +#define CCU_CPU_AXI_CFG		0x050
 +#define CCU_AHB2_APB1_DIV	0x054
 +#define CCU_APB1_DIV_CFG	0x058
-+#define CCU_APB2_DIV_CFG	0x05c
-+#define CCU_PLL_CPU_AXI_DIV	0x060
-+#define CCU_PLL_CCI_DIV		0x064
-+#define CCU_DSP_CFG		0x068
++#define CCU_APB2_DIV_CFG	0x05C
++#define CCU_PLL_CPU_AXI_DIV	0x048
++#define CCU_PLL_CCI_DIV		0x04C
++#define CCU_DSP_CFG		0x064
 +
 +/* Bus gate + reset registers (24 bits: gate[31:24], reset[23:16]) */
-+#define CCU_UART_BGR		0x080
-+#define CCU_SPI_BGR		0x084
-+#define CCU_I2C_BGR		0x088
-+#define CCU_USB_BGR		0x08c
-+#define CCU_MMC_BGR		0x090
-+#define CCU_CE_BGR		0x094
-+#define CCU_DMA_BGR		0x098
-+#define CCU_THERMAL_BGR		0x09c
-+#define CCU_HDMI_BGR		0x0a0
-+#define CCU_DE_BGR		0x0a4
-+#define CCU_GPU_BGR		0x0a8
-+#define CCU_GMAC_BGR		0x0ac
-+#define CCU_DAUDIO_BGR		0x0b0
-+#define CCU_OWA_BGR		0x0b4
-+#define CCU_DMIC_BGR		0x0b8
-+#define CCU_AUDIOC_BGR		0x0bc
-+#define CCU_THS_BGR		0x0c0
-+#define CCU_GPADC_BGR		0x0c4
-+#define CCU_LRADC_BGR		0x0c8
-+#define CCU_CEC_BGR		0x0cc
-+#define CCU_PWM_BGR		0x0d0
-+#define CCU_SPINLOCK_BGR	0x0d4
-+#define CCU_DRC_BGR		0x0d8
-+#define CCU_MSGBOX_BGR		0x0dc
-+#define CCU_ROM_BGR		0x0e0
++#define CCU_UART_BGR		0x090
++#define CCU_SPI_BGR		0x094
++#define CCU_I2C_BGR		0x09C
++#define CCU_USB_BGR		0x0A0
++#define CCU_MMC_BGR		0x0A4
++#define CCU_CE_BGR		0x0A8
++#define CCU_DMA_BGR		0x0B0
++#define CCU_THERMAL_BGR		0x0B4
++#define CCU_HDMI_BGR		0x0B8
++#define CCU_DE_BGR		0x0BC
++#define CCU_GPU_BGR		0x0C0
++#define CCU_GMAC_BGR		0x0C8
++#define CCU_DAUDIO_BGR		0x0C4
++#define CCU_OWA_BGR		0x0CC
++#define CCU_DMIC_BGR		0x0D0
++#define CCU_AUDIOC_BGR		0x0D4
++#define CCU_THS_BGR		0x0D8
++#define CCU_GPADC_BGR		0x0DC
++#define CCU_LRADC_BGR		0x0E0
++#define CCU_CEC_BGR		0x0E4
++#define CCU_PWM_BGR		0x0E8
++#define CCU_SPINLOCK_BGR	0x0EC
++#define CCU_DRC_BGR		0x0F0
++#define CCU_MSGBOX_BGR		0x0F4
++#define CCU_ROM_BGR		0x0F8
 +
 +/* Module (functional) clock configuration registers */
-+#define CCU_UART0_CLK_CFG	0x0e8
-+#define CCU_UART1_CLK_CFG	0x0ec
-+#define CCU_UART2_CLK_CFG	0x0f0
-+#define CCU_UART3_CLK_CFG	0x0f4
-+#define CCU_UART4_CLK_CFG	0x0f8
-+#define CCU_UART5_CLK_CFG	0x0fc
++#define CCU_UART0_CLK_CFG	0x060
++#define CCU_UART1_CLK_CFG	0x064
++#define CCU_UART2_CLK_CFG	0x068
++#define CCU_UART3_CLK_CFG	0x06C
++#define CCU_UART4_CLK_CFG	0x070
++#define CCU_UART5_CLK_CFG	0x074
 +
-+#define CCU_SPI0_CLK_CFG	0x100
-+#define CCU_SPI1_CLK_CFG	0x104
-+#define CCU_SPI2_CLK_CFG	0x108
-+#define CCU_SPI3_CLK_CFG	0x10c
++#define CCU_SPI0_CLK_CFG	0x040
++#define CCU_SPI1_CLK_CFG	0x044
++#define CCU_SPI2_CLK_CFG	0x048
++#define CCU_SPI3_CLK_CFG	0x04C
 +
-+#define CCU_I2C0_CLK_CFG	0x110
-+#define CCU_I2C1_CLK_CFG	0x114
-+#define CCU_I2C2_CLK_CFG	0x118
-+#define CCU_I2C3_CLK_CFG	0x11c
-+#define CCU_I2C4_CLK_CFG	0x120
-+#define CCU_I2C5_CLK_CFG	0x124
++#define CCU_I2C0_CLK_CFG	0x050
++#define CCU_I2C1_CLK_CFG	0x054
++#define CCU_I2C2_CLK_CFG	0x058
++#define CCU_I2C3_CLK_CFG	0x05C
++#define CCU_I2C4_CLK_CFG	0x060
++#define CCU_I2C5_CLK_CFG	0x064
 +
-+#define CCU_USB_CLK_CFG		0x128
-+#define CCU_USB_PHY_CFG		0x12c
-+#define CCU_USB_REF_CLK		0x130
-+#define CCU_USB_SUSPEND_CLK	0x134
++#define CCU_USB_CLK_CFG		0x0A0
++#define CCU_USB_PHY_CFG		0x0E0
++#define CCU_USB_REF_CLK		0x0E4
++#define CCU_USB_SUSPEND_CLK	0x0E8
 +
-+#define CCU_MMC0_CLK_CFG	0x138
-+#define CCU_MMC1_CLK_CFG	0x13c
-+#define CCU_MMC2_CLK_CFG	0x140
++#define CCU_MMC0_CLK_CFG	0x088
++#define CCU_MMC1_CLK_CFG	0x08C
++#define CCU_MMC2_CLK_CFG	0x090
 +
-+#define CCU_GMAC_CLK_CFG	0x144
-+#define CCU_GMAC_TX_CLK		0x148
++#define CCU_GMAC_CLK_CFG	0x0C8
++#define CCU_GMAC_TX_CLK		0x0CC
 +
-+#define CCU_HDMI_CLK_CFG	0x14c
-+#define CCU_HDMI_DDC_CLK	0x150
++#define CCU_HDMI_CLK_CFG	0x0B8
++#define CCU_HDMI_DDC_CLK	0x0BC
 +
-+#define CCU_DE_CLK_CFG		0x154
-+#define CCU_GPU_CLK_CFG		0x158
++#define CCU_DE_CLK_CFG		0x0B0
++#define CCU_GPU_CLK_CFG		0x0B4
 +
-+#define CCU_THS_CLK_CFG		0x15c
-+#define CCU_GPADC_CLK_CFG	0x160
-+#define CCU_LRADC_CLK_CFG	0x164
-+#define CCU_CEC_CLK_CFG		0x168
-+#define CCU_PWM_CLK_CFG		0x16c
++#define CCU_THS_CLK_CFG		0x120
++#define CCU_GPADC_CLK_CFG	0x124
++#define CCU_LRADC_CLK_CFG	0x128
++#define CCU_CEC_CLK_CFG		0x12C
++#define CCU_PWM_CLK_CFG		0x130
 +
-+#define CCU_DAUDIO_CLK_CFG	0x170
-+#define CCU_OWA_CLK_CFG		0x174
-+#define CCU_DMIC_CLK_CFG	0x178
-+#define CCU_AUDIOC_CLK_CFG	0x17c
++#define CCU_DAUDIO_CLK_CFG	0x140
++#define CCU_OWA_CLK_CFG		0x144
++#define CCU_DMIC_CLK_CFG	0x148
++#define CCU_AUDIOC_CLK_CFG	0x14C
 +
-+#define CCU_SPINLOCK_CLK	0x180
-+#define CCU_DRC_CLK_CFG		0x184
-+#define CCU_MSGBOX_CLK		0x188
-+#define CCU_ROM_CLK		0x18c
++#define CCU_SPINLOCK_CLK	0x150
++#define CCU_DRC_CLK_CFG		0x154
++#define CCU_MSGBOX_CLK		0x158
++#define CCU_ROM_CLK		0x15C
 +
 +/* ---------------------------------------------------------------------
 + * PLL definitions
@@ -3424,12 +3406,12 @@ index 000000000..ec5814bb1
 +		.reg		= CCU_PLL_CPU_CTRL,
 +		.hw.init	= CLK_HW_INIT("pll-cpu", "osc24m",
 +					&ccu_nkmp_ops,
-+					CLK_SET_RATE_UNGATE),
++					CLK_SET_RATE_UNGATED),
 +	},
 +};
 +
 +/* PLL_AUDIO0 – SDM (fractional / spread-spectrum PLL) */
-+static struct ccu_nm pll_audio0_clk = {
++static struct ccu_sdm pll_audio0_clk = {
 +	.enable		= BIT(31),
 +	.sdm		= _SUNXI_CCU_SDM_HELPER_WRITABLE(8, 16,
 +					sunxi_ccu_sdm_helper_get_rate,
@@ -3438,20 +3420,20 @@ index 000000000..ec5814bb1
 +	.common		= {
 +		.reg		= CCU_PLL_AUDIO0_CTRL,
 +		.hw.init	= CLK_HW_INIT("pll-audio0", "osc24m",
-+					&ccu_nm_ops,
-+					CLK_SET_RATE_UNGATE),
++					&ccu_sdm_ops,
++					CLK_SET_RATE_UNGATED),
 +	},
 +};
 +
-+static SUNXI_CCU_GATE(pll_audio0_4x_clk, "pll-audio0-4x",
++static SUNXI_CCU_GATE_HW(pll_audio0_4x_clk, "pll-audio0-4x",
 +			  "pll-audio0",
 +			  CCU_PLL_AUDIO0X_CTRL, BIT(31), 0);
 +
-+static SUNXI_CCU_GATE(pll_audio0_2x_clk, "pll-audio0-2x",
++static SUNXI_CCU_GATE_HW(pll_audio0_2x_clk, "pll-audio0-2x",
 +			  "pll-audio0-4x",
 +			  CCU_PLL_AUDIO0_2X_CTRL, BIT(31), 0);
 +
-+static SUNXI_CCU_GATE(pll_audio0_1x_clk, "pll-audio0-1x",
++static SUNXI_CCU_GATE_HW(pll_audio0_1x_clk, "pll-audio0-1x",
 +			  "pll-audio0-2x",
 +			  CCU_PLL_AUDIO0_1X_CTRL, BIT(31), 0);
 +
@@ -3466,11 +3448,11 @@ index 000000000..ec5814bb1
 +		.reg		= CCU_PLL_VIDEO0_CTRL,
 +		.hw.init	= CLK_HW_INIT("pll-video0", "osc24m",
 +					&ccu_nkmp_ops,
-+					CLK_SET_RATE_UNGATE),
++					CLK_SET_RATE_UNGATED),
 +	},
 +};
 +
-+static SUNXI_CCU_GATE(pll_video0_2x_clk, "pll-video0-2x",
++static SUNXI_CCU_GATE_HW(pll_video0_2x_clk, "pll-video0-2x",
 +			  "pll-video0",
 +			  CCU_PLL_VIDEO0_2X_CTRL, BIT(31), 0);
 +
@@ -3485,12 +3467,12 @@ index 000000000..ec5814bb1
 +		.reg		= CCU_PLL_VE_CTRL,
 +		.hw.init	= CLK_HW_INIT("pll-ve", "osc24m",
 +					&ccu_nkmp_ops,
-+					CLK_SET_RATE_UNGATE),
++					CLK_SET_RATE_UNGATED),
 +	},
 +};
 +
 +/* PLL_USB – fixed 480 MHz */
-+static SUNXI_CCU_GATE(pll_usb_clk, "pll-usb", "osc24m",
++static SUNXI_CCU_GATE_HW(pll_usb_clk, "pll-usb", "osc24m",
 +			  CCU_PLL_USB_CTRL,
 +			  BIT(31) | BIT(30) | BIT(29) | BIT(24),
 +			  0);
@@ -3506,7 +3488,7 @@ index 000000000..ec5814bb1
 +		.reg		= CCU_PLL_CPU_AXI_CTRL,
 +		.hw.init	= CLK_HW_INIT("pll-cpu-axi", "osc24m",
 +					&ccu_nkmp_ops,
-+					CLK_SET_RATE_UNGATE),
++					CLK_SET_RATE_UNGATED),
 +	},
 +};
 +
@@ -3521,15 +3503,15 @@ index 000000000..ec5814bb1
 +		.reg		= CCU_PLL_PERIPH0_CTRL,
 +		.hw.init	= CLK_HW_INIT("pll-periph0", "osc24m",
 +					&ccu_nkmp_ops,
-+					CLK_SET_RATE_UNGATE),
++					CLK_SET_RATE_UNGATED),
 +	},
 +};
 +
-+static SUNXI_CCU_GATE(pll_periph0_2x_clk, "pll-periph0-2x",
++static SUNXI_CCU_GATE_HW(pll_periph0_2x_clk, "pll-periph0-2x",
 +			  "pll-periph0",
 +			  CCU_PLL_PERIPH0_2X_CTRL, BIT(31), 0);
 +
-+static SUNXI_CCU_GATE(pll_periph0_4x_clk, "pll-periph0-4x",
++static SUNXI_CCU_GATE_HW(pll_periph0_4x_clk, "pll-periph0-4x",
 +			  "pll-periph0",
 +			  CCU_PLL_PERIPH0_4X_CTRL, BIT(31), 0);
 +
@@ -3544,7 +3526,7 @@ index 000000000..ec5814bb1
 +		.reg		= CCU_PLL_PERIPH1_CTRL,
 +		.hw.init	= CLK_HW_INIT("pll-periph1", "osc24m",
 +					&ccu_nkmp_ops,
-+					CLK_SET_RATE_UNGATE),
++					CLK_SET_RATE_UNGATED),
 +	},
 +};
 +
@@ -3559,7 +3541,7 @@ index 000000000..ec5814bb1
 +		.reg		= CCU_PLL_GPU_CTRL,
 +		.hw.init	= CLK_HW_INIT("pll-gpu", "osc24m",
 +					&ccu_nkmp_ops,
-+					CLK_SET_RATE_UNGATE),
++					CLK_SET_RATE_UNGATED),
 +	},
 +};
 +
@@ -3574,7 +3556,7 @@ index 000000000..ec5814bb1
 +		.reg		= CCU_PLL_DE_CTRL,
 +		.hw.init	= CLK_HW_INIT("pll-de", "osc24m",
 +					&ccu_nkmp_ops,
-+					CLK_SET_RATE_UNGATE),
++					CLK_SET_RATE_UNGATED),
 +	},
 +};
 +
@@ -3589,7 +3571,7 @@ index 000000000..ec5814bb1
 +		.reg		= CCU_PLL_PCIE_CTRL,
 +		.hw.init	= CLK_HW_INIT("pll-pcie", "osc24m",
 +					&ccu_nkmp_ops,
-+					CLK_SET_RATE_UNGATE),
++					CLK_SET_RATE_UNGATED),
 +	},
 +};
 +
@@ -3604,7 +3586,7 @@ index 000000000..ec5814bb1
 +		.reg		= CCU_PLL_DDR_CTRL,
 +		.hw.init	= CLK_HW_INIT("pll-ddr", "osc24m",
 +					&ccu_nkmp_ops,
-+					CLK_SET_RATE_UNGATE),
++					CLK_SET_RATE_UNGATED),
 +	},
 +};
 +
@@ -3696,7 +3678,7 @@ index 000000000..ec5814bb1
 +	},
 +};
 +
-+static SUNXI_CCU_GATE(ahb_clk, "ahb", "ahb2-apb1-div",
++static SUNXI_CCU_GATE_HW(ahb_clk, "ahb", "ahb2-apb1-div",
 +			  CCU_AHB2_APB1_DIV, 0, CLK_SET_RATE_PARENT);
 +
 +static struct ccu_div apb1_clk = {
@@ -3768,111 +3750,111 @@ index 000000000..ec5814bb1
 + * Each BGR register packs multiple modules – one gate bit each. */
 +
 +/* ---- UART ---- */
-+static SUNXI_CCU_GATE(clk_bus_uart0, "bus-uart0", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_uart0, "bus-uart0", "apb2",
 +			  CCU_UART_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE(clk_bus_uart1, "bus-uart1", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_uart1, "bus-uart1", "apb2",
 +			  CCU_UART_BGR, BIT(30), 0);
-+static SUNXI_CCU_GATE(clk_bus_uart2, "bus-uart2", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_uart2, "bus-uart2", "apb2",
 +			  CCU_UART_BGR, BIT(29), 0);
-+static SUNXI_CCU_GATE(clk_bus_uart3, "bus-uart3", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_uart3, "bus-uart3", "apb2",
 +			  CCU_UART_BGR, BIT(28), 0);
-+static SUNXI_CCU_GATE(clk_bus_uart4, "bus-uart4", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_uart4, "bus-uart4", "apb2",
 +			  CCU_UART_BGR, BIT(27), 0);
-+static SUNXI_CCU_GATE(clk_bus_uart5, "bus-uart5", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_uart5, "bus-uart5", "apb2",
 +			  CCU_UART_BGR, BIT(26), 0);
 +
 +/* ---- SPI ---- */
-+static SUNXI_CCU_GATE(clk_bus_spi0, "bus-spi0", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_spi0, "bus-spi0", "apb2",
 +			  CCU_SPI_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE(clk_bus_spi1, "bus-spi1", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_spi1, "bus-spi1", "apb2",
 +			  CCU_SPI_BGR, BIT(30), 0);
-+static SUNXI_CCU_GATE(clk_bus_spi2, "bus-spi2", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_spi2, "bus-spi2", "apb2",
 +			  CCU_SPI_BGR, BIT(29), 0);
-+static SUNXI_CCU_GATE(clk_bus_spi3, "bus-spi3", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_spi3, "bus-spi3", "apb2",
 +			  CCU_SPI_BGR, BIT(28), 0);
 +
 +/* ---- I2C ---- */
-+static SUNXI_CCU_GATE(clk_bus_i2c0, "bus-i2c0", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_i2c0, "bus-i2c0", "apb2",
 +			  CCU_I2C_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE(clk_bus_i2c1, "bus-i2c1", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_i2c1, "bus-i2c1", "apb2",
 +			  CCU_I2C_BGR, BIT(30), 0);
-+static SUNXI_CCU_GATE(clk_bus_i2c2, "bus-i2c2", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_i2c2, "bus-i2c2", "apb2",
 +			  CCU_I2C_BGR, BIT(29), 0);
-+static SUNXI_CCU_GATE(clk_bus_i2c3, "bus-i2c3", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_i2c3, "bus-i2c3", "apb2",
 +			  CCU_I2C_BGR, BIT(28), 0);
-+static SUNXI_CCU_GATE(clk_bus_i2c4, "bus-i2c4", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_i2c4, "bus-i2c4", "apb2",
 +			  CCU_I2C_BGR, BIT(27), 0);
-+static SUNXI_CCU_GATE(clk_bus_i2c5, "bus-i2c5", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_i2c5, "bus-i2c5", "apb2",
 +			  CCU_I2C_BGR, BIT(26), 0);
 +
 +/* ---- USB ---- */
-+static SUNXI_CCU_GATE(clk_bus_usb, "bus-usb", "ahb",
++static SUNXI_CCU_GATE_HW(clk_bus_usb, "bus-usb", "ahb",
 +			  CCU_USB_BGR, BIT(31), 0);
 +
 +/* ---- GMAC ---- */
-+static SUNXI_CCU_GATE(clk_bus_gmac, "bus-gmac", "ahb",
++static SUNXI_CCU_GATE_HW(clk_bus_gmac, "bus-gmac", "ahb",
 +			  CCU_GMAC_BGR, BIT(31), 0);
 +
 +/* ---- MMC ---- */
-+static SUNXI_CCU_GATE(clk_bus_mmc0, "bus-mmc0", "ahb",
++static SUNXI_CCU_GATE_HW(clk_bus_mmc0, "bus-mmc0", "ahb",
 +			  CCU_MMC_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE(clk_bus_mmc1, "bus-mmc1", "ahb",
++static SUNXI_CCU_GATE_HW(clk_bus_mmc1, "bus-mmc1", "ahb",
 +			  CCU_MMC_BGR, BIT(30), 0);
-+static SUNXI_CCU_GATE(clk_bus_mmc2, "bus-mmc2", "ahb",
++static SUNXI_CCU_GATE_HW(clk_bus_mmc2, "bus-mmc2", "ahb",
 +			  CCU_MMC_BGR, BIT(29), 0);
 +
 +/* ---- CE ---- */
-+static SUNXI_CCU_GATE(clk_bus_ce, "bus-ce", "ahb",
++static SUNXI_CCU_GATE_HW(clk_bus_ce, "bus-ce", "ahb",
 +			  CCU_CE_BGR, BIT(31), 0);
 +
 +/* ---- DMA ---- */
-+static SUNXI_CCU_GATE(clk_bus_dma, "bus-dma", "ahb",
++static SUNXI_CCU_GATE_HW(clk_bus_dma, "bus-dma", "ahb",
 +			  CCU_DMA_BGR, BIT(31), 0);
 +
 +/* ---- THERMAL ---- */
-+static SUNXI_CCU_GATE(clk_bus_thermal, "bus-thermal", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_thermal, "bus-thermal", "apb2",
 +			  CCU_THERMAL_BGR, BIT(31), 0);
 +
 +/* ---- HDMI ---- */
-+static SUNXI_CCU_GATE(clk_bus_hdmi, "bus-hdmi", "ahb",
++static SUNXI_CCU_GATE_HW(clk_bus_hdmi, "bus-hdmi", "ahb",
 +			  CCU_HDMI_BGR, BIT(31), 0);
 +
 +/* ---- DE ---- */
-+static SUNXI_CCU_GATE(clk_bus_de, "bus-de", "ahb",
++static SUNXI_CCU_GATE_HW(clk_bus_de, "bus-de", "ahb",
 +			  CCU_DE_BGR, BIT(31), 0);
 +
 +/* ---- GPU ---- */
-+static SUNXI_CCU_GATE(clk_bus_gpu, "bus-gpu", "ahb",
++static SUNXI_CCU_GATE_HW(clk_bus_gpu, "bus-gpu", "ahb",
 +			  CCU_GPU_BGR, BIT(31), 0);
 +
 +/* ---- Audio ---- */
-+static SUNXI_CCU_GATE(clk_bus_daudio, "bus-daudio", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_daudio, "bus-daudio", "apb2",
 +			  CCU_DAUDIO_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE(clk_bus_owa, "bus-owa", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_owa, "bus-owa", "apb2",
 +			  CCU_OWA_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE(clk_bus_dmic, "bus-dmic", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_dmic, "bus-dmic", "apb2",
 +			  CCU_DMIC_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE(clk_bus_audioc, "bus-audioc", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_audioc, "bus-audioc", "apb2",
 +			  CCU_AUDIOC_BGR, BIT(31), 0);
 +
 +/* ---- Misc ---- */
-+static SUNXI_CCU_GATE(clk_bus_ths, "bus-ths", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_ths, "bus-ths", "apb2",
 +			  CCU_THS_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE(clk_bus_gpadc, "bus-gpadc", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_gpadc, "bus-gpadc", "apb2",
 +			  CCU_GPADC_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE(clk_bus_lradc, "bus-lradc", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_lradc, "bus-lradc", "apb2",
 +			  CCU_LRADC_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE(clk_bus_cec, "bus-cec", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_cec, "bus-cec", "apb2",
 +			  CCU_CEC_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE(clk_bus_pwm, "bus-pwm", "apb2",
++static SUNXI_CCU_GATE_HW(clk_bus_pwm, "bus-pwm", "apb2",
 +			  CCU_PWM_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE(clk_bus_spinlock, "bus-spinlock", "ahb",
++static SUNXI_CCU_GATE_HW(clk_bus_spinlock, "bus-spinlock", "ahb",
 +			  CCU_SPINLOCK_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE(clk_bus_drc, "bus-drc", "ahb",
++static SUNXI_CCU_GATE_HW(clk_bus_drc, "bus-drc", "ahb",
 +			  CCU_DRC_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE(clk_bus_msgbox, "bus-msgbox", "ahb",
++static SUNXI_CCU_GATE_HW(clk_bus_msgbox, "bus-msgbox", "ahb",
 +			  CCU_MSGBOX_BGR, BIT(31), 0);
-+static SUNXI_CCU_GATE(clk_bus_rom, "bus-rom", "ahb",
++static SUNXI_CCU_GATE_HW(clk_bus_rom, "bus-rom", "ahb",
 +			  CCU_ROM_BGR, BIT(31), 0);
 +
 +/* ---------------------------------------------------------------------
@@ -3986,35 +3968,35 @@ index 000000000..ec5814bb1
 +};
 +
 +/* ---- I2C module clocks: simple gates (default PLL_PERIPH0_2X) ---- */
-+static SUNXI_CCU_GATE(i2c0_clk, "i2c0", "pll-periph0-2x",
++static SUNXI_CCU_GATE_HW(i2c0_clk, "i2c0", "pll-periph0-2x",
 +			  CCU_I2C0_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE(i2c1_clk, "i2c1", "pll-periph0-2x",
++static SUNXI_CCU_GATE_HW(i2c1_clk, "i2c1", "pll-periph0-2x",
 +			  CCU_I2C1_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE(i2c2_clk, "i2c2", "pll-periph0-2x",
++static SUNXI_CCU_GATE_HW(i2c2_clk, "i2c2", "pll-periph0-2x",
 +			  CCU_I2C2_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE(i2c3_clk, "i2c3", "pll-periph0-2x",
++static SUNXI_CCU_GATE_HW(i2c3_clk, "i2c3", "pll-periph0-2x",
 +			  CCU_I2C3_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE(i2c4_clk, "i2c4", "pll-periph0-2x",
++static SUNXI_CCU_GATE_HW(i2c4_clk, "i2c4", "pll-periph0-2x",
 +			  CCU_I2C4_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE(i2c5_clk, "i2c5", "pll-periph0-2x",
++static SUNXI_CCU_GATE_HW(i2c5_clk, "i2c5", "pll-periph0-2x",
 +			  CCU_I2C5_CLK_CFG, BIT(31), 0);
 +
 +/* ---- USB module clocks ---- */
-+static SUNXI_CCU_GATE(usb_480_clk, "usb-480m", "pll-usb",
++static SUNXI_CCU_GATE_HW(usb_480_clk, "usb-480m", "pll-usb",
 +			  CCU_USB_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE(usb_12_clk, "usb-12m", "pll-periph0-2x",
++static SUNXI_CCU_GATE_HW(usb_12_clk, "usb-12m", "pll-periph0-2x",
 +			  CCU_USB_CLK_CFG, BIT(29), 0);
-+static SUNXI_CCU_GATE(usb_ref_clk, "usb-ref", "usb-480m",
++static SUNXI_CCU_GATE_HW(usb_ref_clk, "usb-ref", "usb-480m",
 +			  CCU_USB_REF_CLK, BIT(31), 0);
-+static SUNXI_CCU_GATE(usb_suspend_clk, "usb-suspend", "osc32k",
++static SUNXI_CCU_GATE_HW(usb_suspend_clk, "usb-suspend", "osc32k",
 +			  CCU_USB_SUSPEND_CLK, BIT(31), 0);
 +
 +/* USB PHYs */
-+static SUNXI_CCU_GATE(usb_phy0_clk, "usb-phy0", "usb-480m",
++static SUNXI_CCU_GATE_HW(usb_phy0_clk, "usb-phy0", "usb-480m",
 +			  CCU_USB_PHY_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE(usb_phy1_clk, "usb-phy1", "usb-480m",
++static SUNXI_CCU_GATE_HW(usb_phy1_clk, "usb-phy1", "usb-480m",
 +			  CCU_USB_PHY_CFG, BIT(30), 0);
-+static SUNXI_CCU_GATE(usb_phy2_clk, "usb-phy2", "usb-480m",
++static SUNXI_CCU_GATE_HW(usb_phy2_clk, "usb-phy2", "usb-480m",
 +			  CCU_USB_PHY_CFG, BIT(29), 0);
 +
 +/* ---- MMC module clocks ----
@@ -4059,25 +4041,25 @@ index 000000000..ec5814bb1
 +};
 +
 +/* MMC sub-clocks: sample, detect, bus (gates derived from mod clock) */
-+static SUNXI_CCU_GATE(mmc0_det, "mmc0-det", "mmc0-mod",
++static SUNXI_CCU_GATE_HW(mmc0_det, "mmc0-det", "mmc0-mod",
 +			  CCU_MMC0_CLK_CFG, BIT(27), 0);
-+static SUNXI_CCU_GATE(mmc0_bus, "mmc0-bus", "mmc0-mod",
++static SUNXI_CCU_GATE_HW(mmc0_bus, "mmc0-bus", "mmc0-mod",
 +			  CCU_MMC0_CLK_CFG, BIT(26), 0);
 +
-+static SUNXI_CCU_GATE(mmc1_det, "mmc1-det", "mmc1-mod",
++static SUNXI_CCU_GATE_HW(mmc1_det, "mmc1-det", "mmc1-mod",
 +			  CCU_MMC1_CLK_CFG, BIT(27), 0);
-+static SUNXI_CCU_GATE(mmc1_bus, "mmc1-bus", "mmc1-mod",
++static SUNXI_CCU_GATE_HW(mmc1_bus, "mmc1-bus", "mmc1-mod",
 +			  CCU_MMC1_CLK_CFG, BIT(26), 0);
 +
-+static SUNXI_CCU_GATE(mmc2_det, "mmc2-det", "mmc2-mod",
++static SUNXI_CCU_GATE_HW(mmc2_det, "mmc2-det", "mmc2-mod",
 +			  CCU_MMC2_CLK_CFG, BIT(27), 0);
-+static SUNXI_CCU_GATE(mmc2_bus, "mmc2-bus", "mmc2-mod",
++static SUNXI_CCU_GATE_HW(mmc2_bus, "mmc2-bus", "mmc2-mod",
 +			  CCU_MMC2_CLK_CFG, BIT(26), 0);
 +
 +/* ---- GMAC module clocks ---- */
-+static SUNXI_CCU_GATE(gmac_phy_clk, "gmac-phy", "pll-periph0-2x",
++static SUNXI_CCU_GATE_HW(gmac_phy_clk, "gmac-phy", "pll-periph0-2x",
 +			  CCU_GMAC_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE(gmac_ptp_clk, "gmac-ptp", "pll-periph0-2x",
++static SUNXI_CCU_GATE_HW(gmac_ptp_clk, "gmac-ptp", "pll-periph0-2x",
 +			  CCU_GMAC_CLK_CFG, BIT(30), 0);
 +
 +/* ---- HDMI ---- */
@@ -4092,7 +4074,7 @@ index 000000000..ec5814bb1
 +	},
 +};
 +
-+static SUNXI_CCU_GATE(hdmi_ddc_clk, "hdmi-ddc", "osc24m",
++static SUNXI_CCU_GATE_HW(hdmi_ddc_clk, "hdmi-ddc", "osc24m",
 +			  CCU_HDMI_DDC_CLK, BIT(31), 0);
 +
 +/* ---- DE (display engine) ---- */
@@ -4120,15 +4102,15 @@ index 000000000..ec5814bb1
 +};
 +
 +/* ---- Misc functional clocks ---- */
-+static SUNXI_CCU_GATE(ths_clk, "ths", "osc24m",
++static SUNXI_CCU_GATE_HW(ths_clk, "ths", "osc24m",
 +			  CCU_THS_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE(gpadc_clk, "gpadc", "osc24m",
++static SUNXI_CCU_GATE_HW(gpadc_clk, "gpadc", "osc24m",
 +			  CCU_GPADC_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE(lradc_clk, "lradc", "osc24m",
++static SUNXI_CCU_GATE_HW(lradc_clk, "lradc", "osc24m",
 +			  CCU_LRADC_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE(cec_clk, "cec", "osc32k",
++static SUNXI_CCU_GATE_HW(cec_clk, "cec", "osc32k",
 +			  CCU_CEC_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE(pwm_clk, "pwm", "osc24m",
++static SUNXI_CCU_GATE_HW(pwm_clk, "pwm", "osc24m",
 +			  CCU_PWM_CLK_CFG, BIT(31), 0);
 +
 +/* ---- Audio module clocks ---- */
@@ -4172,13 +4154,13 @@ index 000000000..ec5814bb1
 +	},
 +};
 +
-+static SUNXI_CCU_GATE(spinlock_clk, "spinlock", "osc24m",
++static SUNXI_CCU_GATE_HW(spinlock_clk, "spinlock", "osc24m",
 +			  CCU_SPINLOCK_CLK, BIT(31), 0);
-+static SUNXI_CCU_GATE(drc_clk, "drc", "osc24m",
++static SUNXI_CCU_GATE_HW(drc_clk, "drc", "osc24m",
 +			  CCU_DRC_CLK_CFG, BIT(31), 0);
-+static SUNXI_CCU_GATE(msgbox_clk, "msgbox", "osc24m",
++static SUNXI_CCU_GATE_HW(msgbox_clk, "msgbox", "osc24m",
 +			  CCU_MSGBOX_CLK, BIT(31), 0);
-+static SUNXI_CCU_GATE(rom_clk, "rom", "osc24m",
++static SUNXI_CCU_GATE_HW(rom_clk, "rom", "osc24m",
 +			  CCU_ROM_CLK, BIT(31), 0);
 +
 +/* ---------------------------------------------------------------------
@@ -4321,128 +4303,12 @@ index 000000000..ec5814bb1
 +	},
 +};
 +
-+static struct ccu_common *sun60i_a733_ccu_clks[] = {
-+	&pll_cpu_clk.common,
-+	&pll_audio0_clk.common,
-+	&pll_video0_clk.common,
-+	&pll_ve_clk.common,
-+	&pll_cpu_axi_clk.common,
-+	&pll_periph0_clk.common,
-+	&pll_periph1_clk.common,
-+	&pll_gpu_clk.common,
-+	&pll_de_clk.common,
-+	&pll_pcie_clk.common,
-+	&pll_ddr_clk.common,
-+	&pll_audio0_4x_clk.common,
-+	&pll_audio0_2x_clk.common,
-+	&pll_audio0_1x_clk.common,
-+	&pll_video0_2x_clk.common,
-+	&pll_periph0_2x_clk.common,
-+	&pll_periph0_4x_clk.common,
-+	&pll_cpu_axi_div.common,
-+	&cci_div.common,
-+	&dsp_div.common,
-+	&ahb_clk.common,
-+	&apb1_clk.common,
-+	&apb2_clk.common,
-+	&clk_bus_uart0.common,
-+	&clk_bus_uart1.common,
-+	&clk_bus_uart2.common,
-+	&clk_bus_uart3.common,
-+	&clk_bus_uart4.common,
-+	&clk_bus_uart5.common,
-+	&clk_bus_spi0.common,
-+	&clk_bus_spi1.common,
-+	&clk_bus_spi2.common,
-+	&clk_bus_spi3.common,
-+	&clk_bus_i2c0.common,
-+	&clk_bus_i2c1.common,
-+	&clk_bus_i2c2.common,
-+	&clk_bus_i2c3.common,
-+	&clk_bus_i2c4.common,
-+	&clk_bus_i2c5.common,
-+	&clk_bus_usb.common,
-+	&clk_bus_gmac.common,
-+	&clk_bus_mmc0.common,
-+	&clk_bus_mmc1.common,
-+	&clk_bus_mmc2.common,
-+	&clk_bus_ce.common,
-+	&clk_bus_dma.common,
-+	&clk_bus_thermal.common,
-+	&clk_bus_hdmi.common,
-+	&clk_bus_de.common,
-+	&clk_bus_gpu.common,
-+	&clk_bus_daudio.common,
-+	&clk_bus_owa.common,
-+	&clk_bus_dmic.common,
-+	&clk_bus_audioc.common,
-+	&clk_bus_ths.common,
-+	&clk_bus_gpadc.common,
-+	&clk_bus_lradc.common,
-+	&clk_bus_cec.common,
-+	&clk_bus_pwm.common,
-+	&clk_bus_spinlock.common,
-+	&clk_bus_drc.common,
-+	&clk_bus_msgbox.common,
-+	&clk_bus_rom.common,
-+	&uart0_clk.common,
-+	&uart1_clk.common,
-+	&uart2_clk.common,
-+	&uart3_clk.common,
-+	&uart4_clk.common,
-+	&uart5_clk.common,
-+	&spi0_mod_clk.common,
-+	&spi1_mod_clk.common,
-+	&spi2_mod_clk.common,
-+	&spi3_mod_clk.common,
-+	&i2c0_clk.common,
-+	&i2c1_clk.common,
-+	&i2c2_clk.common,
-+	&i2c3_clk.common,
-+	&i2c4_clk.common,
-+	&i2c5_clk.common,
-+	&usb_480_clk.common,
-+	&usb_12_clk.common,
-+	&usb_ref_clk.common,
-+	&usb_suspend_clk.common,
-+	&usb_phy0_clk.common,
-+	&usb_phy1_clk.common,
-+	&usb_phy2_clk.common,
-+	&mmc0_mod_clk.common,
-+	&mmc0_det.common,
-+	&mmc0_bus.common,
-+	&mmc1_mod_clk.common,
-+	&mmc1_det.common,
-+	&mmc1_bus.common,
-+	&mmc2_mod_clk.common,
-+	&mmc2_det.common,
-+	&mmc2_bus.common,
-+	&gmac_phy_clk.common,
-+	&gmac_ptp_clk.common,
-+	&hdmi_mod_clk.common,
-+	&hdmi_ddc_clk.common,
-+	&de_mod_clk.common,
-+	&gpu_mod_clk.common,
-+	&ths_clk.common,
-+	&gpadc_clk.common,
-+	&lradc_clk.common,
-+	&cec_clk.common,
-+	&pwm_clk.common,
-+	&daudio_clk.common,
-+	&owa_clk.common,
-+	&dmic_clk.common,
-+	&audioc_clk.common,
-+	&spinlock_clk.common,
-+	&drc_clk.common,
-+	&msgbox_clk.common,
-+	&rom_clk.common,
-+};
-+
 +/* ---------------------------------------------------------------------
 + * Reset controller
 + *
 + * Reset bit positions must match the RST_* constants from the DT
-+ * binding header.
++ * binding header.  The sunxi_ccu_reset_init() function walks this
++ * table and registers a reset domain for each entry.
 + * --------------------------------------------------------------------- */
 +
 +static struct ccu_reset_map sun60i_a733_ccu_resets[] = {
@@ -4486,16 +4352,6 @@ index 000000000..ec5814bb1
 +	[RST_BUS_MSGBOX]	= { CCU_MSGBOX_BGR, BIT(23) },
 +};
 +
-+static const struct sunxi_ccu_desc sun60i_a733_ccu_desc = {
-+	.ccu_clks	= sun60i_a733_ccu_clks,
-+	.num_ccu_clks	= ARRAY_SIZE(sun60i_a733_ccu_clks),
-+
-+	.hw_clks	= &sun60i_a733_hw_clks,
-+
-+	.resets		= sun60i_a733_ccu_resets,
-+	.num_resets	= ARRAY_SIZE(sun60i_a733_ccu_resets),
-+};
-+
 +/* ---------------------------------------------------------------------
 + * Platform driver
 + * --------------------------------------------------------------------- */
@@ -4508,16 +4364,55 @@ index 000000000..ec5814bb1
 +static int sun60i_a733_ccu_probe(struct platform_device *pdev)
 +{
 +	void __iomem *reg;
++	struct resource *res;
++	int ret;
 +
-+	reg = devm_platform_ioremap_resource(pdev, 0);
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!res)
++		return -ENODEV;
++
++	reg = devm_ioremap_resource(&pdev->dev, res);
 +	if (IS_ERR(reg))
 +		return PTR_ERR(reg);
 +
-+	return devm_sunxi_ccu_probe(&pdev->dev, reg, &sun60i_a733_ccu_desc);
++	/* Register all hardware clocks */
++	ret = devm_clk_hw_register_clk_data(&pdev->dev, NULL,
++					     sun60i_a733_hw_clks.hws,
++					     sun60i_a733_hw_clks.num);
++	if (ret) {
++		dev_err(&pdev->dev, "failed to register CCU clocks: %d\n",
++			ret);
++		return ret;
++	}
++
++	ret = devm_of_clk_add_hw_provider(&pdev->dev,
++					   of_clk_hw_onecell_get,
++					   &sun60i_a733_hw_clks);
++	if (ret) {
++		dev_err(&pdev->dev, "failed to add clock provider: %d\n",
++			ret);
++		return ret;
++	}
++
++	ret = sunxi_ccu_reset_init(pdev, reg, sun60i_a733_ccu_resets,
++				   ARRAY_SIZE(sun60i_a733_ccu_resets));
++	if (ret) {
++		dev_err(&pdev->dev,
++			"failed to register reset controller: %d\n", ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++static int sun60i_a733_ccu_remove(struct platform_device *pdev)
++{
++	return 0;
 +}
 +
 +static struct platform_driver sun60i_a733_ccu_driver = {
 +	.probe	= sun60i_a733_ccu_probe,
++	.remove	= sun60i_a733_ccu_remove,
 +	.driver	= {
 +		.name			= "clk-sun60i-a733",
 +		.of_match_table		= sun60i_a733_ccu_ids,
@@ -4528,7 +4423,6 @@ index 000000000..ec5814bb1
 +MODULE_AUTHOR("Allwinner");
 +MODULE_LICENSE("GPL");
 +MODULE_DESCRIPTION("Allwinner A733 CCU driver");
-+MODULE_IMPORT_NS("SUNXI_CCU");
 diff --git a/drivers/crypto/allwinner/Kconfig b/drivers/crypto/allwinner/Kconfig
 index 1048f8e95..fd02db793 100644
 --- a/drivers/crypto/allwinner/Kconfig
@@ -4563,7 +4457,7 @@ index 6effe864d..071eeff4f 100644
  obj-$(CONFIG_CRYPTO_DEV_SUN8I_SS) += sun8i-ss/
 diff --git a/drivers/crypto/allwinner/sun60i-ce.c b/drivers/crypto/allwinner/sun60i-ce.c
 new file mode 100644
-index 000000000..6e08b1b29
+index 000000000..56c040050
 --- /dev/null
 +++ b/drivers/crypto/allwinner/sun60i-ce.c
 @@ -0,0 +1,581 @@
@@ -4600,54 +4494,54 @@ index 000000000..6e08b1b29
 +#include <crypto/akcipher.h>
 +
 +/* CE register offsets */
-+#define CE_TLR		
-+#define CE_TRR		
-+#define CE_ICR		
-+#define CE_ISR		
-+#define CE_TSR		
-+#define CE_ERR		
++#define CE_TLR			0x0000
++#define CE_TRR			0x0004
++#define CE_ICR			0x0008
++#define CE_ISR			0x000c
++#define CE_TSR			0x0010
++#define CE_ERR			0x0014
 +
 +/* CE key area register */
-+#define CE_KEY_CTRL	
-+#define CE_KEY_READ	
++#define CE_KEY_CTRL		0x0040
++#define CE_KEY_READ		0x0044
 +
 +/* CE status */
-+#define CE_STAT		
++#define CE_STAT			0x0080
 +#define CE_STAT_BUSY		BIT(0)
 +
 +/* CE channel registers (per channel, 0x100 stride) */
-+#define CH_CCVR		
-+#define CH_CDS		
-+#define CH_CDD		
-+#define CH_CCD		
-+#define CH_CTL		
-+#define CH_IV		
-+#define CH_KEY0		
-+#define CH_KEY1		
-+#define CH_KEY2		
-+#define CH_KEY3		
-+#define CH_KEYS		
-+#define CH_PAD		
++#define CH_CCVR			0x0100
++#define CH_CDS			0x0104
++#define CH_CDD			0x0108
++#define CH_CCD			0x010c
++#define CH_CTL			0x0110
++#define CH_IV			0x0120
++#define CH_KEY0			0x0140
++#define CH_KEY1			0x0144
++#define CH_KEY2			0x0148
++#define CH_KEY3			0x014c
++#define CH_KEYS			0x0150
++#define CH_PAD			0x0160
 +
 +/* CE control bits */
-+#define CH_CTL_ALG_AES	
-+#define CH_CTL_ALG_DES	
-+#define CH_CTL_ALG_3DES	
-+#define CH_CTL_ALG_SHA1	
-+#define CH_CTL_ALG_SHA224
-+#define CH_CTL_ALG_SHA256
-+#define CH_CTL_ALG_RSA	
++#define CH_CTL_ALG_AES		0
++#define CH_CTL_ALG_DES		1
++#define CH_CTL_ALG_3DES		2
++#define CH_CTL_ALG_SHA1		4
++#define CH_CTL_ALG_SHA224	5
++#define CH_CTL_ALG_SHA256	6
++#define CH_CTL_ALG_RSA		8
 +
-+#define CH_CTL_OP_CIPHER
-+#define CH_CTL_OP_HASH	
-+#define CH_CTL_OP_MAC	
-+#define CH_CTL_OP_RSA	
++#define CH_CTL_OP_CIPHER	0
++#define CH_CTL_OP_HASH		1
++#define CH_CTL_OP_MAC		2
++#define CH_CTL_OP_RSA		3
 +
-+#define CH_CTL_DIR_ENCRYPT
++#define CH_CTL_DIR_ENCRYPT	0
 +#define CH_CTL_DIR_DECRYPT	BIT(4)
 +
 +/* AES modes */
-+#define CH_CTL_MODE_ECB	
++#define CH_CTL_MODE_ECB		0
 +#define CH_CTL_MODE_CBC		(1 << 5)
 +#define CH_CTL_MODE_CTR		(2 << 5)
 +#define CH_CTL_MODE_CTS		(3 << 5)
@@ -4668,7 +4562,7 @@ index 000000000..6e08b1b29
 +	struct dma_pool		*dma_pool;
 +
 +	/* Channels */
-+#define SUN60I_CE_MAX_CHANNELS
++#define SUN60I_CE_MAX_CHANNELS	4
 + spinlock_t		lock;
 +	bool			channel_used[SUN60I_CE_MAX_CHANNELS];
 +};
@@ -5185,7 +5079,7 @@ index bad7497a0..bccb242e6 100644
 +obj-$(CONFIG_DRM_SUN60I)	+= sun60i-drm.o
 diff --git a/drivers/gpu/drm/sun4i/sun60i-de.c b/drivers/gpu/drm/sun4i/sun60i-de.c
 new file mode 100644
-index 000000000..08992873e
+index 000000000..7a9221e0d
 --- /dev/null
 +++ b/drivers/gpu/drm/sun4i/sun60i-de.c
 @@ -0,0 +1,609 @@
@@ -5219,51 +5113,51 @@ index 000000000..08992873e
 +#include <drm/drm_vblank.h>
 +
 +/* DE register offsets */
-+#define DE_MUX_DCLK_CFG	
-+#define DE_MUX_DEBUG_CFG	
-+#define DE_MUX_BLEND_EN		
-+#define DE_MUX_BLEND_ROUTE	
-+#define DE_MUX_BLEND_SIZE	
-+#define DE_MUX_BG_COLOR		
++#define DE_MUX_DCLK_CFG		0x0010
++#define DE_MUX_DEBUG_CFG		0x0018
++#define DE_MUX_BLEND_EN			0x0080
++#define DE_MUX_BLEND_ROUTE		0x0084
++#define DE_MUX_BLEND_SIZE		0x0088
++#define DE_MUX_BG_COLOR			0x008c
 +
 +/* Channel (layer) registers */
-+#define DE_CH_FORMAT		
-+#define DE_CH_SIZE		
-+#define DE_CH_COORD		
-+#define DE_CH_PITCH		
-+#define DE_CH_TOP_LADDR		
-+#define DE_CH_COLOR_CTL		
-+#define DE_CH_SRC_COLOR_KEY	
-+#define DE_CH_DST_COLOR_KEY	
-+#define DE_CH_SCALE_CTRL	
-+#define DE_CH_SCALE_FACTOR	
-+#define DE_CH_SCALE_PHASE	
++#define DE_CH_FORMAT			0x0000
++#define DE_CH_SIZE			0x0004
++#define DE_CH_COORD			0x0008
++#define DE_CH_PITCH			0x000c
++#define DE_CH_TOP_LADDR			0x0010
++#define DE_CH_COLOR_CTL			0x0014
++#define DE_CH_SRC_COLOR_KEY		0x0018
++#define DE_CH_DST_COLOR_KEY		0x001c
++#define DE_CH_SCALE_CTRL		0x0040
++#define DE_CH_SCALE_FACTOR		0x0044
++#define DE_CH_SCALE_PHASE		0x0048
 +
 +/* Alpha blending registers */
-+#define DE_BLEND_MODE		
-+#define DE_BLEND_COLOR		
-+#define DE_BLEND_OUT_COLOR	
++#define DE_BLEND_MODE			0x0000
++#define DE_BLEND_COLOR			0x0004
++#define DE_BLEND_OUT_COLOR		0x0008
 +
 +/* Display engine architecture definitions */
-+#define SUN60I_DE_CLK_NUM	
-+#define SUN60I_DE_MAX_CHANNELS	
-+#define SUN60I_DE_PRIMARY_CHANNEL
-+#define SUN60I_DE_WIDTH_MAX	
-+#define SUN60I_DE_HEIGHT_MAX	
++#define SUN60I_DE_CLK_NUM		4
++#define SUN60I_DE_MAX_CHANNELS		5
++#define SUN60I_DE_PRIMARY_CHANNEL	4
++#define SUN60I_DE_WIDTH_MAX		4096
++#define SUN60I_DE_HEIGHT_MAX		4096
 +
 +/* Layer format definitions */
-+#define DE_FORMAT_ARGB8888	
-+#define DE_FORMAT_XRGB8888	
-+#define DE_FORMAT_RGB565	
-+#define DE_FORMAT_NV12		
-+#define DE_FORMAT_NV21		
-+#define DE_FORMAT_YUV420P	
++#define DE_FORMAT_ARGB8888		0
++#define DE_FORMAT_XRGB8888		1
++#define DE_FORMAT_RGB565		2
++#define DE_FORMAT_NV12			8
++#define DE_FORMAT_NV21			9
++#define DE_FORMAT_YUV420P		10
 +
 +/* Alpha blending modes */
-+#define DE_BLEND_MODE_ALPHA	
-+#define DE_BLEND_MODE_PREMULTI	
-+#define DE_BLEND_MODE_COVERAGE	
-+#define DE_BLEND_MODE_FBC	
++#define DE_BLEND_MODE_ALPHA		0
++#define DE_BLEND_MODE_PREMULTI		1
++#define DE_BLEND_MODE_COVERAGE		2
++#define DE_BLEND_MODE_FBC		3
 +
 +#define to_sun60i_de(x)		container_of(x, struct sun60i_de, drm)
 +
@@ -6009,7 +5903,7 @@ index 000000000..fec9cdb40
 +MODULE_DESCRIPTION("Allwinner A733 DRM display subsystem driver");
 diff --git a/drivers/gpu/drm/sun4i/sun60i-hdmi.c b/drivers/gpu/drm/sun4i/sun60i-hdmi.c
 new file mode 100644
-index 000000000..f13e92c90
+index 000000000..4dd7f4b48
 --- /dev/null
 +++ b/drivers/gpu/drm/sun4i/sun60i-hdmi.c
 @@ -0,0 +1,596 @@
@@ -6045,41 +5939,41 @@ index 000000000..f13e92c90
 +#include <media/cec-notifier.h>
 +
 +/* HDMI controller registers */
-+#define HDMI_CTRL		
-+#define HDMI_STATUS		
-+#define HDMI_INTERRUPT_MASK	
-+#define HDMI_INTERRUPT_STATUS	
-+#define HDMI_HPD_STATUS		
++#define HDMI_CTRL			0x0000
++#define HDMI_STATUS			0x0004
++#define HDMI_INTERRUPT_MASK		0x000c
++#define HDMI_INTERRUPT_STATUS		0x0010
++#define HDMI_HPD_STATUS			0x0020
 +
 +/* HDMI configuration registers */
-+#define HDMI_CFG_VIDEO		
-+#define HDMI_CFG_AUDIO		
-+#define HDMI_CFG_AVI		
-+#define HDMI_CFG_AUDIO_INFO	
-+#define HDMI_CFG_SPD		
-+#define HDMI_CFG_GCP		
++#define HDMI_CFG_VIDEO			0x0100
++#define HDMI_CFG_AUDIO			0x0104
++#define HDMI_CFG_AVI			0x0108
++#define HDMI_CFG_AUDIO_INFO		0x010c
++#define HDMI_CFG_SPD			0x0110
++#define HDMI_CFG_GCP			0x0114
 +
 +/* HDMI PHY registers */
-+#define HDMI_PHY_BASE		
-+#define HDMI_PHY_CTRL		
-+#define HDMI_PHY_PLL_CTRL	
-+#define HDMI_PHY_PLL_STATUS	
-+#define HDMI_PHY_TX_CTRL	
-+#define HDMI_PHY_TX_STATUS	
++#define HDMI_PHY_BASE			0x0200
++#define HDMI_PHY_CTRL			0x0200
++#define HDMI_PHY_PLL_CTRL		0x0204
++#define HDMI_PHY_PLL_STATUS		0x0208
++#define HDMI_PHY_TX_CTRL		0x020c
++#define HDMI_PHY_TX_STATUS		0x0210
 +
 +/* HDMI I2S audio registers */
-+#define HDMI_AUDIO_CTRL		
-+#define HDMI_AUDIO_STATUS	
-+#define HDMI_AUDIO_SAMPLE_RATE	
-+#define HDMI_AUDIO_CHANNELS	
-+#define HDMI_AUDIO_CTS_N		
++#define HDMI_AUDIO_CTRL			0x0300
++#define HDMI_AUDIO_STATUS		0x0304
++#define HDMI_AUDIO_SAMPLE_RATE		0x0308
++#define HDMI_AUDIO_CHANNELS		0x030c
++#define HDMI_AUDIO_CTS_N			0x0310
 +
 +/* HDMI CEC registers */
-+#define HDMI_CEC_CTRL		
-+#define HDMI_CEC_STATUS		
-+#define HDMI_CEC_TX_DATA	
-+#define HDMI_CEC_RX_DATA	
-+#define HDMI_CEC_INT_MASK	
++#define HDMI_CEC_CTRL			0x0400
++#define HDMI_CEC_STATUS			0x0404
++#define HDMI_CEC_TX_DATA		0x0408
++#define HDMI_CEC_RX_DATA		0x040c
++#define HDMI_CEC_INT_MASK		0x0410
 +
 +/* HDMI control bits */
 +#define HDMI_CTRL_ENABLE		BIT(31)
@@ -6144,9 +6038,9 @@ index 000000000..f13e92c90
 +};
 +
 +/* AVI InfoFrame color space */
-+#define HDMI_AVI_CS_RGB	
-+#define HDMI_AVI_CS_YCBCR422
-+#define HDMI_AVI_CS_YCBCR444
++#define HDMI_AVI_CS_RGB		0
++#define HDMI_AVI_CS_YCBCR422	1
++#define HDMI_AVI_CS_YCBCR444	2
 +
 +static void sun60i_hdmi_write(struct sun60i_hdmi *hdmi, u32 reg, u32 val)
 +{
@@ -6611,7 +6505,7 @@ index 000000000..f13e92c90
 +MODULE_DESCRIPTION("Allwinner A733 HDMI 2.0 controller driver");
 diff --git a/drivers/gpu/drm/sun4i/sun60i-tcon.c b/drivers/gpu/drm/sun4i/sun60i-tcon.c
 new file mode 100644
-index 000000000..05b613763
+index 000000000..b29a5456b
 --- /dev/null
 +++ b/drivers/gpu/drm/sun4i/sun60i-tcon.c
 @@ -0,0 +1,420 @@
@@ -6641,55 +6535,55 @@ index 000000000..05b613763
 +#include <drm/drm_probe_helper.h>
 +
 +/* TCON register offsets */
-+#define TCON_GLB_CTL		
-+#define TCON_GLB_STATUS	
-+#define TCON_INT_CFG		
-+#define TCON_INT_FLAG		
-+#define TCON_DAT_RSTY		
-+#define TCON1_DCLK_REV		
++#define TCON_GLB_CTL			0x0000
++#define TCON_GLB_STATUS		0x0004
++#define TCON_INT_CFG			0x0030
++#define TCON_INT_FLAG			0x0034
++#define TCON_DAT_RSTY			0x0048
++#define TCON1_DCLK_REV			0x0040
 +
 +/* TCON0 timing registers */
-+#define TCON0_CTRL		
-+#define TCON0_DCLK		
-+#define TCON0_BASIC_TIMING0	
-+#define TCON0_BASIC_TIMING1	
-+#define TCON0_BASIC_TIMING2	
-+#define TCON0_HV_IF		
-+#define TCON0_SPATAG		
-+#define TCON0_TIMING		
-+#define TCON0_TIMING_SYNC	
++#define TCON0_CTRL			0x0100
++#define TCON0_DCLK			0x0104
++#define TCON0_BASIC_TIMING0		0x0108
++#define TCON0_BASIC_TIMING1		0x010c
++#define TCON0_BASIC_TIMING2		0x0110
++#define TCON0_HV_IF			0x0114
++#define TCON0_SPATAG			0x0118
++#define TCON0_TIMING			0x0130
++#define TCON0_TIMING_SYNC		0x0134
 +
 +/* TCON1 timing registers */
-+#define TCON1_CTRL		
-+#define TCON1_DCLK		
-+#define TCON1_BASIC_TIMING0	
-+#define TCON1_BASIC_TIMING1	
-+#define TCON1_BASIC_TIMING2	
-+#define TCON1_HV_IF		
-+#define TCON1_TIMING		
-+#define TCON1_TIMING_SYNC	
++#define TCON1_CTRL			0x0200
++#define TCON1_DCLK			0x0204
++#define TCON1_BASIC_TIMING0		0x0208
++#define TCON1_BASIC_TIMING1		0x020c
++#define TCON1_BASIC_TIMING2		0x0210
++#define TCON1_HV_IF			0x0214
++#define TCON1_TIMING			0x0230
++#define TCON1_TIMING_SYNC		0x0234
 +
 +/* LVDS registers */
-+#define TCON1_LVDS_IF		
-+#define TCON1_LVDS_POL		
-+#define TCON1_LVDS_CLK		
-+#define TCON1_LVDS_DATA0	
-+#define TCON1_LVDS_DATA1	
-+#define TCON1_LVDS_DATA2	
-+#define TCON1_LVDS_DATA3	
++#define TCON1_LVDS_IF			0x0220
++#define TCON1_LVDS_POL			0x0224
++#define TCON1_LVDS_CLK			0x0228
++#define TCON1_LVDS_DATA0		0x0260
++#define TCON1_LVDS_DATA1		0x0264
++#define TCON1_LVDS_DATA2		0x0268
++#define TCON1_LVDS_DATA3		0x026c
 +
 +/* MIPI-DSI registers */
-+#define TCON1_DSI_IF		
-+#define TCON1_DSI_CLK		
++#define TCON1_DSI_IF			0x0220
++#define TCON1_DSI_CLK			0x0228
 +
 +/* Bus width defines */
-+#define TCON_DSI_BUS_WIDTH_16	
-+#define TCON_DSI_BUS_WIDTH_18	
-+#define TCON_DSI_BUS_WIDTH_24	
++#define TCON_DSI_BUS_WIDTH_16		0
++#define TCON_DSI_BUS_WIDTH_18		1
++#define TCON_DSI_BUS_WIDTH_24		2
 +
 +/* LVDS link modes */
-+#define TCON_LVDS_LINK_SINGLE	
-+#define TCON_LVDS_LINK_DUAL	
++#define TCON_LVDS_LINK_SINGLE		0
++#define TCON_LVDS_LINK_DUAL		1
 +
 +struct sun60i_tcon {
 +	struct device		*dev;
@@ -7073,7 +6967,7 @@ index e75e8045c..46df0ee68 100644
  obj-$(CONFIG_MFD_LP8788)	+= lp8788.o lp8788-irq.o
 diff --git a/drivers/mfd/mfd-axp8191.c b/drivers/mfd/mfd-axp8191.c
 new file mode 100644
-index 000000000..691e24a54
+index 000000000..d5613c15a
 --- /dev/null
 +++ b/drivers/mfd/mfd-axp8191.c
 @@ -0,0 +1,384 @@
@@ -7103,100 +6997,100 @@ index 000000000..691e24a54
 +#include <linux/delay.h>
 +
 +/* AXP8191 register space */
-+#define AXP8191_CHIP_ID	
-+#define AXP8191_CHIP_VER
-+#define AXP8191_POWER_STATUS
-+#define AXP8191_VBUS_STATUS
++#define AXP8191_CHIP_ID		0x00
++#define AXP8191_CHIP_VER	0x01
++#define AXP8191_POWER_STATUS	0x02
++#define AXP8191_VBUS_STATUS	0x03
 +
 +/* DCDC registers (0x10-0x17) */
-+#define AXP8191_DCDC_A_CTRL
-+#define AXP8191_DCDC_A_VOLT
-+#define AXP8191_DCDC_C_CTRL
-+#define AXP8191_DCDC_C_VOLT
-+#define AXP8191_DCDC_D_CTRL
-+#define AXP8191_DCDC_D_VOLT
-+#define AXP8191_DCDC_E_CTRL
-+#define AXP8191_DCDC_E_VOLT
-+#define AXP8191_DCDC_ABC_CTRL
++#define AXP8191_DCDC_A_CTRL	0x10
++#define AXP8191_DCDC_A_VOLT	0x11
++#define AXP8191_DCDC_C_CTRL	0x12
++#define AXP8191_DCDC_C_VOLT	0x13
++#define AXP8191_DCDC_D_CTRL	0x14
++#define AXP8191_DCDC_D_VOLT	0x15
++#define AXP8191_DCDC_E_CTRL	0x16
++#define AXP8191_DCDC_E_VOLT	0x17
++#define AXP8191_DCDC_ABC_CTRL	0x18
 +
 +/* ALDO registers (0x19-0x1f) */
-+#define AXP8191_ALDO1_CTRL
-+#define AXP8191_ALDO1_VOLT
-+#define AXP8191_ALDO2_CTRL
-+#define AXP8191_ALDO2_VOLT
-+#define AXP8191_ALDO3_CTRL
-+#define AXP8191_ALDO3_VOLT
++#define AXP8191_ALDO1_CTRL	0x19
++#define AXP8191_ALDO1_VOLT	0x1a
++#define AXP8191_ALDO2_CTRL	0x1b
++#define AXP8191_ALDO2_VOLT	0x1c
++#define AXP8191_ALDO3_CTRL	0x1d
++#define AXP8191_ALDO3_VOLT	0x1e
 +
 +/* BLDO registers (0x20-0x27) */
-+#define AXP8191_BLDO1_CTRL
-+#define AXP8191_BLDO1_VOLT
-+#define AXP8191_BLDO2_CTRL
-+#define AXP8191_BLDO2_VOLT
-+#define AXP8191_BLDO3_CTRL
-+#define AXP8191_BLDO3_VOLT
-+#define AXP8191_BLDO4_CTRL
-+#define AXP8191_BLDO4_VOLT
++#define AXP8191_BLDO1_CTRL	0x20
++#define AXP8191_BLDO1_VOLT	0x21
++#define AXP8191_BLDO2_CTRL	0x22
++#define AXP8191_BLDO2_VOLT	0x23
++#define AXP8191_BLDO3_CTRL	0x24
++#define AXP8191_BLDO3_VOLT	0x25
++#define AXP8191_BLDO4_CTRL	0x26
++#define AXP8191_BLDO4_VOLT	0x27
 +
 +/* CLDO registers (0x28-0x2f) */
-+#define AXP8191_CLDO1_CTRL
-+#define AXP8191_CLDO1_VOLT
-+#define AXP8191_CLDO2_CTRL
-+#define AXP8191_CLDO2_VOLT
-+#define AXP8191_CLDO3_CTRL
-+#define AXP8191_CLDO3_VOLT
-+#define AXP8191_CLDO4_CTRL
-+#define AXP8191_CLDO4_VOLT
++#define AXP8191_CLDO1_CTRL	0x28
++#define AXP8191_CLDO1_VOLT	0x29
++#define AXP8191_CLDO2_CTRL	0x2a
++#define AXP8191_CLDO2_VOLT	0x2b
++#define AXP8191_CLDO3_CTRL	0x2c
++#define AXP8191_CLDO3_VOLT	0x2d
++#define AXP8191_CLDO4_CTRL	0x2e
++#define AXP8191_CLDO4_VOLT	0x2f
 +
 +/* SW (boost) registers */
-+#define AXP8191_SW_CTRL	
-+#define AXP8191_SW_VOLT	
++#define AXP8191_SW_CTRL		0x30
++#define AXP8191_SW_VOLT		0x31
 +
 +/* Charger registers */
-+#define AXP8191_CHARGER_CTRL1
-+#define AXP8191_CHARGER_CTRL2
-+#define AXP8191_CHARGER_CTRL3
-+#define AXP8191_CHARGER_STATUS
-+#define AXP8191_BATTERY_STATUS
-+#define AXP8191_CHARGE_CTL
++#define AXP8191_CHARGER_CTRL1	0x40
++#define AXP8191_CHARGER_CTRL2	0x41
++#define AXP8191_CHARGER_CTRL3	0x42
++#define AXP8191_CHARGER_STATUS	0x43
++#define AXP8191_BATTERY_STATUS	0x44
++#define AXP8191_CHARGE_CTL	0x45
 +
 +/* ADC registers */
-+#define AXP8191_ADC_EN1	
-+#define AXP8191_ADC_EN2	
-+#define AXP8191_ADC_EN3	
-+#define AXP8191_ADC_SPEED
-+#define AXP8191_VBUS_VOLT_H
-+#define AXP8191_VBUS_VOLT_L
-+#define AXP8191_VBUS_CUR_H
-+#define AXP8191_VBUS_CUR_L
-+#define AXP8191_BATT_VOLT_H
-+#define AXP8191_BATT_VOLT_L
-+#define AXP8191_BATT_CUR_H
-+#define AXP8191_BATT_CUR_L
-+#define AXP8191_DCDC_A_VOLT_ADJ
-+#define AXP8191_DCDC_C_VOLT_ADJ
-+#define AXP8191_TEMP_H	
-+#define AXP8191_TEMP_L	
++#define AXP8191_ADC_EN1		0x50
++#define AXP8191_ADC_EN2		0x51
++#define AXP8191_ADC_EN3		0x52
++#define AXP8191_ADC_SPEED	0x53
++#define AXP8191_VBUS_VOLT_H	0x56
++#define AXP8191_VBUS_VOLT_L	0x57
++#define AXP8191_VBUS_CUR_H	0x58
++#define AXP8191_VBUS_CUR_L	0x59
++#define AXP8191_BATT_VOLT_H	0x5a
++#define AXP8191_BATT_VOLT_L	0x5b
++#define AXP8191_BATT_CUR_H	0x5c
++#define AXP8191_BATT_CUR_L	0x5d
++#define AXP8191_DCDC_A_VOLT_ADJ	0x60
++#define AXP8191_DCDC_C_VOLT_ADJ	0x61
++#define AXP8191_TEMP_H		0x62
++#define AXP8191_TEMP_L		0x63
 +
 +/* Interrupt registers */
-+#define AXP8191_INT_ENABLE1
-+#define AXP8191_INT_ENABLE2
-+#define AXP8191_INT_ENABLE3
-+#define AXP8191_INT_STATUS1
-+#define AXP8191_INT_STATUS2
-+#define AXP8191_INT_STATUS3
++#define AXP8191_INT_ENABLE1	0x70
++#define AXP8191_INT_ENABLE2	0x71
++#define AXP8191_INT_ENABLE3	0x72
++#define AXP8191_INT_STATUS1	0x74
++#define AXP8191_INT_STATUS2	0x75
++#define AXP8191_INT_STATUS3	0x76
 +
 +/* Control registers */
-+#define AXP8191_DCDC_PWM_CTRL
-+#define AXP8191_VOFF_CTRL
-+#define AXP8191_SHUTDOWN_CTL
-+#define AXP8191_RESET_CTL
++#define AXP8191_DCDC_PWM_CTRL	0x80
++#define AXP8191_VOFF_CTRL	0x81
++#define AXP8191_SHUTDOWN_CTL	0x82
++#define AXP8191_RESET_CTL	0x83
 +
 +/* Power off register */
-+#define AXP8191_POWER_OFF
-+#define AXP8191_POWER_OFF_MAGIC
++#define AXP8191_POWER_OFF	0xb0
++#define AXP8191_POWER_OFF_MAGIC	0x40
 +
-+#define AXP8191_CHIP_ID_VALUE
-+#define AXP8191_MAX_REGS
++#define AXP8191_CHIP_ID_VALUE	0xa1
++#define AXP8191_MAX_REGS	0xff
 +
 +/* Interrupt enable bits */
 +#define AXP8191_IRQ_VBUS_IN	BIT(2)
@@ -7475,10 +7369,10 @@ index ee412e6b8..331a3cda0 100644
  obj-$(CONFIG_MMC_BCM2835)	+= bcm2835.o
 diff --git a/drivers/mmc/host/sun20i-d1-mmc.c b/drivers/mmc/host/sun20i-d1-mmc.c
 new file mode 100644
-index 000000000..ef5c30498
+index 000000000..0848d4380
 --- /dev/null
 +++ b/drivers/mmc/host/sun20i-d1-mmc.c
-@@ -0,0 +1,1216 @@
+@@ -0,0 +1,1251 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
 + * MMC host driver for Allwinner sun60i-a733 SoC.
@@ -7496,7 +7390,7 @@ index 000000000..ef5c30498
 +#include <linux/module.h>
 +#include <linux/of.h>
 +#include <linux/of_device.h>
-+#include <linux/gpio.h>
++#include <linux/of_gpio.h>
 +#include <linux/pinctrl/consumer.h>
 +#include <linux/platform_device.h>
 +#include <linux/reset.h>
@@ -7517,10 +7411,10 @@ index 000000000..ef5c30498
 +#define DRV_NAME	"sun20i-d1-mmc"
 +
 +/* Poll interval for card detect */
-+#define SUNXI_CARD_DETECT_INTERVAL_MS	1000
++#define SUNXI_CARD_DETECT_INTERVAL_MS	200
 +
 +/* DMA transfer alignment */
-+#define SUNXI_DMA_ALIGN		4
++#define SUNXI_DMA_ALIGN		512
 +#define SUNXI_DMA_MAX_LEN	(SZ_512K)
 +
 +static int sunxi_mmc_init_host(struct sunxi_mmc_host *host);
@@ -7882,8 +7776,8 @@ index 000000000..ef5c30498
 +
 +	if (data) {
 +		cmd_reg |= SDC_CMD_DATA;
-+		host->blen = data->blksz;
-+		host->rlen = data->blocks * data->blksz;
++		host->blen = data->blen;
++		host->rlen = data->blocks * data->blen;
 +	}
 +
 +	/* Set timeout */
@@ -8066,10 +7960,10 @@ index 000000000..ef5c30498
 +{
 +	struct sunxi_mmc_host *host = mmc_priv(mmc);
 +
-+	if (!host->wp_gpio)
++	if (!gpio_is_valid(host->wp_gpio))
 +		return 0;
 +
-+	return !gpiod_get_value_cansleep(host->wp_gpio);
++	return !gpio_get_value_cansleep(host->wp_gpio);
 +}
 +
 +/* Get card detect status */
@@ -8077,10 +7971,10 @@ index 000000000..ef5c30498
 +{
 +	struct sunxi_mmc_host *host = mmc_priv(mmc);
 +
-+	if (!host->cd_gpio)
++	if (!gpio_is_valid(host->cd_gpio))
 +		return 1;  /* Assume card present if no CD GPIO */
 +
-+	return !gpiod_get_value_cansleep(host->cd_gpio);
++	return !gpio_get_value_cansleep(host->cd_gpio);
 +}
 +
 +/* Enable or disable card detection */
@@ -8088,7 +7982,7 @@ index 000000000..ef5c30498
 +{
 +	struct sunxi_mmc_host *host = mmc_priv(mmc);
 +
-+	if (host->cd_gpio) {
++	if (gpio_is_valid(host->cd_gpio)) {
 +		u32 reg;
 +
 +		reg = sunxi_mmc_readl(host, SDC_PRGPIO);
@@ -8212,7 +8106,7 @@ index 000000000..ef5c30498
 +/* Timeout handler for card detect */
 +static void sunxi_mmc_timeout_handler(struct timer_list *t)
 +{
-+	struct sunxi_mmc_host *host = container_of(t, struct sunxi_mmc_host, detect_timer);
++	struct sunxi_mmc_host *host = from_timer(host, t, detect_timer);
 +
 +	schedule_work(&host->work);
 +	mod_timer(&host->detect_timer,
@@ -8225,16 +8119,30 @@ index 000000000..ef5c30498
 +	int ret;
 +
 +	/* Get GPIOs */
-+	host->cd_gpio = devm_gpiod_get_index(dev, "cd", 0, GPIOD_IN);
-+	if (IS_ERR_OR_NULL(host->cd_gpio)) {
++	host->cd_gpio = of_get_named_gpio(dev->of_node, "cd-gpios", 0);
++	if (!gpio_is_valid(host->cd_gpio)) {
 +		dev_dbg(dev, "No CD GPIO, using internal detection\n");
-+		host->cd_gpio = NULL;
++		host->cd_gpio = -ENOENT;
++	} else {
++		ret = devm_gpio_request_one(dev, host->cd_gpio,
++					    GPIOF_DIR_IN, "mmc-cd");
++		if (ret) {
++			dev_err(dev, "Failed to request CD GPIO: %d\n", ret);
++			return ret;
++		}
 +	}
 +
-+	host->wp_gpio = devm_gpiod_get_index(dev, "wp", 0, GPIOD_IN);
-+	if (IS_ERR_OR_NULL(host->wp_gpio)) {
++	host->wp_gpio = of_get_named_gpio(dev->of_node, "wp-gpios", 0);
++	if (!gpio_is_valid(host->wp_gpio)) {
 +		dev_dbg(dev, "No WP GPIO\n");
-+		host->wp_gpio = NULL;
++		host->wp_gpio = -ENOENT;
++	} else {
++		ret = devm_gpio_request_one(dev, host->wp_gpio,
++					    GPIOF_DIR_IN, "mmc-wp");
++		if (ret) {
++			dev_err(dev, "Failed to request WP GPIO: %d\n", ret);
++			return ret;
++		}
 +	}
 +
 +	/* Determine transfer mode from DT */
@@ -8323,7 +8231,7 @@ index 000000000..ef5c30498
 +		return 0;
 +
 +	/* Check alignment */
-+	if (data->blocks * data->blksz > SUNXI_DMA_MAX_LEN)
++	if (data->blocks * data->blen > SUNXI_DMA_MAX_LEN)
 +		return -EINVAL;
 +
 +	if (host->xfer_mode == SUNXI_XFER_DMA_DESC) {
@@ -8426,7 +8334,7 @@ index 000000000..ef5c30498
 +}
 +
 +/* Reset host */
-+static void sunxi_mmc_host_reset(struct mmc_host *mmc)
++static void sunxi_mmc_reset(struct mmc_host *mmc)
 +{
 +	struct sunxi_mmc_host *host = mmc_priv(mmc);
 +
@@ -8434,7 +8342,7 @@ index 000000000..ef5c30498
 +}
 +
 +/* HS400 enhanced strobe support */
-+static void sunxi_mmc_hs400_enhanced_strobe(struct mmc_host *mmc,
++static int sunxi_mmc_hs400_enhanced_strobe(struct mmc_host *mmc,
 +					   struct mmc_ios *ios)
 +{
 +	struct sunxi_mmc_host *host = mmc_priv(mmc);
@@ -8445,6 +8353,8 @@ index 000000000..ef5c30498
 +	} else {
 +		sunxi_mmc_set_bus_timing(host, MMC_TIMING_MMC_HS400);
 +	}
++
++	return 0;
 +}
 +
 +static const struct mmc_host_ops sunxi_mmc_ops = {
@@ -8452,10 +8362,11 @@ index 000000000..ef5c30498
 +	.set_ios	= sunxi_mmc_set_ios,
 +	.get_ro		= sunxi_mmc_get_ro,
 +	.get_cd		= sunxi_mmc_get_cd,
++	.enable_card_detection = sunxi_mmc_enable_card_detection,
 +	.execute_tuning	= sunxi_mmc_execute_tuning,
 +	.card_busy	= sunxi_mmc_card_busy,
 +	.hs400_enhanced_strobe = sunxi_mmc_hs400_enhanced_strobe,
-+	.start_signal_voltage_switch = NULL,
++	.start_signal_voltage_switch = NULL, /* TODO: voltage switching */
 +	.card_event	= NULL,
 +};
 +
@@ -8573,7 +8484,7 @@ index 000000000..ef5c30498
 +
 +	/* Request IRQ */
 +	ret = devm_request_irq(&pdev->dev, host->irq, sunxi_mmc_irq, 0,
-+			       DRV_NAME, host);
++			       DRIVER_NAME, host);
 +	if (ret) {
 +		dev_err(&pdev->dev, "Failed to request IRQ %d: %d\n",
 +			host->irq, ret);
@@ -8600,7 +8511,7 @@ index 000000000..ef5c30498
 +
 +err_free_dma:
 +	cancel_work_sync(&host->work);
-+	timer_delete_sync(&host->detect_timer);
++	del_timer_sync(&host->detect_timer);
 +	if (host->xfer_mode == SUNXI_XFER_DMA_DESC)
 +		sunxi_mmc_free_dma_desc(host);
 +err_free_host:
@@ -8609,12 +8520,12 @@ index 000000000..ef5c30498
 +}
 +
 +/* Driver remove */
-+static void sunxi_mmc_remove(struct platform_device *pdev)
++static int sunxi_mmc_remove(struct platform_device *pdev)
 +{
 +	struct sunxi_mmc_host *host = platform_get_drvdata(pdev);
 +	struct mmc_host *mmc = host->mmc;
 +
-+	timer_delete_sync(&host->detect_timer);
++	del_timer_sync(&host->detect_timer);
 +	cancel_work_sync(&host->work);
 +
 +	mmc_remove_host(mmc);
@@ -8626,25 +8537,37 @@ index 000000000..ef5c30498
 +		sunxi_mmc_free_dma_desc(host);
 +
 +	mmc_free_host(mmc);
++
++	return 0;
 +}
 +
 +/* Suspend support */
 +static int __maybe_unused sunxi_mmc_suspend(struct device *dev)
 +{
 +	struct sunxi_mmc_host *host = dev_get_drvdata(dev);
++	struct mmc_host *mmc = host->mmc;
++	int ret = 0;
 +
-+	timer_delete_sync(&host->detect_timer);
++	del_timer_sync(&host->detect_timer);
 +	cancel_work_sync(&host->work);
++
++	if (mmc->card) {
++		ret = mmc_suspend_host(mmc);
++		if (ret)
++			goto out;
++	}
 +
 +	sunxi_mmc_clks_disable(host);
 +
-+	return 0;
++out:
++	return ret;
 +}
 +
 +/* Resume support */
 +static int __maybe_unused sunxi_mmc_resume(struct device *dev)
 +{
 +	struct sunxi_mmc_host *host = dev_get_drvdata(dev);
++	struct mmc_host *mmc = host->mmc;
 +	int ret;
 +
 +	ret = sunxi_mmc_clks_enable(host);
@@ -8658,6 +8581,12 @@ index 000000000..ef5c30498
 +		dev_err(dev, "Failed to init host: %d\n", ret);
 +		sunxi_mmc_clks_disable(host);
 +		return ret;
++	}
++
++	if (mmc->card) {
++		ret = mmc_resume_host(mmc);
++		if (ret)
++			return ret;
 +	}
 +
 +	mod_timer(&host->detect_timer,
@@ -8697,10 +8626,10 @@ index 000000000..ef5c30498
 +MODULE_ALIAS("platform:sun20i-d1-mmc");
 diff --git a/drivers/mmc/host/sun20i-d1-mmc.h b/drivers/mmc/host/sun20i-d1-mmc.h
 new file mode 100644
-index 000000000..224b71bea
+index 000000000..9a60b41f6
 --- /dev/null
 +++ b/drivers/mmc/host/sun20i-d1-mmc.h
-@@ -0,0 +1,308 @@
+@@ -0,0 +1,301 @@
 +/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
 + * Header for Allwinner sun60i-a733 MMC controller driver.
@@ -8711,42 +8640,37 @@ index 000000000..224b71bea
 +#ifndef _SUN20I_D1_MMC_H_
 +#define _SUN20I_D1_MMC_H_
 +
-+#include <linux/workqueue.h>
-+#include <linux/timer.h>
-+#include <linux/mmc/host.h>
-+#include <linux/gpio/consumer.h>
-+
 +/* SDC register offsets */
-+#define SDC_CTRL		0x000
-+#define SDC_CLKDIV		0x004
-+#define SDC_CKGEN		0x008
-+#define SDC_TMOUT		0x00c
-+#define SDC_WIDTH		0x010
-+#define SDC_DATA		0x014
-+#define SDC_BLOCK		0x018
-+#define SDC_FIFOCT		0x01c
-+#define SDC_INTSTS		0x020
-+#define SDC_INTEN		0x024
-+#define SDC_CMD			0x028
-+#define SDC_ARG			0x02c
-+#define SDC_RESP0		0x030
-+#define SDC_RESP1		0x034
-+#define SDC_RESP2		0x038
-+#define SDC_RESP3		0x03c
-+#define SDC_STATUS		0x040
-+#define SDC_FIFOSTA		0x044
-+#define SDC_DATASTS		0x048
-+#define SDC_DMAADDR		0x04c
-+#define SDC_DMAC		0x050
-+#define SDC_DMAC_ADDR		0x054
-+#define SDC_DMA_INT		0x058
-+#define SDC_DMA_INT_EN		0x05c
-+#define SDC_PRGPIO		0x060
-+#define SDC_DRV_DL		0x064
-+#define SDC_SAMPL_DL		0x068
-+#define SDC_DS_DL		0x06c
-+#define SDC_SMPL_DL_CT		0x070
-+#define SDC_GCTRL		0x074
++#define SDC_CTRL		0x00
++#define SDC_CLKDIV		0x04
++#define SDC_CKGEN		0x08
++#define SDC_TMOUT		0x0c
++#define SDC_WIDTH		0x10
++#define SDC_DATA		0x20
++#define SDC_BLOCK		0x24
++#define SDC_FIFOCT		0x28
++#define SDC_INTSTS		0x30
++#define SDC_INTEN		0x34
++#define SDC_CMD		0x3c
++#define SDC_ARG			0x40
++#define SDC_RESP0		0x50
++#define SDC_RESP1		0x54
++#define SDC_RESP2		0x58
++#define SDC_RESP3		0x5c
++#define SDC_STATUS		0x60
++#define SDC_FIFOSTA		0x64
++#define SDC_DATASTS		0xa4
++#define SDC_DMAADDR		0xc0
++#define SDC_DMAC		0xc4
++#define SDC_DMAC_ADDR		0xc8
++#define SDC_DMA_INT		0xcc
++#define SDC_DMA_INT_EN		0xd0
++#define SDC_PRGPIO		0x38
++#define SDC_DRV_DL		0x400
++#define SDC_SAMPL_DL		0x404
++#define SDC_DS_DL		0x408
++#define SDC_SMPL_DL_CT		0x420
++#define SDC_GCTRL		0x440
 +
 +/* SDC_CTRL bits */
 +#define SDC_CTRL_STOP_CLK		BIT(31)
@@ -8783,7 +8707,7 @@ index 000000000..224b71bea
 +/* SDC_WIDTH bits */
 +#define SDC_WIDTH_CARD_WIDTH_8		BIT(24)
 +#define SDC_WIDTH_CARD_WIDTH_4		BIT(0)
-+#define SDC_WIDTH_CARD_WIDTH_1		0x0
++#define SDC_WIDTH_CARD_WIDTH_1		0
 +
 +/* SDC_INTSTS bits */
 +#define SDC_INTSTS_CARD_ERROR		BIT(22)
@@ -8908,16 +8832,16 @@ index 000000000..224b71bea
 +	unsigned int			dma_len;
 +
 +	/* Timing and mode */
-+	unsigned int			timing;
-+	unsigned int			signal_voltage;
-+	bool			 GetById;
++	enum mmc_timing			timing;
++	enum mmc_signal_voltage	signal_voltage;
++	bool			.GetById;
 +	bool				def_speed_mode;
 +
 +	/* Card state */
 +	bool				card_present;
 +	bool				wp_enabled;
-+	struct gpio_desc		*wp_gpio;
-+	struct gpio_desc		*cd_gpio;
++	int				wp_gpio;
++	int				cd_gpio;
 +
 +	/* Transfer state */
 +	unsigned int			intSTS;
@@ -8929,8 +8853,6 @@ index 000000000..224b71bea
 +	bool				error;
 +	wait_queue_head_t		incorrect_cmd;
 +	wait_queue_head_t		incorrect_data;
-+	struct work_struct		work;
-+	struct timer_list		detect_timer;
 +
 +	/* Capabilities from DT */
 +	u32				capabilities;
@@ -8964,21 +8886,13 @@ index 000000000..224b71bea
 +	SUNXI_TIMING_MMC_HS400_ES,
 +};
 +
-+/* HS400 enhanced strobe (vendor extension, not in upstream) */
-+#ifndef MMC_TIMING_MMC_HS400_ES
-+#define MMC_TIMING_MMC_HS400_ES	13
-+#endif
-+#ifndef MMC_CAP_MMC_HS400_ES
-+#define MMC_CAP_MMC_HS400_ES	(1 << 30)
-+#endif
-+
 +/* Bus speed mode register values */
-+#define SUNXI_CLK_400K		0x00
-+#define SUNXI_CLK_25M		0x01
-+#define SUNXI_CLK_50M		0x02
-+#define SUNXI_CLK_52M		0x03
-+#define SUNXI_CLK_104M		0x04
-+#define SUNXI_CLK_208M		0x05
++#define SUNXI_CLK_400K		0
++#define SUNXI_CLK_25M		1
++#define SUNXI_CLK_50M		2
++#define SUNXI_CLK_52M		3
++#define SUNXI_CLK_104M		4
++#define SUNXI_CLK_208M		5
 +
 +/* Clock divider table */
 +struct sunxi_clk_factor {
@@ -8994,19 +8908,27 @@ index 000000000..224b71bea
 +};
 +
 +/* Host capabilities */
-+#define SUNXI_HOST_CAP_HS		MMC_CAP_4_BIT_DATA | \
++#define SUNXI_HOST_CAP_HS		MMC_CAP_1_BIT_DATA | \
++					MMC_CAP_4_BIT_DATA | \
 +					MMC_CAP_8_BIT_DATA | \
 +					MMC_CAP_MMC_HIGHSPEED | \
 +					MMC_CAP_SD_HIGHSPEED | \
++					MMC_CAP_3_3V | \
++					MMC_CAP_1_8V | \
++					MMC_CAP_ERASE | \
 +					MMC_CAP_CMD23
 +
 +#define SUNXI_HOST_CAP_HS200		MMC_CAP_UHS_SDR50 | \
-+					MMC_CAP_UHS_SDR104
++					MMC_CAP_UHS_SDR104 | \
++					MMC_CAP_MMC_HS200 | \
++					MMC_CAP_1_8V
 +
-+#define SUNXI_HOST_CAP_HS400		MMC_CAP2_HS400
++#define SUNXI_HOST_CAP_HS400		MMC_CAP_MMC_HS400 | \
++					MMC_CAP_MMC_HS400_ES | \
++					MMC_CAP_1_8V
 +
 +/* Default timeout values */
-+#define SUNXI_DEFAULT_TIMEOUT	0xff
++#define SUNXI_DEFAULT_TIMEOUT		0x03ffffff
 +
 +#endif /* _SUN20I_D1_MMC_H_ */
 diff --git a/drivers/net/ethernet/stmicro/stmmac/Kconfig b/drivers/net/ethernet/stmicro/stmmac/Kconfig
@@ -9041,10 +8963,10 @@ index a1cea2f57..643ae494e 100644
  obj-$(CONFIG_DWMAC_INTEL_PLAT)	+= dwmac-intel-plat.o
 diff --git a/drivers/net/ethernet/stmicro/stmmac/sun60i-gmac.c b/drivers/net/ethernet/stmicro/stmmac/sun60i-gmac.c
 new file mode 100644
-index 000000000..52c4a0b56
+index 000000000..17b66ea10
 --- /dev/null
 +++ b/drivers/net/ethernet/stmicro/stmmac/sun60i-gmac.c
-@@ -0,0 +1,725 @@
+@@ -0,0 +1,726 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
 + * Allwinner sun60i GMAC Ethernet driver
@@ -9070,33 +8992,28 @@ index 000000000..52c4a0b56
 +#include <linux/platform_device.h>
 +#include <linux/regulator/consumer.h>
 +#include <linux/stmmac.h>
-+
-+/* MDIO register bits (from legacy stmmac/mdio.h) */
-+#define MII_BUSY		BIT(0)
-+#define MII_WRITE		BIT(1)
-+#define MII_CLKRANGE_150_250	0x4
-+#define MII_DEVADDR_C45		BIT(12)
++#include <linux/stmmac/mdio.h>
 +
 +#define GMAC_SUN60I_NAME	"sun60i-gmac"
 +
 +/* GMAC register offsets */
 +#define GMAC_TX_CTRL		0x0000
 +#define GMAC_RX_CTRL		0x0004
-+#define GMAC_TX_DESC_LIST	0x0008
-+#define GMAC_RX_DESC_LIST	0x000c
-+#define GMAC_TX_DESC_CTRL	0x0010
-+#define GMAC_RX_DESC_CTRL	0x0014
-+#define GMAC_TX_DESC_RING	0x0018
-+#define GMAC_RX_DESC_RING	0x001c
-+#define GMAC_TX_STATUS		0x0020
-+#define GMAC_RX_STATUS		0x0024
-+#define GMAC_INT_STATUS		0x0028
-+#define GMAC_INT_ENABLE		0x002c
-+#define GMAC_RGMII_STATUS	0x0030
-+#define GMAC_MDIO_ADDR		0x0034
-+#define GMAC_MDIO_DATA		0x0038
-+#define GMAC_VLAN_TAG		0x003c
-+#define GMAC_VLAN_FILTER	0x0040
++#define GMAC_TX_DESC_LIST	0x0100
++#define GMAC_RX_DESC_LIST	0x0104
++#define GMAC_TX_DESC_CTRL	0x0108
++#define GMAC_RX_DESC_CTRL	0x010c
++#define GMAC_TX_DESC_RING	0x0110
++#define GMAC_RX_DESC_RING	0x0114
++#define GMAC_TX_STATUS		0x0120
++#define GMAC_RX_STATUS		0x0124
++#define GMAC_INT_STATUS		0x0130
++#define GMAC_INT_ENABLE		0x0134
++#define GMAC_RGMII_STATUS	0x0138
++#define GMAC_MDIO_ADDR		0x0200
++#define GMAC_MDIO_DATA		0x0204
++#define GMAC_VLAN_TAG		0x0280
++#define GMAC_VLAN_FILTER	0x0284
 +
 +/* TX control register bits */
 +#define GMAC_TX_ENABLE		BIT(0)
@@ -9116,13 +9033,13 @@ index 000000000..52c4a0b56
 +
 +/* RGMII status register */
 +#define GMAC_RGMII_SPEED_MASK	GENMASK(1, 0)
-+#define GMAC_RGMII_SPEED_1000	0x3
-+#define GMAC_RGMII_SPEED_100	0x1
-+#define GMAC_RGMII_SPEED_10	0x0
++#define GMAC_RGMII_SPEED_1000	0x02
++#define GMAC_RGMII_SPEED_100	0x01
++#define GMAC_RGMII_SPEED_10	0x00
 +
 +/* TX/RX descriptor sizes */
-+#define NUM_TX_DESCS	256
-+#define NUM_RX_DESCS	256
++#define NUM_TX_DESCS		256
++#define NUM_RX_DESCS		256
 +#define DESC_BUF_LEN		PAGE_SIZE
 +
 +/* DMA descriptors */
@@ -9285,7 +9202,7 @@ index 000000000..52c4a0b56
 +	if (bus->name[0] == '/')
 +		snprintf(bus->id, MII_BUS_ID_SIZE, "sun60i");
 +
-+	priv->phydev = of_phy_connect(priv->ndev, np, NULL, 0,
++	priv->phydev = of_phy_connect(bus, np, NULL, 0,
 +					priv->use_internal_delay ?
 +					PHY_INTERFACE_MODE_RGMII_ID :
 +					PHY_INTERFACE_MODE_RGMII);
@@ -9297,6 +9214,8 @@ index 000000000..52c4a0b56
 +	}
 +
 +	phy_set_max_speed(priv->phydev, 1000);
++	priv->phydev->supported &= PHY_GBIT_FEATURES;
++	priv->phydev->advertising = priv->phydev->supported;
 +
 +	return mdiobus_register(bus);
 +}
@@ -9423,8 +9342,6 @@ index 000000000..52c4a0b56
 +	writel(val, priv->base + GMAC_RGMII_STATUS);
 +}
 +
-+static irqreturn_t sun60i_eth_interrupt(int irq, void *dev_id);
-+
 +static int sun60i_eth_open(struct net_device *ndev)
 +{
 +	struct sun60i_eth *priv = netdev_priv(ndev);
@@ -9443,7 +9360,7 @@ index 000000000..52c4a0b56
 +	priv->duplex = priv->phydev->duplex;
 +	sun60i_eth_update_speed(priv);
 +
-+	ret = request_irq(priv->irq, sun60i_eth_interrupt, 0, ndev->name, priv);
++	ret = request_irq(priv->irq, stmmac_interrupt, 0, ndev->name, priv);
 +	if (ret) {
 +		dev_err(priv->dev, "Failed to request IRQ %d: %d\n",
 +			priv->irq, ret);
@@ -9555,7 +9472,7 @@ index 000000000..52c4a0b56
 +		dma = le32_to_cpu(desc->buffer);
 +		dma_sync_single_for_cpu(priv->dev, dma, len, DMA_FROM_DEVICE);
 +		skb_put_data(skb, phys_to_virt(dma), len);
-+		dma_sync_single_for_device(priv->dev, dma, len, DMA_FROM_DEVICE);
++		dma_sync_single_for_dev(priv->dev, dma, len, DMA_FROM_DEVICE);
 +
 +		skb->protocol = eth_type_trans(skb, ndev);
 +		skb->ip_summed = CHECKSUM_UNNECESSARY;
@@ -9577,13 +9494,13 @@ index 000000000..52c4a0b56
 +	napi_complete_done(&priv->napi, work_done);
 +
 +	/* Re-enable RX interrupt */
-+writel(GMAC_INT_RX | GMAC_INT_TX | GMAC_INT_ABNORMAL | GMAC_INT_NORMAL,
-+	       priv->base + GMAC_INT_ENABLE);
++ritel(GMAC_INT_RX | GMAC_INT_TX | GMAC_INT_ABNORMAL | GMAC_INT_NORMAL,
++	      priv->base + GMAC_INT_ENABLE);
 +
 +	return work_done;
 +}
 +
-+static irqreturn_t sun60i_eth_interrupt(int irq, void *dev_id)
++static irqreturn_t stmmac_interrupt(int irq, void *dev_id)
 +{
 +	struct sun60i_eth *priv = dev_id;
 +	u32 status;
@@ -9644,6 +9561,7 @@ index 000000000..52c4a0b56
 +	struct sun60i_eth *priv;
 +	struct net_device *ndev;
 +	struct resource *res;
++	const void *mac_addr;
 +	int ret;
 +
 +	ndev = devm_alloc_etherdev(&pdev->dev, sizeof(*priv));
@@ -9697,9 +9615,12 @@ index 000000000..52c4a0b56
 +					"allwinner,rx-delay-ps");
 +
 +	/* Get MAC address from DT or random */
-+	ret = of_get_mac_address(np, ndev->dev_addr);
-+	if (ret)
++	mac_addr = of_get_mac_address(np);
++	if (IS_ERR(mac_addr)) {
 +		eth_hw_addr_random(ndev);
++	} else {
++		ether_addr_copy(ndev->dev_addr, mac_addr);
++	}
 +
 +	ndev->netdev_ops = &sun60i_eth_netdev_ops;
 +	ndev->min_mtu = ETH_ZLEN;
@@ -9711,7 +9632,7 @@ index 000000000..52c4a0b56
 +
 +	sun60i_eth_set_ethtool_ops(ndev);
 +
-+	netif_napi_add(ndev, &priv->napi, sun60i_eth_poll);
++	INIT_NAPI(&priv->napi, sun60i_eth_poll, 64);
 +
 +	ret = sun60i_eth_mdio_init(priv);
 +	if (ret) {
@@ -9736,7 +9657,7 @@ index 000000000..52c4a0b56
 +	return ret;
 +}
 +
-+static void sun60i_eth_remove(struct platform_device *pdev)
++static int sun60i_eth_remove(struct platform_device *pdev)
 +{
 +	struct sun60i_eth *priv = platform_get_drvdata(pdev);
 +	struct net_device *ndev = priv->ndev;
@@ -9749,6 +9670,8 @@ index 000000000..52c4a0b56
 +	clk_disable_unprepare(priv->mac_clk);
 +	clk_disable_unprepare(priv->rx_clk);
 +	clk_disable_unprepare(priv->tx_clk);
++
++	return 0;
 +}
 +
 +static const struct of_device_id sun60i_eth_of_match[] = {
@@ -9810,7 +9733,7 @@ index bd74901a1..422dad6ce 100644
 +obj-$(CONFIG_PHY_SUN60I_USB3)		+= phy-sun60i-usb3.o
 diff --git a/drivers/phy/allwinner/phy-sun60i-pcie.c b/drivers/phy/allwinner/phy-sun60i-pcie.c
 new file mode 100644
-index 000000000..0d02eb95f
+index 000000000..1fd94a5ff
 --- /dev/null
 +++ b/drivers/phy/allwinner/phy-sun60i-pcie.c
 @@ -0,0 +1,258 @@
@@ -9823,8 +9746,6 @@ index 000000000..0d02eb95f
 +
 +#include <linux/clk.h>
 +#include <linux/delay.h>
-+#include <linux/io.h>
-+#include <linux/iopoll.h>
 +#include <linux/module.h>
 +#include <linux/of.h>
 +#include <linux/phy/phy.h>
@@ -9832,16 +9753,16 @@ index 000000000..0d02eb95f
 +#include <linux/regulator/consumer.h>
 +
 +/* PCIe PHY register offsets (mapped via SerDes) */
-+#define PCIE_PHY_CTRL		0x00
-+#define PCIE_PHY_STATUS		0x04
-+#define PCIE_PHY_TRIM		0x08
-+#define PCIE_PHY_EQ		0x0c
-+#define PCIE_PHY_TIMER		0x10
++#define PCIE_PHY_CTRL		0x0200
++#define PCIE_PHY_STATUS		0x0204
++#define PCIE_PHY_TRIM		0x0208
++#define PCIE_PHY_EQ		0x020c
++#define PCIE_PHY_TIMER		0x0210
 +
 +/* Control bits */
 +#define PCIE_CTRL_LANE_MASK	GENMASK(1, 0)
-+#define PCIE_CTRL_MODE_RC	BIT(2)
-+#define PCIE_CTRL_MODE_EP	BIT(3)
++#define PCIE_CTRL_MODE_RC	0x00	/* Root Complex */
++#define PCIE_CTRL_MODE_EP	0x01	/* Endpoint */
 +#define PCIE_CTRL_SSC_EN	BIT(4)
 +#define PCIE_CTRL_POWER_ON	BIT(8)
 +#define PCIE_CTRL_LANE0_EN	BIT(12)
@@ -9859,7 +9780,7 @@ index 000000000..0d02eb95f
 +#define PCIE_EQ_RX_PRESET_MASK	GENMASK(7, 4)
 +#define PCIE_EQ_RX_PRESET(x)	(((x) & 0xf) << 4)
 +
-+#define PCIE_PHY_TIMEOUT_US	500000
++#define PCIE_PHY_TIMEOUT_US	10000
 +
 +struct sun60i_pcie_phy {
 +	struct device		*dev;
@@ -9962,6 +9883,8 @@ index 000000000..0d02eb95f
 +
 +	switch (mode) {
 +	case PHY_MODE_PCIE:
++	case PHY_MODE_PCIE_A:
++	case PHY_MODE_PCIE_B:
 +		priv->mode = mode;
 +		break;
 +	default:
@@ -10074,7 +9997,7 @@ index 000000000..0d02eb95f
 +MODULE_DESCRIPTION("Allwinner sun60i PCIe PHY driver for A733");
 diff --git a/drivers/phy/allwinner/phy-sun60i-serdes.c b/drivers/phy/allwinner/phy-sun60i-serdes.c
 new file mode 100644
-index 000000000..d141d80e0
+index 000000000..7af7d5869
 --- /dev/null
 +++ b/drivers/phy/allwinner/phy-sun60i-serdes.c
 @@ -0,0 +1,379 @@
@@ -10097,24 +10020,24 @@ index 000000000..d141d80e0
 +#include <linux/regulator/consumer.h>
 +
 +/* SerDes register offsets */
-+#define SERDES_LANECTRL0
-+#define SERDES_LANECTRL1
-+#define SERDES_PLLCTRL	
-+#define SERDES_STATE	
-+#define SERDES_POWERDOWN
-+#define SERDES_RESET	
-+#define SERDES_RATE	
-+#define SERDES_TXCK_SEL	
-+#define SERDES_RX_EQ	
-+#define SERDES_TX_EMP	
-+#define SERDES_TEST	
++#define SERDES_LANECTRL0	0x0000
++#define SERDES_LANECTRL1	0x0004
++#define SERDES_PLLCTRL		0x0010
++#define SERDES_STATE		0x0020
++#define SERDES_POWERDOWN	0x0030
++#define SERDES_RESET		0x0034
++#define SERDES_RATE		0x0040
++#define SERDES_TXCK_SEL		0x0050
++#define SERDES_RX_EQ		0x0060
++#define SERDES_TX_EMP		0x0070
++#define SERDES_TEST		0x0080
 +
 +/* Lane control register bits */
 +#define LANECTRL_MODE_MASK	GENMASK(3, 0)
-+#define LANECTRL_MODE_USB3
-+#define LANECTRL_MODE_PCIE
-+#define LANECTRL_MODE_DP
-+#define LANECTRL_MODE_SATA
++#define LANECTRL_MODE_USB3	0x01
++#define LANECTRL_MODE_PCIE	0x02
++#define LANECTRL_MODE_DP	0x03
++#define LANECTRL_MODE_SATA	0x04
 +#define LANECTRL_TX_ENABLE	BIT(8)
 +#define LANECTRL_RX_ENABLE	BIT(9)
 +#define LANECTRL_TX_RESET	BIT(16)
@@ -10136,12 +10059,12 @@ index 000000000..d141d80e0
 +#define RESET_LANE1		BIT(2)
 +
 +/* Rate */
-+#define RATE_GEN1	
-+#define RATE_GEN2	
-+#define RATE_GEN3	
++#define RATE_GEN1		0x00
++#define RATE_GEN2		0x01
++#define RATE_GEN3		0x02
 +
-+#define SERDES_NUM_LANES
-+#define SERDES_TIMEOUT_US
++#define SERDES_NUM_LANES	2
++#define SERDES_TIMEOUT_US	10000
 +
 +struct sun60i_serdes {
 +	void __iomem		*base;
@@ -10459,10 +10382,10 @@ index 000000000..d141d80e0
 +MODULE_DESCRIPTION("Allwinner sun60i SerDes PHY driver");
 diff --git a/drivers/phy/allwinner/phy-sun60i-usb3.c b/drivers/phy/allwinner/phy-sun60i-usb3.c
 new file mode 100644
-index 000000000..3921a3d48
+index 000000000..b81b41c98
 --- /dev/null
 +++ b/drivers/phy/allwinner/phy-sun60i-usb3.c
-@@ -0,0 +1,225 @@
+@@ -0,0 +1,223 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
 + * Allwinner sun60i USB3 PHY driver
@@ -10471,8 +10394,6 @@ index 000000000..3921a3d48
 + */
 +
 +#include <linux/clk.h>
-+#include <linux/io.h>
-+#include <linux/iopoll.h>
 +#include <linux/module.h>
 +#include <linux/of.h>
 +#include <linux/phy/phy.h>
@@ -10480,14 +10401,14 @@ index 000000000..3921a3d48
 +#include <linux/regulator/consumer.h>
 +
 +/* USB3 PHY specific register offsets (mapped via SerDes) */
-+#define USB3_PHY_CTRL		0x00
-+#define USB3_PHY_STATUS		0x04
-+#define USB3_PHY_TRIM		0x08
-+#define USB3_PHY_TUNE		0x0c
++#define USB3_PHY_CTRL		0x0100
++#define USB3_PHY_STATUS		0x0104
++#define USB3_PHY_TRIM		0x0108
++#define USB3_PHY_TUNE		0x010c
 +
 +/* Control register bits */
-+#define USB3_CTRL_MODE_HOST	BIT(0)
-+#define USB3_CTRL_MODE_DEV	BIT(1)
++#define USB3_CTRL_MODE_HOST	0x00
++#define USB3_CTRL_MODE_DEV	0x01
 +#define USB3_CTRL_SSC_EN	BIT(4)
 +#define USB3_CTRL_RX_POL		BIT(5)
 +#define USB3_CTRL_TX_POL		BIT(6)
@@ -10499,7 +10420,7 @@ index 000000000..3921a3d48
 +#define USB3_STATUS_RX_READY	BIT(1)
 +#define USB3_STATUS_TX_READY	BIT(2)
 +
-+#define USB3_PHY_TIMEOUT_US	500000
++#define USB3_PHY_TIMEOUT_US	10000
 +
 +struct sun60i_usb3_phy {
 +	struct device		*dev;
@@ -10715,10 +10636,10 @@ index 951b3f1e4..ce34f323a 100644
  obj-$(CONFIG_PINCTRL_SUN9I_A80_R)	+= pinctrl-sun9i-a80-r.o
 diff --git a/drivers/pinctrl/sunxi/pinctrl-sun20i-a733.c b/drivers/pinctrl/sunxi/pinctrl-sun20i-a733.c
 new file mode 100644
-index 000000000..1cc45395b
+index 000000000..c857d17c9
 --- /dev/null
 +++ b/drivers/pinctrl/sunxi/pinctrl-sun20i-a733.c
-@@ -0,0 +1,712 @@
+@@ -0,0 +1,751 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +// Copyright (c) 2024 Allwinner Technology Co.,Ltd. All rights reserved.
 +
@@ -11396,16 +11317,55 @@ index 000000000..1cc45395b
 +		SUNXI_FUNCTION(0x2, "pdm")),
 +};
 +
++/*
++ * Bank base offsets. Each bank is indexed relative to bank A.
++ * PA=0, PB=1, PC=2, PD=3, PE=4, PF=5, PG=6, PH=7, PI=8, PJ=9, PK=10.
++ */
++static const unsigned int a733_bank_base[] = {
++	SUNXI_BANK_OFFSET('B', 'A'),
++	SUNXI_BANK_OFFSET('C', 'A'),
++	SUNXI_BANK_OFFSET('D', 'A'),
++	SUNXI_BANK_OFFSET('E', 'A'),
++	SUNXI_BANK_OFFSET('F', 'A'),
++	SUNXI_BANK_OFFSET('G', 'A'),
++	SUNXI_BANK_OFFSET('H', 'A'),
++	SUNXI_BANK_OFFSET('I', 'A'),
++	SUNXI_BANK_OFFSET('J', 'A'),
++	SUNXI_BANK_OFFSET('K', 'A'),
++};
++
++/*
++ * IRQ-capable banks: PB through PJ (9 banks).
++ * Maps software IRQ bank index -> hardware bank offset.
++ */
++static const unsigned int a733_irq_bank_map[] = {
++	SUNXI_BANK_OFFSET('B', 'A'),
++	SUNXI_BANK_OFFSET('C', 'A'),
++	SUNXI_BANK_OFFSET('D', 'A'),
++	SUNXI_BANK_OFFSET('E', 'A'),
++	SUNXI_BANK_OFFSET('F', 'A'),
++	SUNXI_BANK_OFFSET('G', 'A'),
++	SUNXI_BANK_OFFSET('H', 'A'),
++	SUNXI_BANK_OFFSET('I', 'A'),
++	SUNXI_BANK_OFFSET('J', 'A'),
++};
++
 +static const struct sunxi_pinctrl_desc a733_pinctrl_data = {
 +	.pins			= a733_pins,
 +	.npins			= ARRAY_SIZE(a733_pins),
-+	.irq_banks		= 9,
++	.banks			= ARRAY_SIZE(a733_bank_base),
++	.bank_base		= a733_bank_base,
++	.irq_banks		= ARRAY_SIZE(a733_irq_bank_map),
++	.irq_bank_map		= a733_irq_bank_map,
++	.pf_power_source_switch	= true,
++	.auto_power_source_switch = true,
++	.hw_type		= SUNXI_PCTL_HW_TYPE_4,
 +};
 +
 +static int a733_pinctrl_probe(struct platform_device *pdev)
 +{
-+	pr_info("sunxi pinctrl version: %s\n", A733_PINCTRL_VERSION);
-+	return sunxi_pinctrl_init(pdev, &a733_pinctrl_data);
++	sunxi_info(NULL, "sunxi pinctrl version: %s\n", A733_PINCTRL_VERSION);
++	return sunxi_bsp_pinctrl_init(pdev, &a733_pinctrl_data);
 +}
 +
 +static const struct of_device_id a733_pinctrl_match[] = {
@@ -11431,1478 +11391,8 @@ index 000000000..1cc45395b
 +MODULE_DESCRIPTION("Allwinner A733 pio pinctrl driver");
 +MODULE_LICENSE("GPL");
 +MODULE_VERSION(A733_PINCTRL_VERSION);
-diff --git a/drivers/regulator/Kconfig b/drivers/regulator/Kconfig
-index 87554ab92..5ac7a4228 100644
---- a/drivers/regulator/Kconfig
-+++ b/drivers/regulator/Kconfig
-@@ -220,6 +220,13 @@ config REGULATOR_AXP20X
- 	  This driver provides support for the voltage regulators on the
- 	  AXP20X PMIC.
- 
-+config REGULATOR_AXP8191
-+	tristate "X-POWERS AXP8191 PMIC Regulators"
-+	depends on MFD_AXP8191
-+	help
-+	  This driver provides support for the voltage regulators on the
-+	  AXP8191 PMIC.
-+
- config REGULATOR_BCM590XX
- 	tristate "Broadcom BCM590xx PMU Regulators"
- 	depends on MFD_BCM590XX
-diff --git a/drivers/regulator/Makefile b/drivers/regulator/Makefile
-index 35639f311..2de0ad179 100644
---- a/drivers/regulator/Makefile
-+++ b/drivers/regulator/Makefile
-@@ -32,6 +32,7 @@ obj-$(CONFIG_REGULATOR_AS3722) += as3722-regulator.o
- obj-$(CONFIG_REGULATOR_ATC260X) += atc260x-regulator.o
- obj-$(CONFIG_REGULATOR_AW37503) += aw37503-regulator.o
- obj-$(CONFIG_REGULATOR_AXP20X) += axp20x-regulator.o
-+obj-$(CONFIG_REGULATOR_AXP8191) += regulator-axp8191.o
- obj-$(CONFIG_REGULATOR_BCM590XX) += bcm590xx-regulator.o
- obj-$(CONFIG_REGULATOR_BD71815)	+= bd71815-regulator.o
- obj-$(CONFIG_REGULATOR_BD71828) += bd71828-regulator.o
-diff --git a/drivers/regulator/regulator-axp8191.c b/drivers/regulator/regulator-axp8191.c
-new file mode 100644
-index 000000000..7dcd48eaa
---- /dev/null
-+++ b/drivers/regulator/regulator-axp8191.c
-@@ -0,0 +1,285 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * AXP8191 Regulator driver
-+ *
-+ * Supports all 16 regulator rails on the AXP8191 PMIC:
-+ *   4x DCDC (A/C/D/E) buck converters
-+ *   1x SW (5V boost)
-+ *   3x ALDO (1-3)
-+ *   4x BLDO (1-4)
-+ *   4x CLDO (1-4)
-+ */
-+
-+#include <linux/module.h>
-+#include <linux/of.h>
-+#include <linux/platform_device.h>
-+#include <linux/regmap.h>
-+#include <linux/regulator/driver.h>
-+#include <linux/regulator/of_regulator.h>
-+
-+/* Regulator enable and voltage register maps */
-+struct axp8191_reg_info {
-+	const char *name;
-+	u8 enable_reg;
-+	u8 enable_bit;
-+	u8 vol_reg;
-+	u8 vol_min;
-+	u8 vol_max;
-+	u8 vol_step;
-+	unsigned int min_uv;
-+	unsigned int max_uv;
-+};
-+
-+#define AXPENT(_name, _ereg, _ebit, _vreg, _vmin, _vmax, _vstep, \
-+	       _minuv, _maxuv) \
-+	.name = _name, .enable_reg = _ereg, .enable_bit = _ebit, \
-+	.vol_reg = _vreg, .vol_min = _vmin, .vol_max = _vmax, \
-+	.vol_step = _vstep, .min_uv = _minuv, .max_uv = _maxuv
-+
-+static const struct axp8191_reg_info axp8191_regs[] = {
-+	/* DCDC A: 0.6V-1.5V, 10mV step */
-+	[0] = { AXPENT("DCDC_A", 0x10, 7, 0x11, 0x00, 0x3f, 0x01,
-+			600000, 1520000), },
-+	/* DCDC C: 0.8V-1.84V, 10mV step */
-+	[1] = { AXPENT("DCDC_C", 0x12, 7, 0x13, 0x00, 0x3f, 0x01,
-+			800000, 1840000), },
-+	/* DCDC D: 0.5V-1.34V, 10mV step */
-+	[2] = { AXPENT("DCDC_D", 0x14, 7, 0x15, 0x00, 0x3f, 0x01,
-+			500000, 1340000), },
-+	/* DCDC E: 1.2V-2.0V, 10mV step */
-+	[3] = { AXPENT("DCDC_E", 0x16, 7, 0x17, 0x00, 0x3f, 0x01,
-+			1200000, 2000000), },
-+	/* ALDO1: 0.7V-3.3V, 100mV step */
-+	[4] = { AXPENT("ALDO1", 0x18, 7, 0x19, 0x00, 0x1c, 0x01,
-+			700000, 3300000), },
-+	/* ALDO2: 0.7V-3.3V, 100mV step */
-+	[5] = { AXPENT("ALDO2", 0x1a, 7, 0x1b, 0x00, 0x1c, 0x01,
-+			700000, 3300000), },
-+	/* ALDO3: 0.7V-3.3V, 100mV step */
-+	[6] = { AXPENT("ALDO3", 0x1c, 7, 0x1d, 0x00, 0x1c, 0x01,
-+			700000, 3300000), },
-+	/* BLDO1: 0.7V-3.3V, 100mV step */
-+	[7] = { AXPENT("BLDO1", 0x20, 7, 0x21, 0x00, 0x1c, 0x01,
-+			700000, 3300000), },
-+	/* BLDO2: 0.7V-3.3V, 100mV step */
-+	[8] = { AXPENT("BLDO2", 0x22, 7, 0x23, 0x00, 0x1c, 0x01,
-+			700000, 3300000), },
-+	/* BLDO3: 0.7V-3.3V, 100mV step */
-+	[9] = { AXPENT("BLDO3", 0x24, 7, 0x25, 0x00, 0x1c, 0x01,
-+			700000, 3300000), },
-+		
-+	/* BLDO4: 0.7V-3.3V, 100mV step */
-+	[10] = { AXPENT("BLDO4", 0x26, 7, 0x27, 0x00, 0x1c, 0x01,
-+			 700000, 3300000), },
-+	/* CLDO1: 0.7V-3.3V, 100mV step */
-+	[11] = { AXPENT("CLDO1", 0x28, 7, 0x29, 0x00, 0x1c, 0x01,
-+			 700000, 3300000), },
-+	/* CLDO2: 0.7V-3.3V, 100mV step */
-+	[12] = { AXPENT("CLDO2", 0x2a, 7, 0x2b, 0x00, 0x1c, 0x01,
-+			 700000, 3300000), },
-+	/* CLDO3: 0.7V-3.3V, 100mV step */
-+	[13] = { AXPENT("CLDO3", 0x2c, 7, 0x2d, 0x00, 0x1c, 0x01,
-+			 700000, 3300000), },
-+	/* CLDO4: 0.7V-3.3V, 100mV step */
-+	[14] = { AXPENT("CLDO4", 0x2e, 7, 0x2f, 0x00, 0x1c, 0x01,
-+			 700000, 3300000), },
-+	/* SW: 5V fixed boost */
-+	[15] = { AXPENT("SW", 0x30, 7, 0x31, 0x00, 0x00, 0x00,
-+			 5000000, 5000000), },
-+};
-+
-+static unsigned int axp8191_map_voltage(struct regulator_dev *rdev,
-+					int min_uv, int max_uv)
-+{
-+	const struct axp8191_reg_info *info = rdev_get_drvdata(rdev);
-+	unsigned int voltage_range;
-+	unsigned int n_steps;
-+	unsigned int step_uv;
-+	unsigned int uv;
-+	int reg;
-+
-+	step_uv = (info->max_uv - info->min_uv) /
-+		  (info->vol_max - info->vol_min + 1);
-+
-+	if (min_uv < info->min_uv)
-+		min_uv = info->min_uv;
-+	if (max_uv > info->max_uv)
-+		max_uv = info->max_uv;
-+
-+	n_steps = DIV_ROUND_UP(min_uv - info->min_uv, step_uv);
-+	uv = info->min_uv + n_steps * step_uv;
-+
-+	if (uv > max_uv)
-+		return -EINVAL;
-+
-+	reg = info->vol_min + n_steps;
-+	if (reg > info->vol_max)
-+		return -EINVAL;
-+
-+	return uv;
-+}
-+
-+static int axp8191_set_voltage(struct regulator_dev *rdev,
-+			       int min_uv, int max_uv, unsigned int *sel)
-+{
-+	const struct axp8191_reg_info *info = rdev_get_drvdata(rdev);
-+	unsigned int uv;
-+	int reg;
-+
-+	if (info->vol_reg == 0)
-+		return -EINVAL;
-+
-+	uv = axp8191_map_voltage(rdev, min_uv, max_uv);
-+	if (uv < 0)
-+		return uv;
-+
-+	reg = (uv - info->min_uv) /
-+	      ((info->max_uv - info->min_uv) / (info->vol_max - info->vol_min + 1));
-+	reg += info->vol_min;
-+
-+	return regmap_update_bits(rdev->regmap, info->vol_reg,
-+				 info->vol_max, reg);
-+}
-+
-+static int axp8191_get_voltage(struct regulator_dev *rdev)
-+{
-+	const struct axp8191_reg_info *info = rdev_get_drvdata(rdev);
-+	unsigned int reg;
-+	unsigned int uv;
-+	unsigned int step_uv;
-+	int ret;
-+
-+	if (info->vol_reg == 0)
-+		return info->min_uv;
-+
-+	ret = regmap_read(rdev->regmap, info->vol_reg, &reg);
-+	if (ret)
-+		return ret;
-+
-+	reg &= info->vol_max;
-+
-+	step_uv = (info->max_uv - info->min_uv) /
-+		  (info->vol_max - info->vol_min + 1);
-+
-+	uv = info->min_uv + (reg - info->vol_min) * step_uv;
-+
-+	if (uv > info->max_uv)
-+		return info->max_uv;
-+
-+	return uv;
-+}
-+
-+static int axp8191_enable(struct regulator_dev *rdev)
-+{
-+	const struct axp8191_reg_info *info = rdev_get_drvdata(rdev);
-+
-+	return regmap_update_bits(rdev->regmap, info->enable_reg,
-+				 BIT(info->enable_bit), BIT(info->enable_bit));
-+}
-+
-+static int axp8191_disable(struct regulator_dev *rdev)
-+{
-+	const struct axp8191_reg_info *info = rdev_get_drvdata(rdev);
-+
-+	return regmap_update_bits(rdev->regmap, info->enable_reg,
-+				 BIT(info->enable_bit), 0);
-+}
-+
-+static int axp8191_is_enabled(struct regulator_dev *rdev)
-+{
-+	const struct axp8191_reg_info *info = rdev_get_drvdata(rdev);
-+	unsigned int val;
-+	int ret;
-+
-+	ret = regmap_read(rdev->regmap, info->enable_reg, &val);
-+	if (ret)
-+		return ret;
-+
-+	return !!(val & BIT(info->enable_bit));
-+}
-+
-+static const struct regulator_ops axp8191_regulator_ops = {
-+	.enable		= axp8191_enable,
-+	.disable	= axp8191_disable,
-+	.is_enabled	= axp8191_is_enabled,
-+	.set_voltage	= axp8191_set_voltage,
-+	.get_voltage	= axp8191_get_voltage,
-+	.list_voltage	= regulator_list_voltage_linear_range,
-+};
-+
-+#define AXP8191_RDESC(_name) \
-+	&((struct regulator_desc) { \
-+		.name = _name, \
-+		.ops = &axp8191_regulator_ops, \
-+		.type = REGULATOR_VOLTAGE, \
-+		.owner = THIS_MODULE, \
-+	})
-+
-+static int axp8191_regulator_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct regmap *regmap;
-+	struct regulator_dev *rdev;
-+	int i, ret;
-+
-+	regmap = dev_get_regmap(dev->parent, NULL);
-+	if (!regmap)
-+		return -ENODEV;
-+
-+	for (i = 0; i < ARRAY_SIZE(axp8191_regs); i++) {
-+		const struct axp8191_reg_info *info = &axp8191_regs[i];
-+		struct regulator_desc *desc;
-+
-+		desc = devm_kzalloc(dev, sizeof(*desc), GFP_KERNEL);
-+		if (!desc)
-+			return -ENOMEM;
-+
-+		desc->name = info->name;
-+		desc->ops = &axp8191_regulator_ops;
-+		desc->type = REGULATOR_VOLTAGE;
-+		desc->owner = THIS_MODULE;
-+		desc->of_match = devm_kasprintf(dev, GFP_KERNEL,
-+						"axp8191-%s-ldo",
-+						strtolower(info->name));
-+		if (!desc->of_match)
-+			return -ENOMEM;
-+
-+		rdev = devm_regulator_register(dev, desc, &info);
-+		if (IS_ERR(rdev)) {
-+			ret = dev_err_probe(dev, PTR_ERR(rdev),
-+					    "Failed to register %s\n",
-+					    info->name);
-+			return ret;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static const struct of_device_id axp8191_regulator_of_match[] = {
-+	{ .compatible = "allwinner,axp8191-regulator" },
-+	{ /* sentinel */ }
-+};
-+MODULE_DEVICE_TABLE(of, axp8191_regulator_of_match);
-+
-+static struct platform_driver axp8191_regulator_driver = {
-+	.probe	= axp8191_regulator_probe,
-+	.driver	= {
-+		.name		= "axp8191-regulator",
-+		.of_match_table	= axp8191_regulator_of_match,
-+	},
-+};
-+module_platform_driver(axp8191_regulator_driver);
-+
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Allwinner");
-+MODULE_DESCRIPTION("AXP8191 regulator driver");
-diff --git a/drivers/thermal/Kconfig b/drivers/thermal/Kconfig
-index b10080d61..879233f7a 100644
---- a/drivers/thermal/Kconfig
-+++ b/drivers/thermal/Kconfig
-@@ -369,6 +369,20 @@ config SUN8I_THERMAL
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called sun8i-thermal.
- 
-+config SUN60I_THERMAL
-+	tristate "Allwinner sun60i thermal driver"
-+	depends on ARCH_SUNXI || COMPILE_TEST
-+	depends on HAS_IOMEM
-+	depends on NVMEM
-+	depends on OF
-+	depends on RESET_CONTROLLER
-+	help
-+	  Support for the sun60i thermal sensor driver into the Linux thermal
-+	  framework.
-+
-+	  To compile this driver as a module, choose M here: the
-+	  module will be called sun60i-thermal.
-+
- config ROCKCHIP_THERMAL
- 	tristate "Rockchip thermal driver"
- 	depends on ARCH_ROCKCHIP || COMPILE_TEST
-diff --git a/drivers/thermal/Makefile b/drivers/thermal/Makefile
-index bb21e7ea7..87e8b411c 100644
---- a/drivers/thermal/Makefile
-+++ b/drivers/thermal/Makefile
-@@ -41,6 +41,7 @@ obj-$(CONFIG_THERMAL_MMIO)		+= thermal_mmio.o
- obj-$(CONFIG_AIROHA_THERMAL)	+= airoha_thermal.o
- obj-$(CONFIG_SPEAR_THERMAL)	+= spear_thermal.o
- obj-$(CONFIG_SUN8I_THERMAL)     += sun8i_thermal.o
-+obj-$(CONFIG_SUN60I_THERMAL)    += sun60i-thermal.o
- obj-$(CONFIG_ROCKCHIP_THERMAL)	+= rockchip_thermal.o
- obj-y				+= renesas/
- obj-$(CONFIG_KIRKWOOD_THERMAL)  += kirkwood_thermal.o
-diff --git a/drivers/thermal/sun60i-thermal.c b/drivers/thermal/sun60i-thermal.c
-new file mode 100644
-index 000000000..e6fac5a72
---- /dev/null
-+++ b/drivers/thermal/sun60i-thermal.c
-@@ -0,0 +1,354 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * Allwinner A733 (sun60iw2) Temperature Sensor (THS) driver
-+ *
-+ * Copyright (C) 2026 Allwinner Technology Co., Ltd.
-+ */
-+
-+#include <linux/bitfield.h>
-+#include <linux/clk.h>
-+#include <linux/interrupt.h>
-+#include <linux/io.h>
-+#include <linux/module.h>
-+#include <linux/of.h>
-+#include <linux/of_device.h>
-+#include <linux/platform_device.h>
-+#include <linux/regmap.h>
-+#include <linux/reset.h>
-+#include <linux/slab.h>
-+#include <linux/thermal.h>
-+
-+/* THS register offsets */
-+#define THS_CTRL		0x00
-+#define THS_INT_EN		0x04
-+#define THS_INT_STA		0x08
-+#define THS_INT_CTRL		0x0c
-+#define THS_MBUS_RST		0x10
-+#define THS_THS_DATA_0		0x14
-+#define THS_THS_DATA_1		0x18
-+
-+/* Sensor calibration registers */
-+#define THS_CALI_CTRL		0x1c
-+#define THS_CALI_DATA_0		0x20
-+#define THS_CALI_DATA_1		0x24
-+
-+/* Threshold registers */
-+#define THS_THRESHOLD_0		0x28
-+#define THS_THRESHOLD_1		0x2c
-+#define THS_THRESHOLD_CTRL	0x30
-+
-+/* Sensor control */
-+#define THS_SENSOR_CTRL		0x34
-+#define THS_SENSOR_EN		0x38
-+
-+/* Interrupt status bits */
-+#define THS_IRQ_DATA_READY_0		BIT(0)
-+#define THS_IRQ_DATA_READY_1		BIT(1)
-+#define THS_IRQ_THRESHOLD_0		BIT(8)
-+#define THS_IRQ_THRESHOLD_1		BIT(9)
-+#define THS_IRQ_OVERFLOW_0		BIT(16)
-+#define THS_IRQ_OVERFLOW_1		BIT(17)
-+
-+/* Control bits */
-+#define THS_CTRL_ENABLE			BIT(0)
-+#define THS_CTRL_SENSOR_EN_0		BIT(8)
-+#define THS_CTRL_SENSOR_EN_1		BIT(9)
-+#define THS_CTRLADC_SRC(n)		((n) << 20)
-+
-+/* Sensor filter */
-+#define THS_FILTER_EN			BIT(0)
-+#define THS_FILTER_SHIFT		4
-+#define THS_FILTER_MASK			(0xf << THS_FILTER_SHIFT)
-+
-+#define SUN60I_THERMAL_NUM_SENSORS	2
-+#define SUN60I_THERMAL_AVG_COUNT	8
-+
-+struct sun60i_thermal_sense {
-+	void __iomem		*data_reg;
-+	u32			threshold;
-+	bool			irq_enabled;
-+};
-+
-+struct sun60i_thermal {
-+	struct device		*dev;
-+	void __iomem		*regs;
-+	struct clk		*bus_clk;
-+	struct clk		*mod_clk;
-+	struct reset_control	*rstc;
-+	struct regmap		*regmap;
-+
-+	struct thermal_zone_device *tzd[SUN60I_THERMAL_NUM_SENSORS];
-+	struct sun60i_thermal_sense sense[SUN60I_THERMAL_NUM_SENSORS];
-+
-+	/* Calibration data */
-+	u32			cali_data[SUN60I_THERMAL_NUM_SENSORS];
-+	bool			calibrated;
-+};
-+
-+static int sun60i_thermal_read_temp(struct sun60i_thermal *ths, int sensor)
-+{
-+	u32 reg;
-+
-+	if (sensor >= SUN60I_THERMAL_NUM_SENSORS)
-+		return -EINVAL;
-+
-+	reg = readl(ths->regs + THS_THS_DATA_0 + sensor * 4);
-+	reg >>= 16;
-+	reg &= 0xfff;
-+
-+	return reg;
-+}
-+
-+static int sun60i_thermal_get_temp(struct thermal_zone_device *tz, int *temp)
-+{
-+	struct sun60i_thermal *ths = thermal_zone_device_priv(tz);
-+	int sensor;
-+	u32 raw_temp;
-+
-+	sensor = thermal_zone_device_id(tz);
-+
-+	raw_temp = sun60i_thermal_read_temp(ths, sensor);
-+
-+	if (ths->calibrated)
-+		*temp = (raw_temp - ths->cali_data[sensor]) * 412;
-+	else
-+		*temp = raw_temp * 412 - 1089000;
-+
-+	return 0;
-+}
-+
-+static const struct thermal_zone_device_ops sun60i_thermal_ops = {
-+	.get_temp	= sun60i_thermal_get_temp,
-+};
-+
-+static void sun60i_thermal_set_threshold(struct sun60i_thermal *ths,
-+					 int sensor, u32 temp)
-+{
-+	u32 reg;
-+
-+	reg = readl(ths->regs + THS_THRESHOLD_CTRL);
-+
-+	if (temp > 0) {
-+		writel(temp, ths->regs + THS_THRESHOLD_0 + sensor * 4);
-+		reg |= BIT(sensor);
-+	} else {
-+		reg &= ~BIT(sensor);
-+	}
-+
-+	writel(reg, ths->regs + THS_THRESHOLD_CTRL);
-+}
-+
-+static irqreturn_t sun60i_thermal_isr(int irq, void *data)
-+{
-+	struct sun60i_thermal *ths = data;
-+	u32 status;
-+	int i;
-+
-+	status = readl(ths->regs + THS_INT_STA);
-+	if (!status)
-+		return IRQ_NONE;
-+
-+	writel(status, ths->regs + THS_INT_STA);
-+
-+	for (i = 0; i < SUN60I_THERMAL_NUM_SENSORS; i++) {
-+		if (status & (THS_IRQ_THRESHOLD_0 << i))
-+			thermal_zone_device_update(ths->tzd[i],
-+						   THERMAL_EVENT_UNSPECIFIED);
-+	}
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static void sun60i_thermal_init_sensors(struct sun60i_thermal *ths)
-+{
-+	u32 val;
-+
-+	val = readl(ths->regs + THS_CTRL);
-+	val |= THS_CTRL_ENABLE;
-+	val |= THS_CTRL_SENSOR_EN_0 | THS_CTRL_SENSOR_EN_1;
-+	val |= THS_CTRLADC_SRC(0);
-+	writel(val, ths->regs + THS_CTRL);
-+
-+	val = THS_FILTER_EN | (0x07 << THS_FILTER_SHIFT);
-+	writel(val, ths->regs + THS_MBUS_RST);
-+
-+	val = THS_INT_STA;
-+	writel(val, ths->regs + THS_INT_STA);
-+
-+	val = THS_IRQ_DATA_READY_0 | THS_IRQ_DATA_READY_1;
-+	writel(val, ths->regs + THS_INT_EN);
-+
-+	sun60i_thermal_set_threshold(ths, 0, 95);
-+	sun60i_thermal_set_threshold(ths, 1, 95);
-+}
-+
-+static int sun60i_thermal_calibrate(struct sun60i_thermal *ths)
-+{
-+	u32 val;
-+
-+	val = readl(ths->regs + THS_CALI_CTRL);
-+	if (val & BIT(31)) {
-+		ths->cali_data[0] = readl(ths->regs + THS_CALI_DATA_0);
-+		ths->cali_data[1] = readl(ths->regs + THS_CALI_DATA_1);
-+		ths->calibrated = true;
-+	} else {
-+		ths->calibrated = false;
-+	}
-+
-+	return 0;
-+}
-+
-+static int sun60i_thermal_clks_init(struct sun60i_thermal *ths)
-+{
-+	int ret;
-+
-+	ths->bus_clk = devm_clk_get(ths->dev, "bus");
-+	if (IS_ERR(ths->bus_clk))
-+		return dev_err_probe(ths->dev, PTR_ERR(ths->bus_clk),
-+				     "failed to get bus clock\n");
-+
-+	ths->mod_clk = devm_clk_get(ths->dev, "mod");
-+	if (IS_ERR(ths->mod_clk))
-+		return dev_err_probe(ths->dev, PTR_ERR(ths->mod_clk),
-+				     "failed to get mod clock\n");
-+
-+	ret = clk_set_rate(ths->mod_clk, 24000000);
-+	if (ret)
-+		dev_warn(ths->dev, "failed to set mod clock rate: %d\n", ret);
-+
-+	return 0;
-+}
-+
-+static int sun60i_thermal_hw_init(struct sun60i_thermal *ths)
-+{
-+	int ret;
-+
-+	ret = reset_control_deassert(ths->rstc);
-+	if (ret) {
-+		dev_err(ths->dev, "failed to deassert reset: %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = clk_prepare_enable(ths->bus_clk);
-+	if (ret) {
-+		dev_err(ths->dev, "failed to enable bus clock: %d\n", ret);
-+		goto err_rst_assert;
-+	}
-+
-+	ret = clk_prepare_enable(ths->mod_clk);
-+	if (ret) {
-+		dev_err(ths->dev, "failed to enable mod clock: %d\n", ret);
-+		goto err_bus_clk;
-+	}
-+
-+	return 0;
-+
-+err_bus_clk:
-+	clk_disable_unprepare(ths->bus_clk);
-+err_rst_assert:
-+	reset_control_assert(ths->rstc);
-+
-+	return ret;
-+}
-+
-+static int sun60i_thermal_probe(struct platform_device *pdev)
-+{
-+	struct sun60i_thermal *ths;
-+	struct device *dev = &pdev->dev;
-+	int irq, ret;
-+	int i;
-+
-+	ths = devm_kzalloc(dev, sizeof(*ths), GFP_KERNEL);
-+	if (!ths)
-+		return -ENOMEM;
-+
-+	dev_set_drvdata(dev, ths);
-+	ths->dev = dev;
-+
-+	ret = sun60i_thermal_clks_init(ths);
-+	if (ret)
-+		return ret;
-+
-+	ths->rstc = devm_reset_control_get_shared(dev, NULL);
-+	if (IS_ERR(ths->rstc))
-+		return dev_err_probe(dev, PTR_ERR(ths->rstc),
-+				     "failed to get reset control\n");
-+
-+	ret = sun60i_thermal_hw_init(ths);
-+	if (ret)
-+		return ret;
-+
-+	ths->regs = devm_platform_ioremap_resource(pdev, 0);
-+	if (IS_ERR(ths->regs)) {
-+		ret = PTR_ERR(ths->regs);
-+		goto err_clk_disable;
-+	}
-+
-+	irq = platform_get_irq(pdev, 0);
-+	if (irq >= 0) {
-+		ret = devm_request_irq(dev, irq, sun60i_thermal_isr, 0,
-+				       dev_name(dev), ths);
-+		if (ret) {
-+			dev_err(dev, "failed to request IRQ %d: %d\n", irq, ret);
-+			goto err_clk_disable;
-+		}
-+	}
-+
-+	sun60i_thermal_calibrate(ths);
-+	sun60i_thermal_init_sensors(ths);
-+
-+	for (i = 0; i < SUN60I_THERMAL_NUM_SENSORS; i++) {
-+		ths->tzd[i] = devm_thermal_of_zone_register(dev, i,
-+					ths, &sun60i_thermal_ops);
-+		if (IS_ERR(ths->tzd[i])) {
-+			ret = PTR_ERR(ths->tzd[i]);
-+			dev_err(dev, "failed to register thermal zone %d: %d\n",
-+				i, ret);
-+			goto err_clk_disable;
-+		}
-+	}
-+
-+	return 0;
-+
-+err_clk_disable:
-+	clk_disable_unprepare(ths->mod_clk);
-+	clk_disable_unprepare(ths->bus_clk);
-+	reset_control_assert(ths->rstc);
-+
-+	return ret;
-+}
-+
-+static void sun60i_thermal_remove(struct platform_device *pdev)
-+{
-+	struct sun60i_thermal *ths = platform_get_drvdata(pdev);
-+
-+	sun60i_thermal_set_threshold(ths, 0, 0);
-+	sun60i_thermal_set_threshold(ths, 1, 0);
-+
-+	writel(0, ths->regs + THS_INT_EN);
-+	writel(0, ths->regs + THS_CTRL);
-+
-+	clk_disable_unprepare(ths->mod_clk);
-+	clk_disable_unprepare(ths->bus_clk);
-+	reset_control_assert(ths->rstc);
-+}
-+
-+static const struct of_device_id sun60i_thermal_match[] = {
-+	{ .compatible = "allwinner,sun60i-a733-thermal" },
-+	{ }
-+};
-+MODULE_DEVICE_TABLE(of, sun60i_thermal_match);
-+
-+struct platform_driver sun60i_thermal_platform_driver = {
-+	.probe	= sun60i_thermal_probe,
-+	.remove	= sun60i_thermal_remove,
-+	.driver	= {
-+		.name		= "sun60i-thermal",
-+		.of_match_table	= sun60i_thermal_match,
-+	},
-+};
-+module_platform_driver(sun60i_thermal_platform_driver);
-+
-+MODULE_LICENSE("GPL v2");
-+MODULE_AUTHOR("Allwinner Technology Co., Ltd.");
-+MODULE_DESCRIPTION("Allwinner A733 Temperature Sensor driver");
-diff --git a/include/dt-bindings/clock/sun60i-a733-ccu.h b/include/dt-bindings/clock/sun60i-a733-ccu.h
-new file mode 100644
-index 000000000..a455afa01
---- /dev/null
-+++ b/include/dt-bindings/clock/sun60i-a733-ccu.h
-@@ -0,0 +1,369 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+/*
-+ * Copyright (C) 2024 The Linux Foundation. All rights reserved.
-+ *
-+ * Allwinner A733 Clock Control Unit (CCU) bindings.
-+ */
-+
-+#ifndef _DT_BINDINGS_CLK_SUN60I_A733_CCU_H_
-+#define _DT_BINDINGS_CLK_SUN60I_A733_CCU_H_
-+
-+/* Root clocks (from oscillator / PLLs) */
-+#define CLK_OSC24M		0
-+#define CLK_OSC32K		1
-+#define CLK_IOSC		2
-+#define CLK_PLL_CPU		3
-+#define CLK_PLL_AUDIO0		4
-+#define CLK_PLL_VIDEO0		5
-+#define CLK_PLL_VE		6
-+#define CLK_PLL_USB		7
-+#define CLK_PLL_CPU_AXI		8
-+#define CLK_PLL_PERIPH0		9
-+#define CLK_PLL_PERIPH1		10
-+#define CLK_PLL_GPU		11
-+#define CLK_PLL_DE		12
-+#define CLK_PLL_PCIE		13
-+#define CLK_PLL_DDR		14
-+
-+/* HOSC-gated sources */
-+#define CLK_HOSC		15
-+#define CLK_PLL_HOSC		16
-+
-+/* Audio PLL output divider */
-+#define CLK_PLL_AUDIO0_4X	17
-+#define CLK_PLL_AUDIO0_2X	18
-+#define CLK_PLL_AUDIO0_1X	19
-+
-+/* Video PLL output divider */
-+#define CLK_PLL_VIDEO0_4X	20
-+#define CLK_PLL_VIDEO0_2X	21
-+
-+/* PERIPH0 fixed dividers */
-+#define CLK_PLL_PERIPH0_2X	22
-+#define CLK_PLL_PERIPH0_4X	23
-+
-+/* Clock source mux + divider: CPU */
-+#define CLK_CPU			24
-+
-+/* AHB / APB (bus hierarchy) */
-+#define CLK_AHB			25
-+#define CLK_APB1		26
-+#define CLK_APB2		27
-+
-+/* Bus gates (enable/disable bus clock to peripherals) */
-+#define CLK_BUS_UART0		28
-+#define CLK_BUS_UART1		29
-+#define CLK_BUS_UART2		30
-+#define CLK_BUS_UART3		31
-+#define CLK_BUS_UART4		32
-+#define CLK_BUS_UART5		33
-+
-+#define CLK_BUS_SPI0		34
-+#define CLK_BUS_SPI1		35
-+#define CLK_BUS_SPI2		36
-+#define CLK_BUS_SPI3		37
-+
-+#define CLK_BUS_I2C0		38
-+#define CLK_BUS_I2C1		39
-+#define CLK_BUS_I2C2		40
-+#define CLK_BUS_I2C3		41
-+#define CLK_BUS_I2C4		42
-+#define CLK_BUS_I2C5		43
-+
-+#define CLK_BUS_USB		44
-+#define CLK_BUS_GMAC		45
-+#define CLK_BUS_MMC0		46
-+#define CLK_BUS_MMC1		47
-+#define CLK_BUS_MMC2		48
-+#define CLK_BUS_CE		49
-+#define CLK_BUS_DMA		50
-+#define CLK_BUS_THERMAL		51
-+#define CLK_BUS_HDMI		52
-+#define CLK_BUS_DE		53
-+#define CLK_BUS_GPU		54
-+#define CLK_BUS_DAUDIO		55
-+#define CLK_BUS_OWA		56
-+#define CLK_BUS_DMIC		57
-+#define CLK_BUS_AUDIOC		58
-+#define CLK_BUS_THS		59
-+#define CLK_BUS_GPADC		60
-+#define CLK_BUS_LRADC		61
-+#define CLK_BUS_CEC		62
-+#define CLK_BUS_PWM		63
-+#define CLK_BUS_SPINLOCK	64
-+#define CLK_BUS_DRC		65
-+#define CLK_BUS_MSGBOX		66
-+#define CLK_BUS_ROM		67
-+
-+/* Module (functional) clocks */
-+#define CLK_UART0		68
-+#define CLK_UART1		69
-+#define CLK_UART2		70
-+#define CLK_UART3		71
-+#define CLK_UART4		72
-+#define CLK_UART5		73
-+
-+#define CLK_SPI0		74
-+#define CLK_SPI1		75
-+#define CLK_SPI2		76
-+#define CLK_SPI3		77
-+
-+#define CLK_I2C0		78
-+#define CLK_I2C1		79
-+#define CLK_I2C2		80
-+#define CLK_I2C3		81
-+#define CLK_I2C4		82
-+#define CLK_I2C5		83
-+
-+#define CLK_USB_480		84
-+#define CLK_USB_12		85
-+#define CLK_USB_PHY		86
-+
-+#define CLK_MMC0		87
-+#define CLK_MMC0_SAMPLE		88
-+#define CLK_MMC0_DET		89
-+#define CLK_MMC0_BUS		90
-+
-+#define CLK_MMC1		91
-+#define CLK_MMC1_SAMPLE		92
-+#define CLK_MMC1_DET		93
-+#define CLK_MMC1_BUS		94
-+
-+#define CLK_MMC2		95
-+#define CLK_MMC2_SAMPLE		96
-+#define CLK_MMC2_DET		97
-+#define CLK_MMC2_BUS		98
-+
-+#define CLK_GMAC		99
-+#define CLK_GMAC_TX		100
-+#define CLK_GMAC_PTP		101
-+
-+#define CLK_HDMI		102
-+#define CLK_HDMI_DDC		103
-+
-+#define CLK_DE			104
-+#define CLK_DE_DIV		105
-+
-+#define CLK_GPU			106
-+#define CLK_GPU_DIV		107
-+
-+#define CLK_THS			108
-+#define CLK_GPADC		109
-+#define CLK_LRADC		110
-+#define CLK_CEC			111
-+#define CLK_PWM			112
-+
-+#define CLK_DAUDIO		113
-+#define CLK_OWA			114
-+#define CLK_DMIC		115
-+#define CLK_AUDIOC		116
-+
-+/* Vendor alias */
-+#define CLK_AUDIO		CLK_PLL_AUDIO0_4X
-+
-+#define CLK_SPINLOCK		117
-+#define CLK_DRC			118
-+#define CLK_MSGBOX		119
-+#define CLK_ROM			120
-+
-+#define CLK_USB_REF		121
-+#define CLK_USB_SUSPEND		122
-+
-+/* /2 clocks */
-+#define CLK_CPU_AXI		123
-+#define CLK_CCI			124
-+#define CLK_DSP			125
-+
-+/* PLL DDR1 (second DDR PLL) */
-+#define CLK_PLL_DDR1		126
-+
-+/* PCIe clocks */
-+#define CLK_PCIE0_AUX		127
-+#define CLK_PCIE0_AXI_SLV	128
-+
-+/* Resets (active-low, bit positions in reset register) */
-+#define RST_BUS_UART0		0
-+#define RST_BUS_UART1		1
-+#define RST_BUS_UART2		2
-+#define RST_BUS_UART3		3
-+#define RST_BUS_UART4		4
-+#define RST_BUS_UART5		5
-+
-+#define RST_BUS_SPI0		6
-+#define RST_BUS_SPI1		7
-+#define RST_BUS_SPI2		8
-+#define RST_BUS_SPI3		9
-+
-+#define RST_BUS_I2C0		10
-+#define RST_BUS_I2C1		11
-+#define RST_BUS_I2C2		12
-+#define RST_BUS_I2C3		13
-+#define RST_BUS_I2C4		14
-+#define RST_BUS_I2C5		15
-+
-+#define RST_BUS_USB		16
-+#define RST_BUS_GMAC		17
-+#define RST_BUS_MMC0		18
-+#define RST_BUS_MMC1		19
-+#define RST_BUS_MMC2		20
-+#define RST_BUS_CE		21
-+#define RST_BUS_DMA		22
-+#define RST_BUS_HDMI		23
-+#define RST_BUS_DE		24
-+#define RST_BUS_GPU		25
-+#define RST_BUS_THS		26
-+#define RST_BUS_DAUDIO		27
-+#define RST_BUS_OWA		28
-+#define RST_BUS_DMIC		29
-+#define RST_BUS_AUDIOC		30
-+#define RST_BUS_SPINLOCK	31
-+#define RST_BUS_DRC		32
-+#define RST_BUS_MSGBOX		33
-+#define RST_BUS_GPADC		34
-+#define RST_BUS_LRADC		35
-+#define RST_BUS_PWM		36
-+
-+/* PCIe reset */
-+#define RST_BUS_PCIE0		37
-+
-+/* Thermal reset */
-+#define RST_BUS_THERMAL		38
-+
-+/*
-+ * Vendor-name aliases (DTSI uses these names, which map to the
-+ * canonical indices above).
-+ */
-+
-+/* TWI / I2C aliases */
-+#define CLK_BUS_TWI0		CLK_BUS_I2C0
-+#define CLK_BUS_TWI1		CLK_BUS_I2C1
-+#define CLK_BUS_TWI2		CLK_BUS_I2C2
-+#define CLK_BUS_TWI3		CLK_BUS_I2C3
-+#define CLK_BUS_TWI4		CLK_BUS_I2C4
-+#define CLK_BUS_TWI5		CLK_BUS_I2C5
-+
-+/* SMHC / MMC aliases */
-+#define CLK_SMHC0		CLK_MMC0
-+#define CLK_SMHC1		CLK_MMC1
-+#define CLK_SMHC2		CLK_MMC2
-+
-+#define CLK_BUS_SMHC0		CLK_BUS_MMC0
-+#define CLK_BUS_SMHC1		CLK_BUS_MMC1
-+#define CLK_BUS_SMHC2		CLK_BUS_MMC2
-+
-+#define RST_BUS_SMHC0		RST_BUS_MMC0
-+#define RST_BUS_SMHC1		RST_BUS_MMC1
-+#define RST_BUS_SMHC2		RST_BUS_MMC2
-+
-+/* TWI / I2C reset aliases */
-+#define RST_BUS_TWI0		RST_BUS_I2C0
-+#define RST_BUS_TWI1		RST_BUS_I2C1
-+#define RST_BUS_TWI2		RST_BUS_I2C2
-+#define RST_BUS_TWI3		RST_BUS_I2C3
-+#define RST_BUS_TWI4		RST_BUS_I2C4
-+#define RST_BUS_TWI5		RST_BUS_I2C5
-+
-+/* MSGBOX aliases */
-+#define CLK_MSGBOX0		CLK_MSGBOX
-+#define RST_BUS_MSGBOX0		RST_BUS_MSGBOX
-+
-+/* PLL VE alias */
-+#define CLK_PLL_VE0		CLK_PLL_VE
-+
-+/* GMAC aliases */
-+#define CLK_GMAC0		CLK_GMAC
-+#define RST_BUS_GMAC0		RST_BUS_GMAC
-+
-+/* GPADC aliases */
-+#define CLK_GPADC0		CLK_GPADC
-+#define RST_BUS_GPADC0		RST_BUS_GPADC
-+
-+/* PWM aliases */
-+#define CLK_PWM0		CLK_PWM
-+#define RST_BUS_PWM0		RST_BUS_PWM
-+
-+/* VE / NPU bus clock placeholders */
-+#define CLK_BUS_VE_DEC		CLK_BUS_DMA
-+#define CLK_BUS_VE_ENC		CLK_BUS_DMA
-+#define CLK_BUS_NPU		CLK_BUS_DMA
-+
-+/* Timer / LEDC / TWI7-9 bus clocks */
-+#define CLK_BUS_TIMER		129
-+#define CLK_TIMER0		130
-+#define CLK_TIMER1		131
-+#define CLK_BUS_LEDC		132
-+#define CLK_LEDC			133
-+#define CLK_BUS_TWI7		134
-+#define CLK_BUS_TWI8		135
-+#define CLK_BUS_TWI9		136
-+
-+/* USB clocks */
-+#define CLK_USB0			137
-+#define CLK_USB0_DEVICE		138
-+#define CLK_USB0_EHCI		139
-+#define CLK_USB0_OHCI		140
-+#define CLK_USB1			141
-+#define CLK_USB1_EHCI		142
-+#define CLK_USB1_OHCI		143
-+#define CLK_USB2			144
-+#define CLK_USB2_MF		145
-+
-+/* DMA / MBUS / CE clocks */
-+#define CLK_DMA			146
-+#define CLK_MBUS_DMA		147
-+#define CLK_MBUS_CE		148
-+#define CLK_CE			149
-+
-+/* VE (video engine) clocks */
-+#define CLK_PLL_VE1		150
-+#define CLK_VE_AHB_GATE		151
-+#define CLK_VE_DEC			152
-+#define CLK_VE_DEC_MBUS		153
-+#define CLK_DEC_MBUS_GATE		154
-+#define CLK_VE_ENC_AHB_GATE	155
-+#define CLK_VE_ENC0		156
-+#define CLK_MBUS_VE_GATE		157
-+#define CLK_MBUS_VE		158
-+
-+/* NPU clocks */
-+#define CLK_NPU			159
-+#define CLK_PLL_NPU		160
-+
-+/* PERI0 derived clocks */
-+#define CLK_PLL_PERI0_800M	161
-+#define CLK_PLL_PERI0_600M	162
-+#define CLK_PLL_PERI0_300M	163
-+#define CLK_PLL_PERI0_200M	164
-+#define CLK_PLL_PERI0_400M	CLK_PLL_PERIPH0_4X
-+
-+/* GMAC derived clocks */
-+#define CLK_GMAC0_MBUS		165
-+#define CLK_GMAC0_PHY		166
-+
-+/* GPADC derived clock */
-+#define CLK_GPADC0_24M		167
-+
-+/* UART6 */
-+#define CLK_UART6			168
-+
-+/* New reset indices */
-+#define RST_BUS_TWI7		55
-+#define RST_BUS_TWI8		56
-+#define RST_BUS_TWI9		57
-+#define RST_USB0			58
-+#define RST_USB0_EHCI		59
-+#define RST_USB0_OHCI		60
-+#define RST_USB1			61
-+#define RST_USB1_EHCI		62
-+#define RST_USB1_OHCI		63
-+#define RST_USB2			64
-+#define RST_BUS_GMAC0_AXI	65
-+#define RST_BUS_TIMER0		66
-+#define RST_BUS_LEDC		67
-+#define RST_BUS_NPU		68
-+#define RST_BUS_VE_DEC		69
-+#define RST_BUS_VE_ENC0		70
-+#define RST_BUS_UART6		71
-+
-+#endif /* _DT_BINDINGS_CLK_SUN60I_A733_CCU_H_ */
-diff --git a/include/dt-bindings/clock/sun60i-a733-r-ccu.h b/include/dt-bindings/clock/sun60i-a733-r-ccu.h
-new file mode 100644
-index 000000000..431623835
---- /dev/null
-+++ b/include/dt-bindings/clock/sun60i-a733-r-ccu.h
-@@ -0,0 +1,80 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+/*
-+ * Copyright (C) 2024 The Linux Foundation. All rights reserved.
-+ *
-+ * Allwinner A733 R-CCU (PRCM / Resource Clock Control Unit) bindings.
-+ */
-+
-+#ifndef _DT_BINDINGS_CLK_SUN60I_A733_R_CCU_H_
-+#define _DT_BINDINGS_CLK_SUN60I_A733_R_CCU_H_
-+
-+/* R-CCU / PRCM clock IDs (logical; used in DTS and driver) */
-+
-+#define R_CLK_OSC32K		0
-+#define R_CLK_IOSC		1
-+#define R_CLK_PLL_AUDIO0	2
-+
-+/* RTC domain */
-+#define R_CLK_RTC_32K		3
-+#define R_CLK_RTC_1K		4
-+#define R_CLK_CEC_32K		5
-+
-+/* Reset- / low-power-domain bus clocks */
-+#define R_CLK_R_PIO		6
-+#define R_CLK_R_APB1		7
-+
-+/* Peripheral clocks in the R domain */
-+#define R_CLK_R_UART		8
-+#define R_CLK_R_I2C		9
-+#define R_CLK_R_PWM		10
-+#define R_CLK_R_SPINLOCK	11
-+#define R_CLK_R_THERMAL		12
-+#define R_CLK_R_SID		13
-+#define R_CLK_R_CPUCFG		14
-+
-+/* Module clocks inside R domain */
-+#define R_CLK_R_UART_CK		15
-+#define R_CLK_R_I2C_CK		16
-+#define R_CLK_THERMAL_SENSOR	17
-+#define R_CLK_R_SID_CK		18
-+
-+/* Fixed dividers */
-+#define R_CLK_R_AHB		19
-+#define R_CLK_R_APB1_DIV	20
-+
-+/* R-PPU clocks */
-+#define R_CLK_R_PPU		21
-+
-+/* R-CCU resets */
-+#define R_RST_RTC		0
-+#define R_RST_R_PIO		1
-+#define R_RST_R_UART		2
-+#define R_RST_R_I2C		3
-+#define R_RST_R_PWM		4
-+#define R_RST_R_SPINLOCK	5
-+#define R_RST_R_THERMAL		6
-+#define R_RST_R_SID		7
-+#define R_RST_R_CPUCFG		8
-+
-+/* R-PPU resets */
-+#define R_RST_R_PPU0		9
-+#define R_RST_R_PPU1		10
-+
-+/*
-+ * Vendor-name aliases (DTSI uses these names, which map to the
-+ * canonical indices above).
-+ */
-+#define CLK_R_AHB		R_CLK_R_AHB
-+#define CLK_R_APB0		R_CLK_R_APB1
-+#define CLK_R_TWI0		R_CLK_R_I2C
-+#define RST_BUS_R_TWI0		R_RST_R_I2C
-+#define RST_BUS_RTC		R_RST_RTC
-+#define CLK_R_PPU		R_CLK_R_PPU
-+#define RST_BUS_R_PPU0		R_RST_R_PPU0
-+#define RST_BUS_R_PPU1		R_RST_R_PPU1
-+
-+/* New clock defines */
-+#define CLK_RTC_1K		22
-+#define CLK_RTC_SPI		23
-+
-+#endif /* _DT_BINDINGS_CLK_SUN60I_A733_R_CCU_H_ */
-diff --git a/include/dt-bindings/thermal/sun60i-a733-thermal.h b/include/dt-bindings/thermal/sun60i-a733-thermal.h
-new file mode 100644
---- /dev/null
-+++ b/include/dt-bindings/thermal/sun60i-a733-thermal.h
-@@ -0,0 +1,21 @@
-+/* SPDX-License-Identifier: (GPL-2.0-or-later OR MIT) */
-+/*
-+ * Device Tree binding constants for Allwinner A733 thermal sensor
-+ */
-+
-+#ifndef _DT_BINDINGS_THERMAL_SUN60I_A733_H
-+#define _DT_BINDINGS_THERMAL_SUN60I_A733_H
-+
-+#define SUN60I_THERMAL_ACTIVE_LOW	0
-+#define SUN60I_THERMAL_ACTIVE_HIGH	1
-+
-+#define SUN60I_THERMAL_TRIP_PASSIVE	0
-+#define SUN60I_THERMAL_TRIP_ACTIVE	1
-+#define SUN60I_THERMAL_TRIP_HOT	2
-+#define SUN60I_THERMAL_TRIP_CRITICAL	3
-+
-+#ifndef THERMAL_NO_LIMIT
-+#define THERMAL_NO_LIMIT		(~0)
-+#endif
-+
-+#endif /* _DT_BINDINGS_THERMAL_SUN60I_A733_H */
-diff --git a/include/dt-bindings/gpio/sun60i-a733-gpio.h b/include/dt-bindings/gpio/sun60i-a733-gpio.h
-new file mode 100644
---- /dev/null
-+++ b/include/dt-bindings/gpio/sun60i-a733-gpio.h
-@@ -0,0 +1,25 @@
-+/* SPDX-License-Identifier: (GPL-2.0-or-later OR MIT) */
-+/*
-+ * Device Tree binding constants for Allwinner A733 GPIO controller
-+ */
-+
-+#ifndef _DT_BINDINGS_GPIO_SUN60I_A733_H
-+#define _DT_BINDINGS_GPIO_SUN60I_A733_H
-+
-+#define GPIO_BANK_A	0
-+#define GPIO_BANK_B	1
-+#define GPIO_BANK_C	2
-+#define GPIO_BANK_D	3
-+#define GPIO_BANK_E	4
-+#define GPIO_BANK_F	5
-+#define GPIO_BANK_G	6
-+#define GPIO_BANK_H	7
-+#define GPIO_BANK_I	8
-+#define GPIO_BANK_J	9
-+#define GPIO_BANK_K	10
-+#define GPIO_BANK_L	11
-+#define GPIO_BANK_M	12
-+
-+#define GPIO_BANK(letter, offset)	(GPIO_BANK_ ## letter + (offset))
-+
-+#endif /* _DT_BINDINGS_GPIO_SUN60I_A733_H */
-diff --git a/sound/soc/sunxi/Kconfig b/sound/soc/sunxi/Kconfig
-index 205f422d9..9aa62da24 100644
---- a/sound/soc/sunxi/Kconfig
-+++ b/sound/soc/sunxi/Kconfig
-@@ -67,4 +67,14 @@ config SND_SUN8I_ADDA_PR_REGMAP
- 	tristate
- 	select REGMAP
- 
-+config SND_SUN60I_SOC
-+	tristate "Allwinner sun60i SoC Audio Support"
-+	depends on SND_SOC
-+	depends on ARCH_SUNXI || COMPILE_TEST
-+	depends on OF
-+	select SND_SOC_GENERIC_DMAENGINE_PCM
-+	help
-+	  Say Y or M to add support for the audio subsystem on Allwinner
-+	  sun60i SoCs.
-+
- endmenu
-diff --git a/sound/soc/sunxi/Makefile b/sound/soc/sunxi/Makefile
-index 4483fe9c9..8732218ca 100644
---- a/sound/soc/sunxi/Makefile
-+++ b/sound/soc/sunxi/Makefile
-@@ -7,3 +7,4 @@ obj-$(CONFIG_SND_SUN50I_CODEC_ANALOG) += sun50i-codec-analog.o
- obj-$(CONFIG_SND_SUN8I_CODEC) += sun8i-codec.o
- obj-$(CONFIG_SND_SUN8I_ADDA_PR_REGMAP) += sun8i-adda-pr-regmap.o
- obj-$(CONFIG_SND_SUN50I_DMIC) += sun50i-dmic.o
-+obj-$(CONFIG_SND_SUN60I_SOC) += sun60i-audio.o
-diff --git a/sound/soc/sunxi/sun60i-audio.c b/sound/soc/sunxi/sun60i-audio.c
-new file mode 100644
-index 000000000..aecdd4858
---- /dev/null
-+++ b/sound/soc/sunxi/sun60i-audio.c
-@@ -0,0 +1,212 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * Allwinner A733 (sun60iw2) Audio Machine driver
-+ *
-+ * Audio machine driver connecting I2S0 controller and ES8389 codec.
-+ *
-+ * Copyright (C) 2026 Allwinner Technology Co., Ltd.
-+ */
-+
-+#include <linux/module.h>
-+#include <linux/of.h>
-+#include <linux/of_device.h>
-+#include <linux/platform_device.h>
-+#include <linux/slab.h>
-+
-+#include <sound/asoundef.h>
-+#include <sound/pcm.h>
-+#include <sound/pcm_params.h>
-+#include <sound/soc.h>
-+#include <sound/jack.h>
-+
-+#define DRV_NAME "sun60i-audio"
-+
-+struct sun60i_audio_card {
-+	struct snd_soc_card	card;
-+	struct snd_soc_dai_link dai_link;
-+	struct platform_device	*i2s_pdev;
-+	struct platform_device	*codec_pdev;
-+	struct snd_soc_jack	*jack;
-+	bool			master;
-+};
-+
-+static const struct snd_soc_dapm_widget sun60i_audio_widgets[] = {
-+	SND_SOC_DAPM_HP("Headphone", NULL),
-+	SND_SOC_DAPM_SPK("Speaker", NULL),
-+	SND_SOC_DAPM_MIC("Internal Mic", NULL),
-+	SND_SOC_DAPM_MIC("External Mic", NULL),
-+};
-+
-+static const struct snd_soc_dapm_route sun60i_audio_routes[] = {
-+	{ "Headphone", NULL, "HPOL" },
-+	{ "Headphone", NULL, "HPOR" },
-+	{ "Speaker",  NULL, "SPKOUT" },
-+	{ "MIC1", NULL, "Internal Mic" },
-+	{ "MIC2", NULL, "External Mic" },
-+};
-+
-+static struct snd_soc_jack_pin jack_pins[] = {
-+	{
-+		.pin    = "Headphone",
-+		.mask   = SND_JACK_HEADPHONE,
-+	},
-+};
-+
-+static int sun60i_audio_startup(struct snd_pcm_substream *substream)
-+{
-+	return 0;
-+}
-+
-+static int sun60i_audio_hw_params(struct snd_pcm_substream *substream,
-+				  struct snd_pcm_hw_params *params)
-+{
-+	struct snd_soc_pcm_runtime *rtd = substream->private_data;
-+	struct snd_soc_component *component = snd_soc_rtdcom_lookup(rtd,
-+						   "es8388-codec");
-+
-+	snd_soc_component_set_sysclk(component, 0, 0, params_rate(params) * 256, 0);
-+
-+	return 0;
-+}
-+
-+static const struct snd_soc_ops sun60i_audio_ops = {
-+	.startup	= sun60i_audio_startup,
-+	.hw_params	= sun60i_audio_hw_params,
-+};
-+
-+static int sun60i_audio_init(struct snd_soc_pcm_runtime *rtd)
-+{
-+	struct sun60i_audio_card *priv = snd_soc_card_get_drvdata(rtd->card);
-+	struct snd_soc_component *component;
-+	int ret;
-+
-+	component = snd_soc_rtdcom_lookup(rtd, "es8388-codec");
-+
-+	ret = snd_soc_component_set_jack(component, priv->jack, NULL);
-+	if (ret) {
-+		dev_err(rtd->card->dev, "failed to set jack: %d\n", ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int sun60i_audio_of_xlate_dai_name(struct snd_soc_component *component,
-+					  const struct of_phandle_args *args,
-+					  const char **dai_name)
-+{
-+	return 0;
-+}
-+
-+static const struct snd_soc_component_driver sun60i_audio_component = {
-+	.of_xlate_dai_name	= sun60i_audio_of_xlate_dai_name,
-+	.idle_bias_on		= 1,
-+	.use_pmdown_time	= 1,
-+	.endianness		= 1,
-+};
-+
-+static int sun60i_audio_probe(struct platform_device *pdev)
-+{
-+	struct sun60i_audio_card *priv;
-+	struct device_node *i2s_node, *codec_node;
-+	struct snd_soc_dai_link *dai;
-+	struct snd_soc_dai_link_component *cpus;
-+	struct snd_soc_dai_link_component *codecs;
-+	struct snd_soc_dai_link_component *platforms;
-+	int ret;
-+
-+	priv = devm_kzalloc(&pdev->dev, sizeof(*priv), GFP_KERNEL);
-+	if (!priv)
-+		return -ENOMEM;
-+
-+	/* Find I2S DAI */
-+	i2s_node = of_parse_phandle(pdev->dev.of_node,
-+				    "allwinner,i2s-controller", 0);
-+	if (!i2s_node) {
-+		dev_err(&pdev->dev, "failed to get I2S controller\n");
-+		return -ENODEV;
-+	}
-+
-+	/* Find codec */
-+	codec_node = of_parse_phandle(pdev->dev.of_node,
-+				      "allwinner,codec", 0);
-+	if (!codec_node) {
-+		dev_err(&pdev->dev, "failed to get codec\n");
-+		of_node_put(i2s_node);
-+		return -ENODEV;
-+	}
-+
-+	dai = &priv->dai_link;
-+	dai->name = "sun60i-audio";
-+	dai->stream_name = "sun60i-audio";
-+
-+	cpus = devm_kzalloc(&pdev->dev, sizeof(*cpus), GFP_KERNEL);
-+	codecs = devm_kzalloc(&pdev->dev, sizeof(*codecs), GFP_KERNEL);
-+	platforms = devm_kzalloc(&pdev->dev, sizeof(*platforms), GFP_KERNEL);
-+	if (!cpus || !codecs || !platforms)
-+		return -ENOMEM;
-+
-+	cpus->dai_name = "ES8388 HiFi";
-+	codecs->dai_name = "ES8388 HiFi";
-+	codecs->of_node = codec_node;
-+	platforms->of_node = i2s_node;
-+
-+	dai->cpus = cpus;
-+	dai->num_cpus = 1;
-+	dai->codecs = codecs;
-+	dai->num_codecs = 1;
-+	dai->platforms = platforms;
-+	dai->num_platforms = 1;
-+	dai->init = sun60i_audio_init;
-+	dai->ops = &sun60i_audio_ops;
-+	dai->dai_fmt = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF |
-+		       SND_SOC_DAIFMT_CBP_CFC;
-+
-+	priv->card.dai_link = dai;
-+	priv->card.num_links = 1;
-+	priv->card.owner = THIS_MODULE;
-+	priv->card.dev = &pdev->dev;
-+	priv->card.name = "Sun60i A733 Audio";
-+	priv->card.dapm_widgets = sun60i_audio_widgets;
-+	priv->card.num_dapm_widgets = ARRAY_SIZE(sun60i_audio_widgets);
-+	priv->card.dapm_routes = sun60i_audio_routes;
-+	priv->card.num_dapm_routes = ARRAY_SIZE(sun60i_audio_routes);
-+
-+	ret = devm_snd_soc_register_card(&pdev->dev, &priv->card);
-+	if (ret) {
-+		dev_err(&pdev->dev, "failed to register card: %d\n", ret);
-+		goto err_node_put;
-+	}
-+
-+	platform_set_drvdata(pdev, priv);
-+
-+err_node_put:
-+	of_node_put(i2s_node);
-+	of_node_put(codec_node);
-+
-+	return ret;
-+}
-+
-+static void sun60i_audio_remove(struct platform_device *pdev)
-+{
-+}
-+
-+static const struct of_device_id sun60i_audio_match[] = {
-+	{ .compatible = "allwinner,sun60i-a733-audio" },
-+	{ }
-+};
-+MODULE_DEVICE_TABLE(of, sun60i_audio_match);
-+
-+struct platform_driver sun60i_audio_platform_driver = {
-+	.probe	= sun60i_audio_probe,
-+	.remove	= sun60i_audio_remove,
-+	.driver	= {
-+		.name		= DRV_NAME,
-+		.of_match_table	= sun60i_audio_match,
-+	},
-+};
-+module_platform_driver(sun60i_audio_platform_driver);
-+
-+MODULE_LICENSE("GPL v2");
-+MODULE_AUTHOR("Allwinner Technology Co., Ltd.");
-+MODULE_DESCRIPTION("Allwinner A733 Audio Machine driver");
 diff --git a/drivers/power/supply/Kconfig b/drivers/power/supply/Kconfig
+index 83392ed6a..3fca0fccb 100644
 --- a/drivers/power/supply/Kconfig
 +++ b/drivers/power/supply/Kconfig
 @@ -405,6 +405,19 @@ config BATTERY_AXP20X
@@ -12926,9 +11416,10 @@ diff --git a/drivers/power/supply/Kconfig b/drivers/power/supply/Kconfig
  	tristate "AXP20x power supply driver"
  	depends on MFD_AXP20X
 diff --git a/drivers/power/supply/Makefile b/drivers/power/supply/Makefile
+index 7ee839dca..6e3759bef 100644
 --- a/drivers/power/supply/Makefile
 +++ b/drivers/power/supply/Makefile
-@@ -28,6 +28,7 @@ obj-$(CONFIG_CHARGER_AXP20X)	+= axp20x_ac_power.o
+@@ -28,6 +28,7 @@ obj-$(CONFIG_BATTERY_CHAGALL)	+= chagall-battery.o
  obj-$(CONFIG_BATTERY_CPCAP)	+= cpcap-battery.o
  obj-$(CONFIG_BATTERY_CW2015)	+= cw2015_battery.o
  obj-$(CONFIG_BATTERY_DS2760)	+= ds2760_battery.o
@@ -12936,291 +11427,9 @@ diff --git a/drivers/power/supply/Makefile b/drivers/power/supply/Makefile
  obj-$(CONFIG_BATTERY_DS2780)	+= ds2780_battery.o
  obj-$(CONFIG_BATTERY_DS2781)	+= ds2781_battery.o
  obj-$(CONFIG_BATTERY_DS2782)	+= ds2782_battery.o
-diff --git a/drivers/power/supply/axp8191-power-supply.c b/drivers/power/supply/axp8191-power-supply.c
-new file mode 100644
-index 000000000..000000001
---- /dev/null
-+++ b/drivers/power/supply/axp8191-power-supply.c
-@@ -0,0 +1,275 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * AXP8191 Power Supply driver
-+ *
-+ * Reports VBUS/AC adapter online status, voltage, and current.
-+ * The AXP8191 has ADC channels for VBUS voltage/current monitoring
-+ * and status registers for power source detection.
-+ *
-+ * Supports charger_mode=kernel parameter:
-+ *   powerbank - limit input current to 500mA (safe for USB power banks)
-+ *   fast      - allow up to 1500mA input current (wall adapter)
-+ *   (empty)  - default 1000mA
-+ */
-+
-+#include <linux/module.h>
-+#include <linux/of.h>
-+#include <linux/of_device.h>
-+#include <linux/platform_device.h>
-+#include <linux/regmap.h>
-+#include <linux/power_supply.h>
-+#include <linux/delay.h>
-+#include <linux/moduleparam.h>
-+
-+/* Register definitions (from MFD) */
-+#define AXP8191_POWER_STATUS	0x02
-+#define AXP8191_VBUS_STATUS	0x03
-+#define AXP8191_CHARGER_CTRL1	0x40
-+#define AXP8191_ADC_EN1		0x50
-+#define AXP8191_VBUS_VOLT_H	0x56
-+#define AXP8191_VBUS_VOLT_L	0x57
-+#define AXP8191_VBUS_CUR_H	0x58
-+#define AXP8191_VBUS_CUR_L	0x59
-+#define AXP8191_ADC_SPEED	0x53
-+
-+/* ADC enable bits */
-+#define AXP8191_ADC_EN_VBUS_VOLT	BIT(7)
-+#define AXP8191_ADC_EN_VBUS_CUR		BIT(6)
-+
-+/* POWER_STATUS bits */
-+#define AXP8191_PS_VBUS_PRESENT		BIT(7)
-+#define AXP8191_PS_ACIN_PRESENT		BIT(6)
-+
-+/* Charger CTRL1 bits */
-+#define AXP8191_CC1_CHARGE_ENABLE	BIT(7)
-+#define AXP8191_CC1_IINLIM_MASK	GENMASK(6, 4)
-+#define AXP8191_CC1_IINLIM_100MA	0
-+#define AXP8191_CC1_IINLIM_500MA	BIT(4)
-+#define AXP8191_CC1_IINLIM_1000MA	BIT(5)
-+#define AXP8191_CC1_IINLIM_1500MA	(BIT(5) | BIT(4))
-+
-+static char *charger_mode;
-+module_param(charger_mode, charp, 0444);
-+MODULE_PARM_DESC(charger_mode, "Charger mode: powerbank (500mA), fast (1500mA)");
-+
-+struct axp8191_psy {
-+	struct device *dev;
-+	struct regmap *regmap;
-+	struct power_supply *ac;
-+	struct power_supply *usb;
-+};
-+
-+static int axp8191_psy_get_vbus_voltage(struct axp8191_psy *psy)
-+{
-+	unsigned int h, l;
-+	int ret;
-+
-+	ret = regmap_read(psy->regmap, AXP8191_VBUS_VOLT_H, &h);
-+	if (ret)
-+		return ret;
-+
-+	ret = regmap_read(psy->regmap, AXP8191_VBUS_VOLT_L, &l);
-+	if (ret)
-+		return ret;
-+
-+	/* 13-bit value, 1.7mV per step */
-+	return ((h & 0x1f) << 8 | l) * 1700;
-+}
-+
-+static int axp8191_psy_get_vbus_current(struct axp8191_psy *psy)
-+{
-+	unsigned int h, l;
-+	int ret;
-+
-+	ret = regmap_read(psy->regmap, AXP8191_VBUS_CUR_H, &h);
-+	if (ret)
-+		return ret;
-+
-+	ret = regmap_read(psy->regmap, AXP8191_VBUS_CUR_L, &l);
-+	if (ret)
-+		return ret;
-+
-+	/* 13-bit value, 0.375mA per step */
-+	return ((h & 0x1f) << 8 | l) * 375;
-+}
-+
-+static int axp8191_psy_is_online(struct axp8191_psy *psy)
-+{
-+	unsigned int val;
-+	int ret;
-+
-+	ret = regmap_read(psy->regmap, AXP8191_POWER_STATUS, &val);
-+	if (ret)
-+		return 0;
-+
-+	return !!(val & AXP8191_PS_VBUS_PRESENT);
-+}
-+
-+static enum power_supply_property axp8191_usb_props[] = {
-+	POWER_SUPPLY_PROP_ONLINE,
-+	POWER_SUPPLY_PROP_VOLTAGE_NOW,
-+	POWER_SUPPLY_PROP_CURRENT_NOW,
-+	POWER_SUPPLY_PROP_VOLTAGE_MIN_DESIGN,
-+};
-+
-+static int axp8191_usb_get_property(struct power_supply *psy,
-+				    enum power_supply_property psp,
-+				    union power_supply_propval *val)
-+{
-+	struct axp8191_psy *psy_data = power_supply_get_drvdata(psy);
-+
-+	switch (psp) {
-+	case POWER_SUPPLY_PROP_ONLINE:
-+		val->intval = axp8191_psy_is_online(psy_data);
-+		return 0;
-+	case POWER_SUPPLY_PROP_VOLTAGE_NOW:
-+		val->intval = axp8191_psy_get_vbus_voltage(psy_data);
-+		return 0;
-+	case POWER_SUPPLY_PROP_CURRENT_NOW:
-+		val->intval = axp8191_psy_get_vbus_current(psy_data);
-+		return 0;
-+	case POWER_SUPPLY_PROP_VOLTAGE_MIN_DESIGN:
-+		val->intval = 4200000; /* USB standard */
-+		return 0;
-+	default:
-+		return -EINVAL;
-+	}
-+}
-+
-+static enum power_supply_property axp8191_ac_props[] = {
-+	POWER_SUPPLY_PROP_ONLINE,
-+	POWER_SUPPLY_PROP_VOLTAGE_NOW,
-+	POWER_SUPPLY_PROP_CURRENT_NOW,
-+};
-+
-+static int axp8191_ac_get_property(struct power_supply *psy,
-+				   enum power_supply_property psp,
-+				   union power_supply_propval *val)
-+{
-+	struct axp8191_psy *psy_data = power_supply_get_drvdata(psy);
-+	unsigned int reg;
-+	int ret;
-+
-+	switch (psp) {
-+	case POWER_SUPPLY_PROP_ONLINE:
-+		ret = regmap_read(psy_data->regmap, AXP8191_POWER_STATUS, &reg);
-+		if (ret)
-+			return ret;
-+		val->intval = !!(reg & AXP8191_PS_ACIN_PRESENT);
-+		return 0;
-+	case POWER_SUPPLY_PROP_VOLTAGE_NOW:
-+		val->intval = axp8191_psy_get_vbus_voltage(psy_data);
-+		return 0;
-+	case POWER_SUPPLY_PROP_CURRENT_NOW:
-+		val->intval = axp8191_psy_get_vbus_current(psy_data);
-+		return 0;
-+	default:
-+		return -EINVAL;
-+	}
-+}
-+
-+static const struct power_supply_desc axp8191_usb_desc = {
-+	.name = "axp8191-usb",
-+	.type = POWER_SUPPLY_TYPE_USB,
-+	.properties = axp8191_usb_props,
-+	.num_properties = ARRAY_SIZE(axp8191_usb_props),
-+	.get_property = axp8191_usb_get_property,
-+};
-+
-+static const struct power_supply_desc axp8191_ac_desc = {
-+	.name = "axp8191-ac",
-+	.type = POWER_SUPPLY_TYPE_MAINS,
-+	.properties = axp8191_ac_props,
-+	.num_properties = ARRAY_SIZE(axp8191_ac_props),
-+	.get_property = axp8191_ac_get_property,
-+};
-+
-+static void axp8191_psy_set_charger_current(struct axp8191_psy *psy)
-+{
-+	u32 iinlim;
-+
-+	if (!charger_mode)
-+		return;
-+
-+	if (strcmp(charger_mode, "powerbank") == 0) {
-+		iinlim = AXP8191_CC1_IINLIM_500MA;
-+		dev_info(psy->dev, "charger_mode=powerbank: limiting input to 500mA\n");
-+	} else if (strcmp(charger_mode, "fast") == 0) {
-+		iinlim = AXP8191_CC1_IINLIM_1500MA;
-+		dev_info(psy->dev, "charger_mode=fast: allowing input up to 1500mA\n");
-+	} else {
-+		dev_warn(psy->dev, "unknown charger_mode='%s', using default\n",
-+			 charger_mode);
-+		return;
-+	}
-+
-+	regmap_update_bits(psy->regmap, AXP8191_CHARGER_CTRL1,
-+			   AXP8191_CC1_IINLIM_MASK, iinlim);
-+}
-+
-+static int axp8191_power_supply_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct axp8191_psy *psy_data;
-+	struct power_supply_config usb_cfg = {}, ac_cfg = {};
-+
-+	psy_data = devm_kzalloc(dev, sizeof(*psy_data), GFP_KERNEL);
-+	if (!psy_data)
-+		return -ENOMEM;
-+
-+	psy_data->dev = dev;
-+	psy_data->regmap = dev_get_regmap(dev->parent, NULL);
-+	if (!psy_data->regmap)
-+		return -ENODEV;
-+
-+	platform_set_drvdata(pdev, psy_data);
-+
-+	/* Enable VBUS ADC channels */
-+	regmap_update_bits(psy_data->regmap, AXP8191_ADC_EN1,
-+			   AXP8191_ADC_EN_VBUS_VOLT | AXP8191_ADC_EN_VBUS_CUR,
-+			   AXP8191_ADC_EN_VBUS_VOLT | AXP8191_ADC_EN_VBUS_CUR);
-+
-+	/* Apply charger mode from kernel command line */
-+	axp8191_psy_set_charger_current(psy_data);
-+
-+	usb_cfg.drv_data = psy_data;
-+	usb_cfg.fwnode = dev_fwnode(dev);
-+
-+	psy_data->usb = devm_power_supply_register(dev, &axp8191_usb_desc,
-+						   &usb_cfg);
-+	if (IS_ERR(psy_data->usb))
-+		return dev_err_probe(dev, PTR_ERR(psy_data->usb),
-+				     "Failed to register USB supply\n");
-+
-+	ac_cfg.drv_data = psy_data;
-+	ac_cfg.fwnode = dev_fwnode(dev);
-+
-+	psy_data->ac = devm_power_supply_register(dev, &axp8191_ac_desc,
-+						  &ac_cfg);
-+	if (IS_ERR(psy_data->ac))
-+		return dev_err_probe(dev, PTR_ERR(psy_data->ac),
-+				     "Failed to register AC supply\n");
-+
-+	dev_dbg(dev, "AXP8191 power supply driver registered\n");
-+	return 0;
-+}
-+
-+static const struct of_device_id axp8191_power_supply_of_match[] = {
-+	{ .compatible = "allwinner,axp8191-power-supply" },
-+	{ /* sentinel */ }
-+};
-+MODULE_DEVICE_TABLE(of, axp8191_power_supply_of_match);
-+
-+static struct platform_driver axp8191_power_supply_driver = {
-+	.driver = {
-+		.name = "axp8191-power-supply",
-+		.of_match_table = axp8191_power_supply_of_match,
-+	},
-+	.probe = axp8191_power_supply_probe,
-+};
-+module_platform_driver(axp8191_power_supply_driver);
-+
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Allwinner");
-+MODULE_DESCRIPTION("AXP8191 Power Supply driver");
-+MODULE_PARM_DESC(charger_mode, "Charger mode: powerbank (500mA), fast (1500mA)");
-
 diff --git a/drivers/power/supply/axp8191-battery.c b/drivers/power/supply/axp8191-battery.c
 new file mode 100644
-index 000000000..000000001
+index 000000000..4dab668a3
 --- /dev/null
 +++ b/drivers/power/supply/axp8191-battery.c
 @@ -0,0 +1,427 @@
@@ -13653,7 +11862,7 @@ index 000000000..000000001
 +MODULE_DESCRIPTION("AXP8191 Battery driver");
 diff --git a/drivers/power/supply/axp8191-onkey.c b/drivers/power/supply/axp8191-onkey.c
 new file mode 100644
-index 000000000..000000002
+index 000000000..d1173e4f4
 --- /dev/null
 +++ b/drivers/power/supply/axp8191-onkey.c
 @@ -0,0 +1,134 @@
@@ -13791,7 +12000,1543 @@ index 000000000..000000002
 +MODULE_LICENSE("GPL");
 +MODULE_AUTHOR("Allwinner");
 +MODULE_DESCRIPTION("AXP8191 Onkey driver");
-
+diff --git a/drivers/power/supply/axp8191-power-supply.c b/drivers/power/supply/axp8191-power-supply.c
+new file mode 100644
+index 000000000..0c1615a7f
+--- /dev/null
++++ b/drivers/power/supply/axp8191-power-supply.c
+@@ -0,0 +1,275 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * AXP8191 Power Supply driver
++ *
++ * Reports VBUS/AC adapter online status, voltage, and current.
++ * The AXP8191 has ADC channels for VBUS voltage/current monitoring
++ * and status registers for power source detection.
++ *
++ * Supports charger_mode=kernel parameter:
++ *   powerbank - limit input current to 500mA (safe for USB power banks)
++ *   fast      - allow up to 1500mA input current (wall adapter)
++ *   (empty)  - default 1000mA
++ */
++
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_device.h>
++#include <linux/platform_device.h>
++#include <linux/regmap.h>
++#include <linux/power_supply.h>
++#include <linux/delay.h>
++#include <linux/moduleparam.h>
++
++/* Register definitions (from MFD) */
++#define AXP8191_POWER_STATUS	0x02
++#define AXP8191_VBUS_STATUS	0x03
++#define AXP8191_CHARGER_CTRL1	0x40
++#define AXP8191_ADC_EN1		0x50
++#define AXP8191_VBUS_VOLT_H	0x56
++#define AXP8191_VBUS_VOLT_L	0x57
++#define AXP8191_VBUS_CUR_H	0x58
++#define AXP8191_VBUS_CUR_L	0x59
++#define AXP8191_ADC_SPEED	0x53
++
++/* ADC enable bits */
++#define AXP8191_ADC_EN_VBUS_VOLT	BIT(7)
++#define AXP8191_ADC_EN_VBUS_CUR		BIT(6)
++
++/* POWER_STATUS bits */
++#define AXP8191_PS_VBUS_PRESENT		BIT(7)
++#define AXP8191_PS_ACIN_PRESENT		BIT(6)
++
++/* Charger CTRL1 bits */
++#define AXP8191_CC1_CHARGE_ENABLE	BIT(7)
++#define AXP8191_CC1_IINLIM_MASK	GENMASK(6, 4)
++#define AXP8191_CC1_IINLIM_100MA	0
++#define AXP8191_CC1_IINLIM_500MA	BIT(4)
++#define AXP8191_CC1_IINLIM_1000MA	BIT(5)
++#define AXP8191_CC1_IINLIM_1500MA	(BIT(5) | BIT(4))
++
++static char *charger_mode;
++module_param(charger_mode, charp, 0444);
++MODULE_PARM_DESC(charger_mode, "Charger mode: powerbank (500mA), fast (1500mA)");
++
++struct axp8191_psy {
++	struct device *dev;
++	struct regmap *regmap;
++	struct power_supply *ac;
++	struct power_supply *usb;
++};
++
++static int axp8191_psy_get_vbus_voltage(struct axp8191_psy *psy)
++{
++	unsigned int h, l;
++	int ret;
++
++	ret = regmap_read(psy->regmap, AXP8191_VBUS_VOLT_H, &h);
++	if (ret)
++		return ret;
++
++	ret = regmap_read(psy->regmap, AXP8191_VBUS_VOLT_L, &l);
++	if (ret)
++		return ret;
++
++	/* 13-bit value, 1.7mV per step */
++	return ((h & 0x1f) << 8 | l) * 1700;
++}
++
++static int axp8191_psy_get_vbus_current(struct axp8191_psy *psy)
++{
++	unsigned int h, l;
++	int ret;
++
++	ret = regmap_read(psy->regmap, AXP8191_VBUS_CUR_H, &h);
++	if (ret)
++		return ret;
++
++	ret = regmap_read(psy->regmap, AXP8191_VBUS_CUR_L, &l);
++	if (ret)
++		return ret;
++
++	/* 13-bit value, 0.375mA per step */
++	return ((h & 0x1f) << 8 | l) * 375;
++}
++
++static int axp8191_psy_is_online(struct axp8191_psy *psy)
++{
++	unsigned int val;
++	int ret;
++
++	ret = regmap_read(psy->regmap, AXP8191_POWER_STATUS, &val);
++	if (ret)
++		return 0;
++
++	return !!(val & AXP8191_PS_VBUS_PRESENT);
++}
++
++static enum power_supply_property axp8191_usb_props[] = {
++	POWER_SUPPLY_PROP_ONLINE,
++	POWER_SUPPLY_PROP_VOLTAGE_NOW,
++	POWER_SUPPLY_PROP_CURRENT_NOW,
++	POWER_SUPPLY_PROP_VOLTAGE_MIN_DESIGN,
++};
++
++static int axp8191_usb_get_property(struct power_supply *psy,
++				    enum power_supply_property psp,
++				    union power_supply_propval *val)
++{
++	struct axp8191_psy *psy_data = power_supply_get_drvdata(psy);
++
++	switch (psp) {
++	case POWER_SUPPLY_PROP_ONLINE:
++		val->intval = axp8191_psy_is_online(psy_data);
++		return 0;
++	case POWER_SUPPLY_PROP_VOLTAGE_NOW:
++		val->intval = axp8191_psy_get_vbus_voltage(psy_data);
++		return 0;
++	case POWER_SUPPLY_PROP_CURRENT_NOW:
++		val->intval = axp8191_psy_get_vbus_current(psy_data);
++		return 0;
++	case POWER_SUPPLY_PROP_VOLTAGE_MIN_DESIGN:
++		val->intval = 4200000; /* USB standard */
++		return 0;
++	default:
++		return -EINVAL;
++	}
++}
++
++static enum power_supply_property axp8191_ac_props[] = {
++	POWER_SUPPLY_PROP_ONLINE,
++	POWER_SUPPLY_PROP_VOLTAGE_NOW,
++	POWER_SUPPLY_PROP_CURRENT_NOW,
++};
++
++static int axp8191_ac_get_property(struct power_supply *psy,
++				   enum power_supply_property psp,
++				   union power_supply_propval *val)
++{
++	struct axp8191_psy *psy_data = power_supply_get_drvdata(psy);
++	unsigned int reg;
++	int ret;
++
++	switch (psp) {
++	case POWER_SUPPLY_PROP_ONLINE:
++		ret = regmap_read(psy_data->regmap, AXP8191_POWER_STATUS, &reg);
++		if (ret)
++			return ret;
++		val->intval = !!(reg & AXP8191_PS_ACIN_PRESENT);
++		return 0;
++	case POWER_SUPPLY_PROP_VOLTAGE_NOW:
++		val->intval = axp8191_psy_get_vbus_voltage(psy_data);
++		return 0;
++	case POWER_SUPPLY_PROP_CURRENT_NOW:
++		val->intval = axp8191_psy_get_vbus_current(psy_data);
++		return 0;
++	default:
++		return -EINVAL;
++	}
++}
++
++static const struct power_supply_desc axp8191_usb_desc = {
++	.name = "axp8191-usb",
++	.type = POWER_SUPPLY_TYPE_USB,
++	.properties = axp8191_usb_props,
++	.num_properties = ARRAY_SIZE(axp8191_usb_props),
++	.get_property = axp8191_usb_get_property,
++};
++
++static const struct power_supply_desc axp8191_ac_desc = {
++	.name = "axp8191-ac",
++	.type = POWER_SUPPLY_TYPE_MAINS,
++	.properties = axp8191_ac_props,
++	.num_properties = ARRAY_SIZE(axp8191_ac_props),
++	.get_property = axp8191_ac_get_property,
++};
++
++static void axp8191_psy_set_charger_current(struct axp8191_psy *psy)
++{
++	u32 iinlim;
++
++	if (!charger_mode)
++		return;
++
++	if (strcmp(charger_mode, "powerbank") == 0) {
++		iinlim = AXP8191_CC1_IINLIM_500MA;
++		dev_info(psy->dev, "charger_mode=powerbank: limiting input to 500mA\n");
++	} else if (strcmp(charger_mode, "fast") == 0) {
++		iinlim = AXP8191_CC1_IINLIM_1500MA;
++		dev_info(psy->dev, "charger_mode=fast: allowing input up to 1500mA\n");
++	} else {
++		dev_warn(psy->dev, "unknown charger_mode='%s', using default\n",
++			 charger_mode);
++		return;
++	}
++
++	regmap_update_bits(psy->regmap, AXP8191_CHARGER_CTRL1,
++			   AXP8191_CC1_IINLIM_MASK, iinlim);
++}
++
++static int axp8191_power_supply_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct axp8191_psy *psy_data;
++	struct power_supply_config usb_cfg = {}, ac_cfg = {};
++
++	psy_data = devm_kzalloc(dev, sizeof(*psy_data), GFP_KERNEL);
++	if (!psy_data)
++		return -ENOMEM;
++
++	psy_data->dev = dev;
++	psy_data->regmap = dev_get_regmap(dev->parent, NULL);
++	if (!psy_data->regmap)
++		return -ENODEV;
++
++	platform_set_drvdata(pdev, psy_data);
++
++	/* Enable VBUS ADC channels */
++	regmap_update_bits(psy_data->regmap, AXP8191_ADC_EN1,
++			   AXP8191_ADC_EN_VBUS_VOLT | AXP8191_ADC_EN_VBUS_CUR,
++			   AXP8191_ADC_EN_VBUS_VOLT | AXP8191_ADC_EN_VBUS_CUR);
++
++	/* Apply charger mode from kernel command line */
++	axp8191_psy_set_charger_current(psy_data);
++
++	usb_cfg.drv_data = psy_data;
++	usb_cfg.fwnode = dev_fwnode(dev);
++
++	psy_data->usb = devm_power_supply_register(dev, &axp8191_usb_desc,
++						   &usb_cfg);
++	if (IS_ERR(psy_data->usb))
++		return dev_err_probe(dev, PTR_ERR(psy_data->usb),
++				     "Failed to register USB supply\n");
++
++	ac_cfg.drv_data = psy_data;
++	ac_cfg.fwnode = dev_fwnode(dev);
++
++	psy_data->ac = devm_power_supply_register(dev, &axp8191_ac_desc,
++						  &ac_cfg);
++	if (IS_ERR(psy_data->ac))
++		return dev_err_probe(dev, PTR_ERR(psy_data->ac),
++				     "Failed to register AC supply\n");
++
++	dev_dbg(dev, "AXP8191 power supply driver registered\n");
++	return 0;
++}
++
++static const struct of_device_id axp8191_power_supply_of_match[] = {
++	{ .compatible = "allwinner,axp8191-power-supply" },
++	{ /* sentinel */ }
++};
++MODULE_DEVICE_TABLE(of, axp8191_power_supply_of_match);
++
++static struct platform_driver axp8191_power_supply_driver = {
++	.driver = {
++		.name = "axp8191-power-supply",
++		.of_match_table = axp8191_power_supply_of_match,
++	},
++	.probe = axp8191_power_supply_probe,
++};
++module_platform_driver(axp8191_power_supply_driver);
++
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Allwinner");
++MODULE_DESCRIPTION("AXP8191 Power Supply driver");
++MODULE_PARM_DESC(charger_mode, "Charger mode: powerbank (500mA), fast (1500mA)");
+diff --git a/drivers/regulator/Kconfig b/drivers/regulator/Kconfig
+index 87554ab92..5ac7a4228 100644
+--- a/drivers/regulator/Kconfig
++++ b/drivers/regulator/Kconfig
+@@ -220,6 +220,13 @@ config REGULATOR_AXP20X
+ 	  This driver provides support for the voltage regulators on the
+ 	  AXP20X PMIC.
+ 
++config REGULATOR_AXP8191
++	tristate "X-POWERS AXP8191 PMIC Regulators"
++	depends on MFD_AXP8191
++	help
++	  This driver provides support for the voltage regulators on the
++	  AXP8191 PMIC.
++
+ config REGULATOR_BCM590XX
+ 	tristate "Broadcom BCM590xx PMU Regulators"
+ 	depends on MFD_BCM590XX
+diff --git a/drivers/regulator/Makefile b/drivers/regulator/Makefile
+index 35639f311..2de0ad179 100644
+--- a/drivers/regulator/Makefile
++++ b/drivers/regulator/Makefile
+@@ -32,6 +32,7 @@ obj-$(CONFIG_REGULATOR_AS3722) += as3722-regulator.o
+ obj-$(CONFIG_REGULATOR_ATC260X) += atc260x-regulator.o
+ obj-$(CONFIG_REGULATOR_AW37503) += aw37503-regulator.o
+ obj-$(CONFIG_REGULATOR_AXP20X) += axp20x-regulator.o
++obj-$(CONFIG_REGULATOR_AXP8191) += regulator-axp8191.o
+ obj-$(CONFIG_REGULATOR_BCM590XX) += bcm590xx-regulator.o
+ obj-$(CONFIG_REGULATOR_BD71815)	+= bd71815-regulator.o
+ obj-$(CONFIG_REGULATOR_BD71828) += bd71828-regulator.o
+diff --git a/drivers/regulator/regulator-axp8191.c b/drivers/regulator/regulator-axp8191.c
+new file mode 100644
+index 000000000..a819e6c64
+--- /dev/null
++++ b/drivers/regulator/regulator-axp8191.c
+@@ -0,0 +1,275 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * AXP8191 Regulator driver
++ *
++ * Supports all 16 regulator rails on the AXP8191 PMIC:
++ *   4x DCDC (A/C/D/E) buck converters
++ *   1x SW (5V boost)
++ *   3x ALDO (1-3)
++ *   4x BLDO (1-4)
++ *   4x CLDO (1-4)
++ */
++
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/platform_device.h>
++#include <linux/regmap.h>
++#include <linux/regulator/driver.h>
++#include <linux/regulator/of_regulator.h>
++
++/* Regulator enable and voltage register maps */
++struct axp8191_reg_info {
++	const char *name;
++	u8 enable_reg;
++	u8 enable_bit;
++	u8 vol_reg;
++	u8 vol_min;
++	u8 vol_max;
++	u8 vol_step;
++	unsigned int min_uv;
++	unsigned int max_uv;
++};
++
++#define AXPENT(_name, _ereg, _ebit, _vreg, _vmin, _vmax, _vstep, \
++	       _minuv, _maxuv) \
++	.name = _name, .enable_reg = _ereg, .enable_bit = _ebit, \
++	.vol_reg = _vreg, .vol_min = _vmin, .vol_max = _vmax, \
++	.vol_step = _vstep, .min_uv = _minuv, .max_uv = _maxuv
++
++static const struct axp8191_reg_info axp8191_regs[] = {
++	/* DCDC A: 0.6V-1.5V, 10mV step */
++	[0] = { AXPENT("DCDC_A", 0x10, 7, 0x11, 0x00, 0x3f, 0x01,
++			600000, 1520000), },
++	/* DCDC C: 0.8V-1.84V, 10mV step */
++	[1] = { AXPENT("DCDC_C", 0x12, 7, 0x13, 0x00, 0x3f, 0x01,
++			800000, 1840000), },
++	/* DCDC D: 0.5V-1.34V, 10mV step */
++	[2] = { AXPENT("DCDC_D", 0x14, 7, 0x15, 0x00, 0x3f, 0x01,
++			500000, 1340000), },
++	/* DCDC E: 1.2V-2.0V, 10mV step */
++	[3] = { AXPENT("DCDC_E", 0x16, 7, 0x17, 0x00, 0x3f, 0x01,
++			1200000, 2000000), },
++	/* ALDO1: 0.7V-3.3V, 100mV step */
++	[4] = { AXPENT("ALDO1", 0x18, 7, 0x19, 0x00, 0x1c, 0x01,
++			700000, 3300000), },
++	/* ALDO2: 0.7V-3.3V, 100mV step */
++	[5] = { AXPENT("ALDO2", 0x1a, 7, 0x1b, 0x00, 0x1c, 0x01,
++			700000, 3300000), },
++	/* ALDO3: 0.7V-3.3V, 100mV step */
++	[6] = { AXPENT("ALDO3", 0x1c, 7, 0x1d, 0x00, 0x1c, 0x01,
++			700000, 3300000), },
++	/* BLDO1: 0.7V-3.3V, 100mV step */
++	[7] = { AXPENT("BLDO1", 0x20, 7, 0x21, 0x00, 0x1c, 0x01,
++			700000, 3300000), },
++	/* BLDO2: 0.7V-3.3V, 100mV step */
++	[8] = { AXPENT("BLDO2", 0x22, 7, 0x23, 0x00, 0x1c, 0x01,
++			700000, 3300000), },
++	/* BLDO3: 0.7V-3.3V, 100mV step */
++	[9] = { AXPENT("BLDO3", 0x24, 7, 0x25, 0x00, 0x1c, 0x01,
++			700000, 3300000), },
++	/* BLDO4: 0.7V-3.3V, 100mV step */
++	[10] = { AXPENT("BLDO4", 0x26, 7, 0x27, 0x00, 0x1c, 0x01,
++			 700000, 3300000), },
++	/* CLDO1: 0.7V-3.3V, 100mV step */
++	[11] = { AXPENT("CLDO1", 0x28, 7, 0x29, 0x00, 0x1c, 0x01,
++			 700000, 3300000), },
++	/* CLDO2: 0.7V-3.3V, 100mV step */
++	[12] = { AXPENT("CLDO2", 0x2a, 7, 0x2b, 0x00, 0x1c, 0x01,
++			 700000, 3300000), },
++	/* CLDO3: 0.7V-3.3V, 100mV step */
++	[13] = { AXPENT("CLDO3", 0x2c, 7, 0x2d, 0x00, 0x1c, 0x01,
++			 700000, 3300000), },
++	/* CLDO4: 0.7V-3.3V, 100mV step */
++	[14] = { AXPENT("CLDO4", 0x2e, 7, 0x2f, 0x00, 0x1c, 0x01,
++			 700000, 3300000), },
++	/* SW: 5V fixed boost */
++	[15] = { AXPENT("SW", 0x30, 7, 0x31, 0x00, 0x00, 0x00,
++			 5000000, 5000000), },
++};
++
++static unsigned int axp8191_map_voltage(struct regulator_dev *rdev,
++					int min_uv, int max_uv)
++{
++	const struct axp8191_reg_info *info = rdev_get_drvdata(rdev);
++	unsigned int voltage_range;
++	unsigned int n_steps;
++	unsigned int step_uv;
++	unsigned int uv;
++	int reg;
++
++	step_uv = (info->max_uv - info->min_uv) /
++		  (info->vol_max - info->vol_min + 1);
++
++	if (min_uv < info->min_uv)
++		min_uv = info->min_uv;
++	if (max_uv > info->max_uv)
++		max_uv = info->max_uv;
++
++	n_steps = DIV_ROUND_UP(min_uv - info->min_uv, step_uv);
++	uv = info->min_uv + n_steps * step_uv;
++
++	if (uv > max_uv)
++		return -EINVAL;
++
++	reg = info->vol_min + n_steps;
++	if (reg > info->vol_max)
++		return -EINVAL;
++
++	return uv;
++}
++
++static int axp8191_set_voltage(struct regulator_dev *rdev,
++			       int min_uv, int max_uv, unsigned int *sel)
++{
++	const struct axp8191_reg_info *info = rdev_get_drvdata(rdev);
++	unsigned int uv;
++	int reg;
++
++	if (info->vol_reg == 0)
++		return -EINVAL;
++
++	uv = axp8191_map_voltage(rdev, min_uv, max_uv);
++	if (uv < 0)
++		return uv;
++
++	reg = (uv - info->min_uv) /
++	      ((info->max_uv - info->min_uv) / (info->vol_max - info->vol_min + 1));
++	reg += info->vol_min;
++
++	return regmap_update_bits(rdev->regmap, info->vol_reg,
++				 info->vol_max, reg);
++}
++
++static int axp8191_get_voltage(struct regulator_dev *rdev)
++{
++	const struct axp8191_reg_info *info = rdev_get_drvdata(rdev);
++	unsigned int reg;
++	unsigned int uv;
++	unsigned int step_uv;
++	int ret;
++
++	if (info->vol_reg == 0)
++		return info->min_uv;
++
++	ret = regmap_read(rdev->regmap, info->vol_reg, &reg);
++	if (ret)
++		return ret;
++
++	reg &= info->vol_max;
++
++	step_uv = (info->max_uv - info->min_uv) /
++		  (info->vol_max - info->vol_min + 1);
++
++	uv = info->min_uv + (reg - info->vol_min) * step_uv;
++
++	if (uv > info->max_uv)
++		return info->max_uv;
++
++	return uv;
++}
++
++static int axp8191_enable(struct regulator_dev *rdev)
++{
++	const struct axp8191_reg_info *info = rdev_get_drvdata(rdev);
++
++	return regmap_update_bits(rdev->regmap, info->enable_reg,
++				 BIT(info->enable_bit), BIT(info->enable_bit));
++}
++
++static int axp8191_disable(struct regulator_dev *rdev)
++{
++	const struct axp8191_reg_info *info = rdev_get_drvdata(rdev);
++
++	return regmap_update_bits(rdev->regmap, info->enable_reg,
++				 BIT(info->enable_bit), 0);
++}
++
++static int axp8191_is_enabled(struct regulator_dev *rdev)
++{
++	const struct axp8191_reg_info *info = rdev_get_drvdata(rdev);
++	unsigned int val;
++	int ret;
++
++	ret = regmap_read(rdev->regmap, info->enable_reg, &val);
++	if (ret)
++		return ret;
++
++	return !!(val & BIT(info->enable_bit));
++}
++
++static const struct regulator_ops axp8191_regulator_ops = {
++	.enable		= axp8191_enable,
++	.disable	= axp8191_disable,
++	.is_enabled	= axp8191_is_enabled,
++	.set_voltage	= axp8191_set_voltage,
++	.get_voltage	= axp8191_get_voltage,
++	.list_voltage	= regulator_list_voltage_linear_range,
++};
++
++#define AXP8191_RDESC(_name) \
++	&((struct regulator_desc) { \
++		.name = _name, \
++		.ops = &axp8191_regulator_ops, \
++		.type = REGULATOR_VOLTAGE, \
++		.owner = THIS_MODULE, \
++	})
++
++static int axp8191_regulator_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct regmap *regmap;
++	struct regulator_dev *rdev;
++	int i, ret;
++
++	regmap = dev_get_regmap(dev->parent, NULL);
++	if (!regmap)
++		return -ENODEV;
++
++	for (i = 0; i < ARRAY_SIZE(axp8191_regs); i++) {
++		const struct axp8191_reg_info *info = &axp8191_regs[i];
++		struct regulator_desc *desc;
++
++		desc = devm_kzalloc(dev, sizeof(*desc), GFP_KERNEL);
++		if (!desc)
++			return -ENOMEM;
++
++		desc->name = info->name;
++		desc->ops = &axp8191_regulator_ops;
++		desc->type = REGULATOR_VOLTAGE;
++		desc->owner = THIS_MODULE;
++		desc->of_match = devm_kasprintf(dev, GFP_KERNEL,
++						"axp8191-%s-ldo",
++						strtolower(info->name));
++		if (!desc->of_match)
++			return -ENOMEM;
++
++		rdev = devm_regulator_register(dev, desc, &info);
++		if (IS_ERR(rdev)) {
++			ret = dev_err_probe(dev, PTR_ERR(rdev),
++					    "Failed to register %s\n",
++					    info->name);
++			return ret;
++		}
++	}
++
++	return 0;
++}
++
++static const struct of_device_id axp8191_regulator_of_match[] = {
++	{ .compatible = "allwinner,axp8191-regulator" },
++	{ /* sentinel */ }
++};
++MODULE_DEVICE_TABLE(of, axp8191_regulator_of_match);
++
++static struct platform_driver axp8191_regulator_driver = {
++	.probe	= axp8191_regulator_probe,
++	.driver	= {
++		.name		= "axp8191-regulator",
++		.of_match_table	= axp8191_regulator_of_match,
++	},
++};
++module_platform_driver(axp8191_regulator_driver);
++
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Allwinner");
++MODULE_DESCRIPTION("AXP8191 regulator driver");
+diff --git a/drivers/thermal/Kconfig b/drivers/thermal/Kconfig
+index b10080d61..879233f7a 100644
+--- a/drivers/thermal/Kconfig
++++ b/drivers/thermal/Kconfig
+@@ -369,6 +369,20 @@ config SUN8I_THERMAL
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called sun8i-thermal.
+ 
++config SUN60I_THERMAL
++	tristate "Allwinner sun60i thermal driver"
++	depends on ARCH_SUNXI || COMPILE_TEST
++	depends on HAS_IOMEM
++	depends on NVMEM
++	depends on OF
++	depends on RESET_CONTROLLER
++	help
++	  Support for the sun60i thermal sensor driver into the Linux thermal
++	  framework.
++
++	  To compile this driver as a module, choose M here: the
++	  module will be called sun60i-thermal.
++
+ config ROCKCHIP_THERMAL
+ 	tristate "Rockchip thermal driver"
+ 	depends on ARCH_ROCKCHIP || COMPILE_TEST
+diff --git a/drivers/thermal/Makefile b/drivers/thermal/Makefile
+index bb21e7ea7..87e8b411c 100644
+--- a/drivers/thermal/Makefile
++++ b/drivers/thermal/Makefile
+@@ -41,6 +41,7 @@ obj-$(CONFIG_THERMAL_MMIO)		+= thermal_mmio.o
+ obj-$(CONFIG_AIROHA_THERMAL)	+= airoha_thermal.o
+ obj-$(CONFIG_SPEAR_THERMAL)	+= spear_thermal.o
+ obj-$(CONFIG_SUN8I_THERMAL)     += sun8i_thermal.o
++obj-$(CONFIG_SUN60I_THERMAL)    += sun60i-thermal.o
+ obj-$(CONFIG_ROCKCHIP_THERMAL)	+= rockchip_thermal.o
+ obj-y				+= renesas/
+ obj-$(CONFIG_KIRKWOOD_THERMAL)  += kirkwood_thermal.o
+diff --git a/drivers/thermal/sun60i-thermal.c b/drivers/thermal/sun60i-thermal.c
+new file mode 100644
+index 000000000..a24c3614d
+--- /dev/null
++++ b/drivers/thermal/sun60i-thermal.c
+@@ -0,0 +1,384 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Allwinner A733 (sun60iw2) Temperature Sensor (THS) driver
++ *
++ * Copyright (C) 2026 Allwinner Technology Co., Ltd.
++ */
++
++#include <linux/bitfield.h>
++#include <linux/clk.h>
++#include <linux/interrupt.h>
++#include <linux/io.h>
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_device.h>
++#include <linux/platform_device.h>
++#include <linux/regmap.h>
++#include <linux/reset.h>
++#include <linux/slab.h>
++#include <linux/thermal.h>
++
++/* THS register offsets */
++#define THS_CTRL			0x0000
++#define THS_INT_EN			0x0004
++#define THS_INT_STA			0x0008
++#define THS_INT_CTRL			0x000c
++#define THS_MBUS_RST			0x0010
++#define THS_THS_DATA_0			0x0020
++#define THS_THS_DATA_1			0x0024
++
++/* Sensor calibration registers */
++#define THS_CALI_CTRL			0x0040
++#define THS_CALI_DATA_0			0x0060
++#define THS_CALI_DATA_1			0x0064
++
++/* Threshold registers */
++#define THS_THRESHOLD_0			0x0080
++#define THS_THRESHOLD_1			0x0084
++#define THS_THRESHOLD_CTRL		0x0088
++
++/* Sensor control */
++#define THS_SENSOR_CTRL			0x00a0
++#define THS_SENSOR_EN			0x00a4
++
++/* Interrupt status bits */
++#define THS_IRQ_DATA_READY_0		BIT(0)
++#define THS_IRQ_DATA_READY_1		BIT(1)
++#define THS_IRQ_THRESHOLD_0		BIT(8)
++#define THS_IRQ_THRESHOLD_1		BIT(9)
++#define THS_IRQ_OVERFLOW_0		BIT(16)
++#define THS_IRQ_OVERFLOW_1		BIT(17)
++
++/* Control bits */
++#define THS_CTRL_ENABLE			BIT(0)
++#define THS_CTRL_SENSOR_EN_0		BIT(8)
++#define THS_CTRL_SENSOR_EN_1		BIT(9)
++#define THS_CTRLADC_SRC(n)		((n) << 20)
++
++/* Sensor filter */
++#define THS_FILTER_EN			BIT(0)
++#define THS_FILTER_SHIFT		4
++#define THS_FILTER_MASK			(0xf << THS_FILTER_SHIFT)
++
++#define SUN60I_THERMAL_NUM_SENSORS	2
++#define SUN60I_THERMAL_AVG_COUNT	16
++
++struct sun60i_thermal_sense {
++	void __iomem		*data_reg;
++	u32			threshold;
++	bool			irq_enabled;
++};
++
++struct sun60i_thermal {
++	struct device		*dev;
++	void __iomem		*regs;
++	struct clk		*bus_clk;
++	struct clk		*mod_clk;
++	struct reset_control	*rstc;
++	struct regmap		*regmap;
++
++	struct thermal_zone_device *tzd[SUN60I_THERMAL_NUM_SENSORS];
++	struct sun60i_thermal_sense sense[SUN60I_THERMAL_NUM_SENSORS];
++
++	/* Calibration data */
++	u32			cali_data[SUN60I_THERMAL_NUM_SENSORS];
++	bool			calibrated;
++};
++
++static int sun60i_thermal_read_temp(struct sun60i_thermal *ths, int sensor)
++{
++	u32 reg;
++
++	if (sensor >= SUN60I_THERMAL_NUM_SENSORS)
++		return -EINVAL;
++
++	reg = readl(ths->regs + THS_THS_DATA_0 + sensor * 4);
++	reg >>= 16;
++	reg &= 0xfff;
++
++	return reg;
++}
++
++static int sun60i_thermal_zone_get_temp(void *data, int *temp)
++{
++	struct sun60i_thermal *ths = data;
++	struct thermal_zone_device *tz;
++	int sensor, raw_temp, cal_temp;
++
++	for (sensor = 0; sensor < SUN60I_THERMAL_NUM_SENSORS; sensor++) {
++		tz = ths->tzd[sensor];
++		if (!tz)
++			continue;
++
++		raw_temp = sun60i_thermal_read_temp(ths, sensor);
++
++		/*
++		 * Convert raw sensor value to temperature in millidegrees.
++		 * Formula: temp = (raw * 165000 - cal * 165000) >> 12
++		 * The sensor has a resolution of about 0.4C per step.
++		 */
++		if (ths->calibrated)
++			cal_temp = (raw_temp - ths->cali_data[sensor]) * 412;
++		else
++			cal_temp = raw_temp * 412 - 1089000;
++
++		thermal_zone_set_trip_points(tz);
++	}
++
++	return 0;
++}
++
++static int sun60i_thermal_get_temp(struct thermal_zone_device *tz)
++{
++	struct sun60i_thermal *ths = thermal_zone_device_priv(tz);
++	int sensor;
++	u32 raw_temp;
++	int temp;
++
++	sensor = (int)thermal_zone_device_get_drvdata(tz);
++
++	raw_temp = sun60i_thermal_read_temp(ths, sensor);
++
++	if (ths->calibrated)
++		temp = (raw_temp - ths->cali_data[sensor]) * 412;
++	else
++		temp = raw_temp * 412 - 1089000;
++
++	return temp;
++}
++
++static const struct thermal_zone_device_ops sun60i_thermal_ops = {
++	.get_temp	= sun60i_thermal_get_temp,
++};
++
++static void sun60i_thermal_set_threshold(struct sun60i_thermal *ths,
++					 int sensor, u32 temp)
++{
++	u32 reg;
++
++	reg = readl(ths->regs + THS_THRESHOLD_CTRL);
++
++	if (temp > 0) {
++		writel(temp, ths->regs + THS_THRESHOLD_0 + sensor * 4);
++		reg |= BIT(sensor);
++	} else {
++		reg &= ~BIT(sensor);
++	}
++
++	writel(reg, ths->regs + THS_THRESHOLD_CTRL);
++}
++
++static irqreturn_t sun60i_thermal_isr(int irq, void *data)
++{
++	struct sun60i_thermal *ths = data;
++	u32 status;
++	int i;
++
++	status = readl(ths->regs + THS_INT_STA);
++	if (!status)
++		return IRQ_NONE;
++
++	writel(status, ths->regs + THS_INT_STA);
++
++	for (i = 0; i < SUN60I_THERMAL_NUM_SENSORS; i++) {
++		if (status & (THS_IRQ_THRESHOLD_0 << i))
++			thermal_zone_device_update(ths->tzd[i],
++						   THERMAL_EVENT_UNSPECIFIED);
++	}
++
++	return IRQ_HANDLED;
++}
++
++static void sun60i_thermal_init_sensors(struct sun60i_thermal *ths)
++{
++	u32 val;
++
++	val = readl(ths->regs + THS_CTRL);
++	val |= THS_CTRL_ENABLE;
++	val |= THS_CTRL_SENSOR_EN_0 | THS_CTRL_SENSOR_EN_1;
++	val |= THS_CTRLADC_SRC(0);
++	writel(val, ths->regs + THS_CTRL);
++
++	val = THS_FILTER_EN | (0x07 << THS_FILTER_SHIFT);
++	writel(val, ths->regs + THS_MBUS_RST);
++
++	val = THS_INT_STA;
++	writel(val, ths->regs + THS_INT_STA);
++
++	val = THS_IRQ_DATA_READY_0 | THS_IRQ_DATA_READY_1;
++	writel(val, ths->regs + THS_INT_EN);
++
++	sun60i_thermal_set_threshold(ths, 0, 95);
++	sun60i_thermal_set_threshold(ths, 1, 95);
++}
++
++static int sun60i_thermal_calibrate(struct sun60i_thermal *ths)
++{
++	u32 val;
++
++	val = readl(ths->regs + THS_CALI_CTRL);
++	if (val & BIT(31)) {
++		ths->cali_data[0] = readl(ths->regs + THS_CALI_DATA_0);
++		ths->cali_data[1] = readl(ths->regs + THS_CALI_DATA_1);
++		ths->calibrated = true;
++	} else {
++		ths->calibrated = false;
++	}
++
++	return 0;
++}
++
++static int sun60i_thermal_clks_init(struct sun60i_thermal *ths)
++{
++	int ret;
++
++	ths->bus_clk = devm_clk_get(ths->dev, "bus");
++	if (IS_ERR(ths->bus_clk))
++		return dev_err_probe(ths->dev, PTR_ERR(ths->bus_clk),
++				     "failed to get bus clock\n");
++
++	ths->mod_clk = devm_clk_get(ths->dev, "mod");
++	if (IS_ERR(ths->mod_clk))
++		return dev_err_probe(ths->dev, PTR_ERR(ths->mod_clk),
++				     "failed to get mod clock\n");
++
++	ret = clk_set_rate(ths->mod_clk, 24000000);
++	if (ret)
++		dev_warn(ths->dev, "failed to set mod clock rate: %d\n", ret);
++
++	return 0;
++}
++
++static int sun60i_thermal_hw_init(struct sun60i_thermal *ths)
++{
++	int ret;
++
++	ret = reset_control_deassert(ths->rstc);
++	if (ret) {
++		dev_err(ths->dev, "failed to deassert reset: %d\n", ret);
++		return ret;
++	}
++
++	ret = clk_prepare_enable(ths->bus_clk);
++	if (ret) {
++		dev_err(ths->dev, "failed to enable bus clock: %d\n", ret);
++		goto err_rst_assert;
++	}
++
++	ret = clk_prepare_enable(ths->mod_clk);
++	if (ret) {
++		dev_err(ths->dev, "failed to enable mod clock: %d\n", ret);
++		goto err_bus_clk;
++	}
++
++	return 0;
++
++err_bus_clk:
++	clk_disable_unprepare(ths->bus_clk);
++err_rst_assert:
++	reset_control_assert(ths->rstc);
++
++	return ret;
++}
++
++static int sun60i_thermal_probe(struct platform_device *pdev)
++{
++	struct sun60i_thermal *ths;
++	struct device *dev = &pdev->dev;
++	int irq, ret;
++	int i;
++
++	ths = devm_kzalloc(dev, sizeof(*ths), GFP_KERNEL);
++	if (!ths)
++		return -ENOMEM;
++
++	dev_set_drvdata(dev, ths);
++	ths->dev = dev;
++
++	ret = sun60i_thermal_clks_init(ths);
++	if (ret)
++		return ret;
++
++	ths->rstc = devm_reset_control_get_shared(dev, NULL);
++	if (IS_ERR(ths->rstc))
++		return dev_err_probe(dev, PTR_ERR(ths->rstc),
++				     "failed to get reset control\n");
++
++	ret = sun60i_thermal_hw_init(ths);
++	if (ret)
++		return ret;
++
++	ths->regs = devm_platform_ioremap_resource(pdev, 0);
++	if (IS_ERR(ths->regs)) {
++		ret = PTR_ERR(ths->regs);
++		goto err_clk_disable;
++	}
++
++	irq = platform_get_irq(pdev, 0);
++	if (irq >= 0) {
++		ret = devm_request_irq(dev, irq, sun60i_thermal_isr, 0,
++				       dev_name(dev), ths);
++		if (ret) {
++			dev_err(dev, "failed to request IRQ %d: %d\n", irq, ret);
++			goto err_clk_disable;
++		}
++	}
++
++	sun60i_thermal_calibrate(ths);
++	sun60i_thermal_init_sensors(ths);
++
++	for (i = 0; i < SUN60I_THERMAL_NUM_SENSORS; i++) {
++		ths->tzd[i] = devm_thermal_zone_of_sensor_register(dev, i,
++					ths, &sun60i_thermal_ops);
++		if (IS_ERR(ths->tzd[i])) {
++			ret = PTR_ERR(ths->tzd[i]);
++			dev_err(dev, "failed to register thermal zone %d: %d\n",
++				i, ret);
++			goto err_clk_disable;
++		}
++	}
++
++	return 0;
++
++err_clk_disable:
++	clk_disable_unprepare(ths->mod_clk);
++	clk_disable_unprepare(ths->bus_clk);
++	reset_control_assert(ths->rstc);
++
++	return ret;
++}
++
++static void sun60i_thermal_remove(struct platform_device *pdev)
++{
++	struct sun60i_thermal *ths = platform_get_drvdata(pdev);
++
++	sun60i_thermal_set_threshold(ths, 0, 0);
++	sun60i_thermal_set_threshold(ths, 1, 0);
++
++	writel(0, ths->regs + THS_INT_EN);
++	writel(0, ths->regs + THS_CTRL);
++
++	clk_disable_unprepare(ths->mod_clk);
++	clk_disable_unprepare(ths->bus_clk);
++	reset_control_assert(ths->rstc);
++}
++
++static const struct of_device_id sun60i_thermal_match[] = {
++	{ .compatible = "allwinner,sun60i-a733-thermal" },
++	{ }
++};
++MODULE_DEVICE_TABLE(of, sun60i_thermal_match);
++
++struct platform_driver sun60i_thermal_platform_driver = {
++	.probe	= sun60i_thermal_probe,
++	.remove	= sun60i_thermal_remove,
++	.driver	= {
++		.name		= "sun60i-thermal",
++		.of_match_table	= sun60i_thermal_match,
++	},
++};
++module_platform_driver(sun60i_thermal_platform_driver);
++
++MODULE_LICENSE("GPL v2");
++MODULE_AUTHOR("Allwinner Technology Co., Ltd.");
++MODULE_DESCRIPTION("Allwinner A733 Temperature Sensor driver");
+diff --git a/include/dt-bindings/clock/sun60i-a733-ccu.h b/include/dt-bindings/clock/sun60i-a733-ccu.h
+new file mode 100644
+index 000000000..0d5d31381
+--- /dev/null
++++ b/include/dt-bindings/clock/sun60i-a733-ccu.h
+@@ -0,0 +1,368 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++/*
++ * Copyright (C) 2024 The Linux Foundation. All rights reserved.
++ *
++ * Allwinner A733 Clock Control Unit (CCU) bindings.
++ */
++
++#ifndef _DT_BINDINGS_CLK_SUN60I_A733_CCU_H_
++#define _DT_BINDINGS_CLK_SUN60I_A733_CCU_H_
++
++/* Root clocks (from oscillator / PLLs) */
++#define CLK_OSC24M		0
++#define CLK_OSC32K		1
++#define CLK_IOSC		2
++#define CLK_PLL_CPU		3
++#define CLK_PLL_AUDIO0		4
++#define CLK_PLL_VIDEO0		5
++#define CLK_PLL_VE		6
++#define CLK_PLL_USB		7
++#define CLK_PLL_CPU_AXI		8
++#define CLK_PLL_PERIPH0		9
++#define CLK_PLL_PERIPH1		10
++#define CLK_PLL_GPU		11
++#define CLK_PLL_DE		12
++#define CLK_PLL_PCIE		13
++#define CLK_PLL_DDR		14
++
++/* HOSC-gated sources */
++#define CLK_HOSC		15
++#define CLK_PLL_HOSC		16
++
++/* Audio PLL output divider */
++#define CLK_PLL_AUDIO0_4X	17
++#define CLK_PLL_AUDIO0_2X	18
++#define CLK_PLL_AUDIO0_1X	19
++
++/* Video PLL output divider */
++#define CLK_PLL_VIDEO0_4X	20
++#define CLK_PLL_VIDEO0_2X	21
++
++/* PERIPH0 fixed dividers */
++#define CLK_PLL_PERIPH0_2X	22
++#define CLK_PLL_PERIPH0_4X	23
++
++/* Clock source mux + divider: CPU */
++#define CLK_CPU			24
++
++/* AHB / APB (bus hierarchy) */
++#define CLK_AHB			25
++#define CLK_APB1		26
++#define CLK_APB2		27
++
++/* Bus gates (enable/disable bus clock to peripherals) */
++#define CLK_BUS_UART0		28
++#define CLK_BUS_UART1		29
++#define CLK_BUS_UART2		30
++#define CLK_BUS_UART3		31
++#define CLK_BUS_UART4		32
++#define CLK_BUS_UART5		33
++
++#define CLK_BUS_SPI0		34
++#define CLK_BUS_SPI1		35
++#define CLK_BUS_SPI2		36
++#define CLK_BUS_SPI3		37
++
++#define CLK_BUS_I2C0		38
++#define CLK_BUS_I2C1		39
++#define CLK_BUS_I2C2		40
++#define CLK_BUS_I2C3		41
++#define CLK_BUS_I2C4		42
++#define CLK_BUS_I2C5		43
++
++#define CLK_BUS_USB		44
++#define CLK_BUS_GMAC		45
++#define CLK_BUS_MMC0		46
++#define CLK_BUS_MMC1		47
++#define CLK_BUS_MMC2		48
++#define CLK_BUS_CE		49
++#define CLK_BUS_DMA		50
++#define CLK_BUS_THERMAL		51
++#define CLK_BUS_HDMI		52
++#define CLK_BUS_DE		53
++#define CLK_BUS_GPU		54
++#define CLK_BUS_DAUDIO		55
++#define CLK_BUS_OWA		56
++#define CLK_BUS_DMIC		57
++#define CLK_BUS_AUDIOC		58
++#define CLK_BUS_THS		59
++#define CLK_BUS_GPADC		60
++#define CLK_BUS_LRADC		61
++#define CLK_BUS_CEC		62
++#define CLK_BUS_PWM		63
++#define CLK_BUS_SPINLOCK	64
++#define CLK_BUS_DRC		65
++#define CLK_BUS_MSGBOX		66
++#define CLK_BUS_ROM		67
++
++/* Module (functional) clocks */
++#define CLK_UART0		68
++#define CLK_UART1		69
++#define CLK_UART2		70
++#define CLK_UART3		71
++#define CLK_UART4		72
++#define CLK_UART5		73
++
++#define CLK_SPI0		74
++#define CLK_SPI1		75
++#define CLK_SPI2		76
++#define CLK_SPI3		77
++
++#define CLK_I2C0		78
++#define CLK_I2C1		79
++#define CLK_I2C2		80
++#define CLK_I2C3		81
++#define CLK_I2C4		82
++#define CLK_I2C5		83
++
++#define CLK_USB_480		84
++#define CLK_USB_12		85
++#define CLK_USB_PHY		86
++
++#define CLK_MMC0		87
++#define CLK_MMC0_SAMPLE		88
++#define CLK_MMC0_DET		89
++#define CLK_MMC0_BUS		90
++
++#define CLK_MMC1		91
++#define CLK_MMC1_SAMPLE		92
++#define CLK_MMC1_DET		93
++#define CLK_MMC1_BUS		94
++
++#define CLK_MMC2		95
++#define CLK_MMC2_SAMPLE		96
++#define CLK_MMC2_DET		97
++#define CLK_MMC2_BUS		98
++
++#define CLK_GMAC		99
++#define CLK_GMAC_TX		100
++#define CLK_GMAC_PTP		101
++
++#define CLK_HDMI		102
++#define CLK_HDMI_DDC		103
++
++#define CLK_DE			104
++#define CLK_DE_DIV		105
++
++#define CLK_GPU			106
++#define CLK_GPU_DIV		107
++
++#define CLK_THS			108
++#define CLK_GPADC		109
++#define CLK_LRADC		110
++#define CLK_CEC			111
++#define CLK_PWM			112
++
++#define CLK_DAUDIO		113
++#define CLK_OWA			114
++#define CLK_DMIC		115
++#define CLK_AUDIOC		116
++
++/* Vendor alias */
++#define CLK_AUDIO		CLK_PLL_AUDIO0_4X
++
++#define CLK_SPINLOCK		117
++#define CLK_DRC			118
++#define CLK_MSGBOX		119
++#define CLK_ROM			120
++
++#define CLK_USB_REF		121
++#define CLK_USB_SUSPEND		122
++
++/* /2 clocks */
++#define CLK_CPU_AXI		123
++#define CLK_CCI			124
++#define CLK_DSP			125
++
++/* PLL DDR1 (second DDR PLL) */
++#define CLK_PLL_DDR1		126
++
++/* PCIe clocks */
++#define CLK_PCIE0_AUX		127
++#define CLK_PCIE0_AXI_SLV	128
++
++/* Resets (active-low, bit positions in reset register) */
++#define RST_BUS_UART0		0
++#define RST_BUS_UART1		1
++#define RST_BUS_UART2		2
++#define RST_BUS_UART3		3
++#define RST_BUS_UART4		4
++#define RST_BUS_UART5		5
++
++#define RST_BUS_SPI0		6
++#define RST_BUS_SPI1		7
++#define RST_BUS_SPI2		8
++#define RST_BUS_SPI3		9
++
++#define RST_BUS_I2C0		10
++#define RST_BUS_I2C1		11
++#define RST_BUS_I2C2		12
++#define RST_BUS_I2C3		13
++#define RST_BUS_I2C4		14
++#define RST_BUS_I2C5		15
++
++#define RST_BUS_USB		16
++#define RST_BUS_GMAC		17
++#define RST_BUS_MMC0		18
++#define RST_BUS_MMC1		19
++#define RST_BUS_MMC2		20
++#define RST_BUS_CE		21
++#define RST_BUS_DMA		22
++#define RST_BUS_HDMI		23
++#define RST_BUS_DE		24
++#define RST_BUS_GPU		25
++#define RST_BUS_THS		26
++#define RST_BUS_DAUDIO		27
++#define RST_BUS_OWA		28
++#define RST_BUS_DMIC		29
++#define RST_BUS_AUDIOC		30
++#define RST_BUS_SPINLOCK	31
++#define RST_BUS_DRC		32
++#define RST_BUS_MSGBOX		33
++#define RST_BUS_GPADC		34
++#define RST_BUS_LRADC		35
++#define RST_BUS_PWM		36
++
++/* PCIe reset */
++#define RST_BUS_PCIE0		37
++
++/* Thermal reset */
++#define RST_BUS_THERMAL		38
++
++/*
++ * Vendor-name aliases (DTSI uses these names, which map to the
++ * canonical indices above).
++ */
++
++/* TWI / I2C aliases */
++#define CLK_BUS_TWI0		CLK_BUS_I2C0
++#define CLK_BUS_TWI1		CLK_BUS_I2C1
++#define CLK_BUS_TWI2		CLK_BUS_I2C2
++#define CLK_BUS_TWI3		CLK_BUS_I2C3
++#define CLK_BUS_TWI4		CLK_BUS_I2C4
++#define CLK_BUS_TWI5		CLK_BUS_I2C5
++
++/* SMHC / MMC aliases */
++#define CLK_SMHC0		CLK_MMC0
++#define CLK_SMHC1		CLK_MMC1
++#define CLK_SMHC2		CLK_MMC2
++
++#define CLK_BUS_SMHC0		CLK_BUS_MMC0
++#define CLK_BUS_SMHC1		CLK_BUS_MMC1
++#define CLK_BUS_SMHC2		CLK_BUS_MMC2
++
++#define RST_BUS_SMHC0		RST_BUS_MMC0
++#define RST_BUS_SMHC1		RST_BUS_MMC1
++#define RST_BUS_SMHC2		RST_BUS_MMC2
++
++/* TWI / I2C reset aliases */
++#define RST_BUS_TWI0		RST_BUS_I2C0
++#define RST_BUS_TWI1		RST_BUS_I2C1
++#define RST_BUS_TWI2		RST_BUS_I2C2
++#define RST_BUS_TWI3		RST_BUS_I2C3
++#define RST_BUS_TWI4		RST_BUS_I2C4
++#define RST_BUS_TWI5		RST_BUS_I2C5
++
++/* MSGBOX aliases */
++#define CLK_MSGBOX0		CLK_MSGBOX
++#define RST_BUS_MSGBOX0		RST_BUS_MSGBOX
++
++/* PLL VE alias */
++#define CLK_PLL_VE0		CLK_PLL_VE
++
++/* GMAC aliases */
++#define CLK_GMAC0		CLK_GMAC
++#define RST_BUS_GMAC0		RST_BUS_GMAC
++
++/* GPADC aliases */
++#define CLK_GPADC0		CLK_GPADC
++#define RST_BUS_GPADC0		RST_BUS_GPADC
++
++/* PWM aliases */
++#define CLK_PWM0		CLK_PWM
++#define RST_BUS_PWM0		RST_BUS_PWM
++
++/* VE / NPU bus clock placeholders */
++#define CLK_BUS_VE_DEC		CLK_BUS_DMA
++#define CLK_BUS_VE_ENC		CLK_BUS_DMA
++#define CLK_BUS_NPU		CLK_BUS_DMA
++
++/* Timer / LEDC / TWI7-9 bus clocks */
++#define CLK_BUS_TIMER		129
++#define CLK_TIMER0		130
++#define CLK_TIMER1		131
++#define CLK_BUS_LEDC		132
++#define CLK_LEDC			133
++#define CLK_BUS_TWI7		134
++#define CLK_BUS_TWI8		135
++#define CLK_BUS_TWI9		136
++
++/* USB clocks */
++#define CLK_USB0			137
++#define CLK_USB0_DEVICE		138
++#define CLK_USB0_EHCI		139
++#define CLK_USB0_OHCI		140
++#define CLK_USB1			141
++#define CLK_USB1_EHCI		142
++#define CLK_USB1_OHCI		143
++#define CLK_USB2			144
++#define CLK_USB2_MF		145
++
++/* DMA / MBUS / CE clocks */
++#define CLK_DMA			146
++#define CLK_MBUS_DMA		147
++#define CLK_MBUS_CE		148
++#define CLK_CE			149
++
++/* VE (video engine) clocks */
++#define CLK_PLL_VE1		150
++#define CLK_VE_AHB_GATE		151
++#define CLK_VE_DEC			152
++#define CLK_VE_DEC_MBUS		153
++#define CLK_DEC_MBUS_GATE		154
++#define CLK_VE_ENC_AHB_GATE	155
++#define CLK_VE_ENC0		156
++#define CLK_MBUS_VE_GATE		157
++#define CLK_MBUS_VE		158
++
++/* NPU clocks */
++#define CLK_NPU			159
++#define CLK_PLL_NPU		160
++
++/* PERI0 derived clocks */
++#define CLK_PLL_PERI0_800M	161
++#define CLK_PLL_PERI0_600M	162
++#define CLK_PLL_PERI0_300M	163
++#define CLK_PLL_PERI0_200M	164
++#define CLK_PLL_PERI0_400M	CLK_PLL_PERIPH0_4X
++
++/* GMAC derived clocks */
++#define CLK_GMAC0_MBUS		165
++#define CLK_GMAC0_PHY		166
++
++/* GPADC derived clock */
++#define CLK_GPADC0_24M		167
++
++/* UART6 */
++#define CLK_UART6			168
++
++/* New reset indices */
++#define RST_BUS_TWI7		55
++#define RST_BUS_TWI8		56
++#define RST_BUS_TWI9		57
++#define RST_USB0			58
++#define RST_USB0_EHCI		59
++#define RST_USB0_OHCI		60
++#define RST_USB1			61
++#define RST_USB1_EHCI		62
++#define RST_USB1_OHCI		63
++#define RST_USB2			64
++#define RST_BUS_GMAC0_AXI	65
++#define RST_BUS_TIMER0		66
++#define RST_BUS_LEDC		67
++#define RST_BUS_NPU		68
++#define RST_BUS_VE_DEC		69
++#define RST_BUS_VE_ENC0		70
++#define RST_BUS_UART6		71
++
++#endif /* _DT_BINDINGS_CLK_SUN60I_A733_CCU_H_ */
+diff --git a/include/dt-bindings/clock/sun60i-a733-r-ccu.h b/include/dt-bindings/clock/sun60i-a733-r-ccu.h
+new file mode 100644
+index 000000000..223525ffa
+--- /dev/null
++++ b/include/dt-bindings/clock/sun60i-a733-r-ccu.h
+@@ -0,0 +1,80 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++/*
++ * Copyright (C) 2024 The Linux Foundation. All rights reserved.
++ *
++ * Allwinner A733 R-CCU (PRCM / Resource Clock Control Unit) bindings.
++ */
++
++#ifndef _DT_BINDINGS_CLK_SUN60I_A733_R_CCU_H_
++#define _DT_BINDINGS_CLK_SUN60I_A733_R_CCU_H_
++
++/* R-CCU / PRCM clock IDs (logical; used in DTS and driver) */
++
++#define R_CLK_OSC32K		0
++#define R_CLK_IOSC		1
++#define R_CLK_PLL_AUDIO0	2
++
++/* RTC domain */
++#define R_CLK_RTC_32K		3
++#define R_CLK_RTC_1K		4
++#define R_CLK_CEC_32K		5
++
++/* Reset- / low-power-domain bus clocks */
++#define R_CLK_R_PIO		6
++#define R_CLK_R_APB1		7
++
++/* Peripheral clocks in the R domain */
++#define R_CLK_R_UART		8
++#define R_CLK_R_I2C		9
++#define R_CLK_R_PWM		10
++#define R_CLK_R_SPINLOCK	11
++#define R_CLK_R_THERMAL		12
++#define R_CLK_R_SID		13
++#define R_CLK_R_CPUCFG		14
++
++/* Module clocks inside R domain */
++#define R_CLK_R_UART_CK		15
++#define R_CLK_R_I2C_CK		16
++#define R_CLK_THERMAL_SENSOR	17
++#define R_CLK_R_SID_CK		18
++
++/* Fixed dividers */
++#define R_CLK_R_AHB		19
++#define R_CLK_R_APB1_DIV	20
++
++/* R-PPU clocks */
++#define R_CLK_R_PPU		21
++
++/* R-CCU resets */
++#define R_RST_RTC		0
++#define R_RST_R_PIO		1
++#define R_RST_R_UART		2
++#define R_RST_R_I2C		3
++#define R_RST_R_PWM		4
++#define R_RST_R_SPINLOCK	5
++#define R_RST_R_THERMAL		6
++#define R_RST_R_SID		7
++#define R_RST_R_CPUCFG		8
++
++/* R-PPU resets */
++#define R_RST_R_PPU0		9
++#define R_RST_R_PPU1		10
++
++/*
++ * Vendor-name aliases (DTSI uses these names, which map to the
++ * canonical indices above).
++ */
++#define CLK_R_AHB		R_CLK_R_AHB
++#define CLK_R_APB0		R_CLK_R_APB1
++#define CLK_R_TWI0		R_CLK_R_I2C
++#define RST_BUS_R_TWI0		R_RST_R_I2C
++#define RST_BUS_RTC		R_RST_RTC
++#define CLK_R_PPU		R_CLK_R_PPU
++#define RST_BUS_R_PPU0		R_RST_R_PPU0
++#define RST_BUS_R_PPU1		R_RST_R_PPU1
++
++/* New clock defines */
++#define CLK_RTC_1K		22
++#define CLK_RTC_SPI		23
++
++#endif /* _DT_BINDINGS_CLK_SUN60I_A733_R_CCU_H_ */
+diff --git a/include/dt-bindings/gpio/sun60i-a733-gpio.h b/include/dt-bindings/gpio/sun60i-a733-gpio.h
+new file mode 100644
+index 000000000..f1449a18b
+--- /dev/null
++++ b/include/dt-bindings/gpio/sun60i-a733-gpio.h
+@@ -0,0 +1,25 @@
++/* SPDX-License-Identifier: (GPL-2.0-or-later OR MIT) */
++/*
++ * Device Tree binding constants for Allwinner A733 GPIO controller
++ */
++
++#ifndef _DT_BINDINGS_GPIO_SUN60I_A733_H
++#define _DT_BINDINGS_GPIO_SUN60I_A733_H
++
++#define GPIO_BANK_A	0
++#define GPIO_BANK_B	1
++#define GPIO_BANK_C	2
++#define GPIO_BANK_D	3
++#define GPIO_BANK_E	4
++#define GPIO_BANK_F	5
++#define GPIO_BANK_G	6
++#define GPIO_BANK_H	7
++#define GPIO_BANK_I	8
++#define GPIO_BANK_J	9
++#define GPIO_BANK_K	10
++#define GPIO_BANK_L	11
++#define GPIO_BANK_M	12
++
++#define GPIO_BANK(letter, offset)	(GPIO_BANK_ ## letter + (offset))
++
++#endif /* _DT_BINDINGS_GPIO_SUN60I_A733_H */
+diff --git a/include/dt-bindings/thermal/sun60i-a733-thermal.h b/include/dt-bindings/thermal/sun60i-a733-thermal.h
+new file mode 100644
+index 000000000..2f905e7f1
+--- /dev/null
++++ b/include/dt-bindings/thermal/sun60i-a733-thermal.h
+@@ -0,0 +1,21 @@
++/* SPDX-License-Identifier: (GPL-2.0-or-later OR MIT) */
++/*
++ * Device Tree binding constants for Allwinner A733 thermal sensor
++ */
++
++#ifndef _DT_BINDINGS_THERMAL_SUN60I_A733_H
++#define _DT_BINDINGS_THERMAL_SUN60I_A733_H
++
++#define SUN60I_THERMAL_ACTIVE_LOW	0
++#define SUN60I_THERMAL_ACTIVE_HIGH	1
++
++#define SUN60I_THERMAL_TRIP_PASSIVE	0
++#define SUN60I_THERMAL_TRIP_ACTIVE	1
++#define SUN60I_THERMAL_TRIP_HOT	2
++#define SUN60I_THERMAL_TRIP_CRITICAL	3
++
++#ifndef THERMAL_NO_LIMIT
++#define THERMAL_NO_LIMIT		(~0)
++#endif
++
++#endif /* _DT_BINDINGS_THERMAL_SUN60I_A733_H */
 diff --git a/scripts/Makefile.dtbs b/scripts/Makefile.dtbs
 index c4e466390..a86cdff32 100644
 --- a/scripts/Makefile.dtbs
@@ -13805,4 +13550,233 @@ index c4e466390..a86cdff32 100644
  
  dtc-tmp = $(subst $(comma),_,$(dot-target).dts.tmp)
  
-
+diff --git a/sound/soc/sunxi/Kconfig b/sound/soc/sunxi/Kconfig
+index 205f422d9..9aa62da24 100644
+--- a/sound/soc/sunxi/Kconfig
++++ b/sound/soc/sunxi/Kconfig
+@@ -67,4 +67,14 @@ config SND_SUN8I_ADDA_PR_REGMAP
+ 	tristate
+ 	select REGMAP
+ 
++config SND_SUN60I_SOC
++	tristate "Allwinner sun60i SoC Audio Support"
++	depends on SND_SOC
++	depends on ARCH_SUNXI || COMPILE_TEST
++	depends on OF
++	select SND_SOC_GENERIC_DMAENGINE_PCM
++	help
++	  Say Y or M to add support for the audio subsystem on Allwinner
++	  sun60i SoCs.
++
+ endmenu
+diff --git a/sound/soc/sunxi/Makefile b/sound/soc/sunxi/Makefile
+index 4483fe9c9..8732218ca 100644
+--- a/sound/soc/sunxi/Makefile
++++ b/sound/soc/sunxi/Makefile
+@@ -7,3 +7,4 @@ obj-$(CONFIG_SND_SUN50I_CODEC_ANALOG) += sun50i-codec-analog.o
+ obj-$(CONFIG_SND_SUN8I_CODEC) += sun8i-codec.o
+ obj-$(CONFIG_SND_SUN8I_ADDA_PR_REGMAP) += sun8i-adda-pr-regmap.o
+ obj-$(CONFIG_SND_SUN50I_DMIC) += sun50i-dmic.o
++obj-$(CONFIG_SND_SUN60I_SOC) += sun60i-audio.o
+diff --git a/sound/soc/sunxi/sun60i-audio.c b/sound/soc/sunxi/sun60i-audio.c
+new file mode 100644
+index 000000000..8945707a8
+--- /dev/null
++++ b/sound/soc/sunxi/sun60i-audio.c
+@@ -0,0 +1,196 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Allwinner A733 (sun60iw2) Audio Machine driver
++ *
++ * Audio machine driver connecting I2S0 controller and ES8389 codec.
++ *
++ * Copyright (C) 2026 Allwinner Technology Co., Ltd.
++ */
++
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_device.h>
++#include <linux/platform_device.h>
++#include <linux/slab.h>
++
++#include <sound/asoundef.h>
++#include <sound/pcm.h>
++#include <sound/pcm_params.h>
++#include <sound/soc.h>
++#include <sound/jack.h>
++
++#define DRV_NAME "sun60i-audio"
++
++struct sun60i_audio_card {
++	struct snd_soc_card	card;
++	struct snd_soc_dai_link dai_link;
++	struct platform_device	*i2s_pdev;
++	struct platform_device	*codec_pdev;
++	struct snd_jack		*jack;
++	bool			master;
++};
++
++static const struct snd_soc_dapm_widget sun60i_audio_widgets[] = {
++	SND_SOC_DAPM_HP("Headphone", NULL),
++	SND_SOC_DAPM_SPK("Speaker", NULL),
++	SND_SOC_DAPM_MIC("Internal Mic", NULL),
++	SND_SOC_DAPM_MIC("External Mic", NULL),
++};
++
++static const struct snd_soc_dapm_route sun60i_audio_routes[] = {
++	{ "Headphone", NULL, "HPOL" },
++	{ "Headphone", NULL, "HPOR" },
++	{ "Speaker",  NULL, "SPKOUT" },
++	{ "MIC1", NULL, "Internal Mic" },
++	{ "MIC2", NULL, "External Mic" },
++};
++
++static struct snd_soc_jack_pin jack_pins[] = {
++	{
++		.pin    = "Headphone",
++		.mask   = SND_JACK_HEADPHONE,
++	},
++};
++
++static int sun60i_audio_startup(struct snd_pcm_substream *substream)
++{
++	return 0;
++}
++
++static int sun60i_audio_hw_params(struct snd_pcm_substream *substream,
++				  struct snd_pcm_hw_params *params)
++{
++	struct snd_soc_pcm_runtime *rtd = substream->private_data;
++	struct snd_soc_component *component = snd_soc_rtdcom_lookup(rtd,
++						   "es8388-codec");
++
++	snd_soc_component_set_sysclk(component, 0, 0, params_rate(params) * 256);
++
++	return 0;
++}
++
++static const struct snd_soc_ops sun60i_audio_ops = {
++	.startup	= sun60i_audio_startup,
++	.hw_params	= sun60i_audio_hw_params,
++};
++
++static int sun60i_audio_init(struct snd_soc_pcm_runtime *rtd)
++{
++	struct sun60i_audio_card *priv = snd_soc_card_get_drvdata(rtd->card);
++	struct snd_soc_component *component;
++	int ret;
++
++	component = snd_soc_rtdcom_lookup(rtd, "es8388-codec");
++
++	ret = snd_soc_component_set_jack(component, priv->jack, NULL);
++	if (ret) {
++		dev_err(rtd->card->dev, "failed to set jack: %d\n", ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++static int sun60i_audio_of_xlate_dai_name(struct snd_soc_component *component,
++					  struct of_phandle_args *args)
++{
++	return 0;
++}
++
++static const struct snd_soc_component_driver sun60i_audio_component = {
++	.of_xlate_dai_name	= sun60i_audio_of_xlate_dai_name,
++	.idle_bias_on		= 1,
++	.use_pmdown_time	= 1,
++	.endianness		= 1,
++};
++
++static int sun60i_audio_probe(struct platform_device *pdev)
++{
++	struct sun60i_audio_card *priv;
++	struct device_node *i2s_node, *codec_node;
++	struct snd_soc_dai_link *dai;
++	int ret;
++
++	priv = devm_kzalloc(&pdev->dev, sizeof(*priv), GFP_KERNEL);
++	if (!priv)
++		return -ENOMEM;
++
++	/* Find I2S DAI */
++	i2s_node = of_parse_phandle(pdev->dev.of_node,
++				    "allwinner,i2s-controller", 0);
++	if (!i2s_node) {
++		dev_err(&pdev->dev, "failed to get I2S controller\n");
++		return -ENODEV;
++	}
++
++	/* Find codec */
++	codec_node = of_parse_phandle(pdev->dev.of_node,
++				      "allwinner,codec", 0);
++	if (!codec_node) {
++		dev_err(&pdev->dev, "failed to get codec\n");
++		of_node_put(i2s_node);
++		return -ENODEV;
++	}
++
++	dai = &priv->dai_link;
++	dai->name = "sun60i-audio";
++	dai->stream_name = "sun60i-audio";
++	dai->cpus dai_name = "ES8388 HiFi";
++	dai->codecs dai_name = "ES8388 HiFi";
++	dai->platforms.of_node = i2s_node;
++	dai->codecs.of_node = codec_node;
++	dai->init = sun60i_audio_init;
++	dai->ops = &sun60i_audio_ops;
++	dai->dai_fmt = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF |
++		       SND_SOC_DAIFMT_CBS_CFS;
++
++	priv->card.dai_link = dai;
++	priv->card.num_links = 1;
++	priv->card.owner = THIS_MODULE;
++	priv->card.dev = &pdev->dev;
++	priv->card.name = "Sun60i A733 Audio";
++
++	snd_soc_dapm_new_controls(&priv->card, sun60i_audio_widgets,
++				  ARRAY_SIZE(sun60i_audio_widgets));
++
++	snd_soc_dapm_add_routes(&priv->card, sun60i_audio_routes,
++				ARRAY_SIZE(sun60i_audio_routes));
++
++	ret = devm_snd_soc_register_card(&pdev->dev, &priv->card);
++	if (ret) {
++		dev_err(&pdev->dev, "failed to register card: %d\n", ret);
++		goto err_node_put;
++	}
++
++	platform_set_drvdata(pdev, priv);
++
++err_node_put:
++	of_node_put(i2s_node);
++	of_node_put(codec_node);
++
++	return ret;
++}
++
++static void sun60i_audio_remove(struct platform_device *pdev)
++{
++}
++
++static const struct of_device_id sun60i_audio_match[] = {
++	{ .compatible = "allwinner,sun60i-a733-audio" },
++	{ }
++};
++MODULE_DEVICE_TABLE(of, sun60i_audio_match);
++
++struct platform_driver sun60i_audio_platform_driver = {
++	.probe	= sun60i_audio_probe,
++	.remove	= sun60i_audio_remove,
++	.driver	= {
++		.name		= DRV_NAME,
++		.of_match_table	= sun60i_audio_match,
++	},
++};
++module_platform_driver(sun60i_audio_platform_driver);
++
++MODULE_LICENSE("GPL v2");
++MODULE_AUTHOR("Allwinner Technology Co., Ltd.");
++MODULE_DESCRIPTION("Allwinner A733 Audio Machine driver");
