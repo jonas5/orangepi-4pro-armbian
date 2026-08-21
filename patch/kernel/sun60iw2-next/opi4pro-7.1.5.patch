@@ -10939,7 +10939,7 @@ index 7ee839dca..6e3759bef 100644
  obj-$(CONFIG_BATTERY_DS2782)	+= ds2782_battery.o
 diff --git a/drivers/power/supply/axp8191-battery.c b/drivers/power/supply/axp8191-battery.c
 new file mode 100644
-index 000000000..4dab668a3
+index 000000000..455da6422
 --- /dev/null
 +++ b/drivers/power/supply/axp8191-battery.c
 @@ -0,0 +1,427 @@
@@ -11225,7 +11225,7 @@ index 000000000..4dab668a3
 +		return 0;
 +
 +	case POWER_SUPPLY_PROP_TECHNOLOGY:
-+		val->intval = POWER_SUPPLY_TECHNOLOGY_LIION;
++		val->intval = POWER_SUPPLY_TECHNOLOGY_LION;
 +		return 0;
 +
 +	case POWER_SUPPLY_PROP_HEALTH:
@@ -11284,7 +11284,7 @@ index 000000000..4dab668a3
 +
 +	power_supply_changed(bat->bat);
 +
-+	schedule_delayed_work(&bat->bat->work,
++	schedule_delayed_work(&bat->work,
 +			      msecs_to_jiffies(bat->poll_interval));
 +}
 +
@@ -11345,7 +11345,7 @@ index 000000000..4dab668a3
 +		return dev_err_probe(dev, PTR_ERR(bat->bat),
 +				     "Failed to register battery supply\n");
 +
-+	INIT_DELAYED_WORK(&bat->bat->work, axp8191_bat_work_func);
++	INIT_DELAYED_WORK(&bat->work, axp8191_bat_work_func);
 +
 +	dev_dbg(dev, "AXP8191 battery driver registered (poll=%ums)\n",
 +		bat->poll_interval);
