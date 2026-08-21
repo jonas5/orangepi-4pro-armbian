@@ -10,10 +10,10 @@ index d116864b6..be98abfa1 100644
  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-a64-nanopi-a64.dtb
 diff --git a/arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts b/arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts
 new file mode 100644
-index 000000000..02b29b8a6
+index 000000000..660a9f6cf
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts
-@@ -0,0 +1,837 @@
+@@ -0,0 +1,754 @@
 +// SPDX-License-Identifier: (GPL-2.0-or-later OR MIT)
 +/*
 + * Device Tree Source for Orange Pi 4 Pro
@@ -28,6 +28,9 @@ index 000000000..02b29b8a6
 +/ {
 +	model = "Orange Pi 4 Pro";
 +	compatible = "xunlong,orangepi-4-pro", "allwinner,sun60i-a733", "arm,v8";
++	#address-cells = <2>;
++	#size-cells = <2>;
++
 +	aliases {
 +		serial0 = &uart0;
 +		serial1 = &uart1;
@@ -40,16 +43,16 @@ index 000000000..02b29b8a6
 +
 +	memory@40000000 {
 +		device_type = "memory";
-+		reg = <0x40000000 0x40000000>;
++		reg = <0x0 0x40000000 0x3 0x00000000>;
 +	};
 +
 +	reserved-memory {
-+		#address-cells = <1>;
-+		#size-cells = <1>;
++		#address-cells = <2>;
++		#size-cells = <2>;
 +		ranges;
 +
 +		bl31@48000000 {
-+			reg = <0x48000000 0x1000000>;
++			reg = <0x0 0x48000000 0x0 0x01000000>;
 +			no-map;
 +		};
 +	};
@@ -90,13 +93,23 @@ index 000000000..02b29b8a6
 +		regulator-boot-on;
 +	};
 +
++	vcc_pcie3v3: vcc-pcie3v3 {
++		compatible = "regulator-fixed";
++		regulator-name = "vcc-pcie3v3";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		enable-active-high;
++		gpio = <&r_pio 0 3 GPIO_ACTIVE_HIGH>; /* PL3: PCIE_PWREN_H */
++		regulator-boot-on;
++	};
++
 +	usb0_vbus: usb0-vbus {
 +		compatible = "regulator-fixed";
 +		regulator-name = "usb0-vbus";
 +		regulator-min-microvolt = <5000000>;
 +		regulator-max-microvolt = <5000000>;
 +		enable-active-high;
-+		gpio = <&pio 8 16 GPIO_ACTIVE_HIGH>; /* PH16 */
++		gpio = <&pio 4 9 GPIO_ACTIVE_HIGH>; /* PE9: USB20_EN */
 +		regulator-boot-on;
 +	};
 +
@@ -106,30 +119,24 @@ index 000000000..02b29b8a6
 +		regulator-min-microvolt = <5000000>;
 +		regulator-max-microvolt = <5000000>;
 +		enable-active-low;
-+		gpio = <&pio 7 7 GPIO_ACTIVE_LOW>; /* PB7 */
++		gpio = <&pio 1 7 GPIO_ACTIVE_LOW>; /* PB7: PWREN1# */
 +		regulator-always-on;
 +		regulator-boot-on;
-+	};
-+
-+	reg_gmac_3v3: gmac-3v3 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "gmac-3v3";
-+		regulator-min-microvolt = <3300000>;
-+		regulator-max-microvolt = <3300000>;
-+		regulator-boot-on;
-+		enable-active-high;
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&gmac_rst_pin>;
 +	};
 +
 +	wifi_pwrseq: wifi-pwrseq {
 +		compatible = "mmc-pwrseq-simple";
 +		clocks = <&osc24M>;
-+		clock-frequency = <24000000>;
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&wifi_enable_pin>;
-+		reset-gpios = <&pio 9 9 GPIO_ACTIVE_LOW>; /* PI9 */
++		clock-frequency = <26000000>;
++		reset-gpios = <&r_pio 1 1 GPIO_ACTIVE_LOW>; /* PM1: WL_REG_ON */
 +		post-power-on-delay-ms = <200>;
++	};
++
++	rfkill_bt: rfkill-bt {
++		compatible = "rfkill-gpio";
++		label = "rfkill-bluetooth";
++		radio-type = "bluetooth";
++		enable-gpios = <&r_pio 1 2 GPIO_ACTIVE_HIGH>; /* PM2: BT_REG_ON */
 +	};
 +
 +	leds {
@@ -137,7 +144,7 @@ index 000000000..02b29b8a6
 +
 +		led-green {
 +			label = "green-led";
-+			gpios = <&pio 9 8 GPIO_ACTIVE_HIGH>; /* PI8 */
++			gpios = <&pio 1 6 GPIO_ACTIVE_HIGH>; /* PB6: PWM_LED1 */
 +			default-state = "on";
 +		};
 +	};
@@ -163,6 +170,11 @@ index 000000000..02b29b8a6
 +	pinctrl-0 = <&uart1_pg6_pins>, <&uart1_rts_cts_pins>;
 +	uart-has-rtscts;
 +	status = "okay";
++
++	bluetooth {
++		compatible = "aic,aic8800";
++		enable-gpios = <&r_pio 1 2 GPIO_ACTIVE_HIGH>; /* PM2: BT_REG_ON */
++	};
 +};
 +
 +&uart2 {
@@ -171,94 +183,17 @@ index 000000000..02b29b8a6
 +	status = "okay";
 +};
 +
-+&i2c0 {
++&i2c5 {
 +	pinctrl-names = "default";
-+	pinctrl-0 = <&i2c0_pins>;
-+	status = "okay";
-+
-+	axp515: pmic@34 {
-+		compatible = "x-powers,axp515";
-+		reg = <0x34>;
-+		interrupt-parent = <&nmi_intc>;
-+		interrupts = <0 IRQ_TYPE_LEVEL_LOW>;
-+		interrupt-controller;
-+		#interrupt-cells = <1>;
-+
-+		x-powers,master-mode-reg = <0x3f>;
-+		x-powers,drive-vbus-en;
-+		pmu_hot_shutdown = <1>;
-+		wakeup-source;
-+
-+		regulators {
-+			reg_dldo1: dldo1 {
-+				regulator-always-on;
-+				regulator-name = "axp515-dldo1";
-+				regulator-min-microvolt = <1800000>;
-+				regulator-max-microvolt = <1800000>;
-+				regulator-enable-ramp-delay = <1000>;
-+			};
-+
-+			reg_dldo2: dldo2 {
-+				regulator-always-on;
-+				regulator-name = "axp515-dldo2";
-+				regulator-min-microvolt = <1800000>;
-+				regulator-max-microvolt = <1800000>;
-+				regulator-enable-ramp-delay = <1000>;
-+			};
-+
-+			reg_dldo3: dldo3 {
-+				regulator-always-on;
-+				regulator-name = "axp515-dldo3";
-+				regulator-min-microvolt = <1800000>;
-+				regulator-max-microvolt = <1800000>;
-+				regulator-enable-ramp-delay = <1000>;
-+			};
-+
-+			reg_dldo4: dldo4 {
-+				regulator-always-on;
-+				regulator-name = "axp515-dldo4";
-+				regulator-min-microvolt = <1800000>;
-+				regulator-max-microvolt = <1800000>;
-+				regulator-enable-ramp-delay = <1000>;
-+			};
-+
-+			reg_eldo1: eldo1 {
-+				regulator-always-on;
-+				regulator-name = "axp515-eldo1";
-+				regulator-min-microvolt = <1800000>;
-+				regulator-max-microvolt = <1800000>;
-+				regulator-enable-ramp-delay = <1000>;
-+			};
-+
-+			reg_eldo2: eldo2 {
-+				regulator-always-on;
-+				regulator-name = "axp515-eldo2";
-+				regulator-min-microvolt = <1800000>;
-+				regulator-max-microvolt = <1800000>;
-+				regulator-enable-ramp-delay = <1000>;
-+			};
-+
-+			reg_drivevbus: drivevbus {
-+				regulator-name = "drive-vbus";
-+				regulator-min-microvolt = <5000000>;
-+				regulator-max-microvolt = <5000000>;
-+				regulator-boot-on;
-+			};
-+		};
-+	};
-+};
-+
-+&i2c9 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&i2c9_pins>;
++	pinctrl-0 = <&i2c5_pins>;
 +	status = "okay";
 +
 +	gt9271: touchscreen@14 {
 +		compatible = "goodix,gt9271";
 +		reg = <0x14>;
 +		interrupt-parent = <&pio>;
-+		interrupts = <1 25 IRQ_TYPE_LEVEL_HIGH>; /* PJ25 */
-+		reset-gpios = <&pio 1 10 GPIO_ACTIVE_HIGH>; /* PG10 */
++		interrupts = <9 25 IRQ_TYPE_LEVEL_HIGH>; /* PJ25 */
++		reset-gpios = <&pio 6 10 GPIO_ACTIVE_HIGH>; /* PG10 */
 +		touchscreen-inverted-x;
 +		touchscreen-swapped-x-y;
 +		touchscreen-size-x = <1280>;
@@ -268,12 +203,18 @@ index 000000000..02b29b8a6
 +	};
 +};
 +
-+&pio {
-+	gt9271_irq_pin: gt9271-irq-pin {
-+		pins = "PJ25";
-+		function = "gpio";
-+		drive-strength = <10>;
-+		bias-pull-up;
++&i2c7 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&i2c7_pins>;
++	status = "okay";
++
++	es8388: audio-codec@10 {
++		compatible = "everest,es8388";
++		reg = <0x10>;
++		assigned-clocks = <&ccu CLK_AUDIO>;
++		assigned-clock-rates = <24576000>;
++		clocks = <&ccu CLK_AUDIO>;
++		clock-names = "mclk";
 +	};
 +};
 +
@@ -333,7 +274,7 @@ index 000000000..02b29b8a6
 +				regulator-enable-ramp-delay = <1000>;
 +			};
 +
-+			dcdc4 {
++			reg_dcdc4: dcdc4 {
 +				regulator-always-on;
 +				regulator-boot-on;
 +				regulator-name = "axp8191-dcdc4";
@@ -511,7 +452,7 @@ index 000000000..02b29b8a6
 +				regulator-enable-ramp-delay = <1000>;
 +			};
 +
-+			dldo1 {
++			reg_dldo1: dldo1 {
 +				regulator-always-on;
 +				regulator-boot-on;
 +				regulator-name = "axp8191-dldo1";
@@ -520,7 +461,7 @@ index 000000000..02b29b8a6
 +				regulator-enable-ramp-delay = <1000>;
 +			};
 +
-+			dldo2 {
++			reg_dldo2: dldo2 {
 +				regulator-name = "axp8191-dldo2";
 +				regulator-min-microvolt = <500000>;
 +				regulator-max-microvolt = <3400000>;
@@ -605,7 +546,7 @@ index 000000000..02b29b8a6
 +				regulator-enable-ramp-delay = <1000>;
 +			};
 +
-+			dc1sw1 {
++			dc1sw1: dc1sw1 {
 +				regulator-always-on;
 +				regulator-boot-on;
 +				regulator-name = "axp8191-dc1sw1";
@@ -617,23 +558,13 @@ index 000000000..02b29b8a6
 +			};
 +		};
 +	};
-+
-+	es8388: audio-codec@10 {
-+		compatible = "everest,es8388";
-+		reg = <0x10>;
-+		assigned-clocks = <&ccu CLK_AUDIO>;
-+		assigned-clock-rates = <24576000>;
-+		clocks = <&ccu CLK_AUDIO>;
-+		clock-names = "mclk";
-+	};
 +};
 +
 +&mmc0 {
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&mmc0_pins>, <&mmc0_cd_pin>;
 +	vmmc-supply = <&reg_dldo1>;
-+	cd-gpios = <&pio 6 6 GPIO_ACTIVE_LOW>; /* PF6 */
-+	wp-gpios = <&pio 6 2 GPIO_ACTIVE_HIGH>; /* PF2 */
++	cd-gpios = <&pio 5 6 GPIO_ACTIVE_LOW>; /* PF6 */
 +	bus-width = <4>;
 +	status = "okay";
 +
@@ -663,8 +594,8 @@ index 000000000..02b29b8a6
 +	sdio_wifi: sdio@1 {
 +		compatible = "brcm,bcm4329-fmac";
 +		reg = <1>;
-+		interrupt-parent = <&pio>;
-+		interrupts = <9 10 IRQ_TYPE_EDGE_FALLING>; /* PI10 */
++		interrupt-parent = <&r_pio>;
++		interrupts = <1 0 IRQ_TYPE_EDGE_FALLING>; /* PM0 */
 +		interrupt-names = "host-wake";
 +	};
 +};
@@ -728,14 +659,16 @@ index 000000000..02b29b8a6
 +	phy-handle = <&ext_gmac0_phy>;
 +	tx-delay = <12>;
 +	rx-delay = <10>;
-+	phy-supply = <&reg_gmac_3v3>;
-+	phy-power-supply = <&reg_gmac_3v3>;
++	phy-supply = <&dc1sw1>;
 +	status = "okay";
 +
 +	mdio0: mdio {
 +		ext_gmac0_phy: ethernet-phy@1 {
-+			reg = <1>;
 +			compatible = "ethernet-phy-ieee802.3-c22";
++			reg = <1>;
++			reset-gpios = <&pio 7 16 GPIO_ACTIVE_LOW>; /* PH16 */
++			reset-assert-us = <10000>;
++			reset-deassert-us = <30000>;
 +		};
 +	};
 +};
@@ -766,9 +699,8 @@ index 000000000..02b29b8a6
 +};
 +
 +&pcie {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie_pins>;
-+	reset-gpios = <&pio 8 11 GPIO_ACTIVE_LOW>; /* PH11 */
++	reset-gpios = <&pio 3 22 GPIO_ACTIVE_LOW>; /* PD22 */
++	vpcie3v3-supply = <&vcc_pcie3v3>;
 +	status = "okay";
 +};
 +
@@ -783,7 +715,7 @@ index 000000000..02b29b8a6
 +};
 +
 +&gpu {
-+	mali-supply = <&reg_dcdc2>;
++	mali-supply = <&reg_dcdc4>;
 +	status = "okay";
 +};
 +
@@ -814,30 +746,15 @@ index 000000000..02b29b8a6
 +		function = "uart2";
 +	};
 +
-+	/* WiFi enable (PI9 = main PIO domain) */
-+	wifi_enable_pin: wifi-enable-pin {
-+		pins = "PI9";
++	gt9271_irq_pin: gt9271-irq-pin {
++		pins = "PJ25";
 +		function = "gpio";
 +		drive-strength = <10>;
-+		output-low;
-+	};
-+
-+	/* GMAC reset (PB13 = main PIO domain) */
-+	gmac_rst_pin: gmac-rst-pin {
-+		pins = "PB13";
-+		function = "gpio";
-+		drive-strength = <10>;
-+		output-high;
++		bias-pull-up;
 +	};
 +
 +	ths_pin: ths-pin {
 +		pins = "PB12";
-+		function = "gpio";
-+		drive-strength = <10>;
-+	};
-+
-+	pcie_pins: pcie-pins {
-+		pins = "PH11";
 +		function = "gpio";
 +		drive-strength = <10>;
 +	};
@@ -853,10 +770,10 @@ index 000000000..02b29b8a6
 +&cpu7 { cpu-supply = <&reg_dcdc3>; };
 diff --git a/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi b/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi
 new file mode 100644
-index 000000000..7c20353c5
+index 000000000..e4bb61553
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi
-@@ -0,0 +1,1673 @@
+@@ -0,0 +1,1692 @@
 +// SPDX-License-Identifier: (GPL-2.0-or-later OR MIT)
 +/*
 + * Device Tree Source for Allwinner Sun60i A733 SoC
@@ -876,14 +793,14 @@ index 000000000..7c20353c5
 +
 +/ {
 +	interrupt-parent = <&gic>;
-+	#address-cells = <1>;
-+	#size-cells = <1>;
++	#address-cells = <2>;
++	#size-cells = <2>;
 +
-+	osc24M: osc24M-clk {
++	osc24M: osc26M: osc26M-clk {
 +		#clock-cells = <0>;
 +		compatible = "fixed-clock";
-+		clock-frequency = <24000000>;
-+		clock-output-names = "osc24M";
++		clock-frequency = <26000000>;
++		clock-output-names = "osc26M";
 +	};
 +
 +	iosc: iosc-clk {
@@ -1371,11 +1288,12 @@ index 000000000..7c20353c5
 +		};
 +	};
 +
-+	soc@3000000 {
++	soc: soc@0 {
 +		compatible = "simple-bus";
 +		#address-cells = <1>;
 +		#size-cells = <1>;
-+		ranges;
++		ranges = <0x0 0x0 0x0 0x40000000>;
++		dma-ranges = <0x40000000 0x0 0x40000000 0xc0000000>;
 +
 +		ccu: clock-controller@2002000 {
 +			compatible = "allwinner,sun60i-a733-ccu";
@@ -1423,10 +1341,20 @@ index 000000000..7c20353c5
 +		gic: interrupt-controller@3400000 {
 +			compatible = "arm,gic-v3";
 +			reg = <0x03400000 0x10000>,
-+			      <0x03460000 0xff004>;
++			      <0x03460000 0x100000>;
 +			interrupt-controller;
-+			interrupt-cells = <3>;
++			#interrupt-cells = <3>;
++			#address-cells = <1>;
++			#size-cells = <1>;
++			ranges;
 +			interrupts = <GIC_PPI 9 IRQ_TYPE_LEVEL_HIGH>;
++
++			its: msi-controller@3440000 {
++				compatible = "arm,gic-v3-its";
++				reg = <0x03440000 0x20000>;
++				msi-controller;
++				#msi-cells = <1>;
++			};
 +		};
 +
 +		pio: pinctrl@2000000 {
@@ -1488,8 +1416,15 @@ index 000000000..7c20353c5
 +
 +			/* I2C5 pins */
 +			i2c5_pins: i2c5-pins {
-+				pins = "PH6", "PH7";
++				pins = "PJ26", "PJ27";
 +				function = "i2c5";
++				drive-strength = <40>;
++			};
++
++			/* I2C7 pins */
++			i2c7_pins: i2c7-pins {
++				pins = "PJ22", "PJ23";
++				function = "i2c7";
 +				drive-strength = <40>;
 +			};
 +
@@ -1914,7 +1849,7 @@ index 000000000..7c20353c5
 +			interrupts = <GIC_SPI 8 IRQ_TYPE_LEVEL_HIGH>;
 +			reg-shift = <2>;
 +			reg-io-width = <4>;
-+			clocks = <&ccu CLK_BUS_UART5>;
++			clocks = <&ccu CLK_BUS_UART6>;
 +			resets = <&ccu RST_BUS_UART6>;
 +			dmas = <&dma 20>, <&dma 20>;
 +			dma-names = "tx", "rx";
@@ -2269,22 +2204,15 @@ index 000000000..7c20353c5
 +			#address-cells = <3>;
 +			#size-cells = <2>;
 +			device_type = "pci";
-+
-+			pci0: pci@0,0 {
-+				reg = <0x000000 0 0 0 0>;
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				device_type = "pci";
-+				ranges;
-+				interrupt-map-mask = <0 0 0 7>;
-+				interrupt-map = <0 0 0 1 &gic GIC_SPI 136 IRQ_TYPE_LEVEL_HIGH
-+						 0 0 0 2 &gic GIC_SPI 137 IRQ_TYPE_LEVEL_HIGH
-+						 0 0 0 3 &gic GIC_SPI 138 IRQ_TYPE_LEVEL_HIGH
-+						 0 0 0 4 &gic GIC_SPI 139 IRQ_TYPE_LEVEL_HIGH
-+						 0 0 0 5 &gic GIC_SPI 140 IRQ_TYPE_LEVEL_HIGH
-+						 0 0 0 6 &gic GIC_SPI 141 IRQ_TYPE_LEVEL_HIGH
-+						 0 0 0 7 &gic GIC_SPI 142 IRQ_TYPE_LEVEL_HIGH>;
-+			};
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0 0 0 7>;
++			interrupt-map = <0 0 0 1 &gic 0 GIC_SPI 136 IRQ_TYPE_LEVEL_HIGH>,
++					<0 0 0 2 &gic 0 GIC_SPI 137 IRQ_TYPE_LEVEL_HIGH>,
++					<0 0 0 3 &gic 0 GIC_SPI 138 IRQ_TYPE_LEVEL_HIGH>,
++					<0 0 0 4 &gic 0 GIC_SPI 139 IRQ_TYPE_LEVEL_HIGH>,
++					<0 0 0 5 &gic 0 GIC_SPI 140 IRQ_TYPE_LEVEL_HIGH>,
++					<0 0 0 6 &gic 0 GIC_SPI 141 IRQ_TYPE_LEVEL_HIGH>,
++					<0 0 0 7 &gic 0 GIC_SPI 142 IRQ_TYPE_LEVEL_HIGH>;
 +		};
 +
 +		gmac0: ethernet@4500000 {
@@ -2344,6 +2272,7 @@ index 000000000..7c20353c5
 +			resets = <&ccu RST_BUS_GPU>;
 +			operating-points-v2 = <&gpu_opp_table>;
 +			power-domains = <&pck 2>;
++			#cooling-cells = <2>;
 +
 +			gpu_opp_table: opp-table {
 +				compatible = "operating-points-v2";
@@ -2457,9 +2386,13 @@ index 000000000..7c20353c5
 +			compatible = "allwinner,sun60i-a733-power-controller",
 +				     "syscon", "simple-mfd";
 +			reg = <0x07060000 0xb000>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			#power-domain-cells = <1>;
 +
-+			pck_usb: power-domain {
++			pck_usb: power-domain@0 {
 +				compatible = "allwinner,sun60i-a733-pd-usb";
++				reg = <0>;
 +				#power-domain-cells = <0>;
 +				clocks = <&ccu CLK_USB0>,
 +					 <&ccu CLK_USB1>,
@@ -2471,6 +2404,7 @@ index 000000000..7c20353c5
 +
 +			pck_de: power-domain@1 {
 +				compatible = "allwinner,sun60i-a733-pd-de";
++				reg = <1>;
 +				#power-domain-cells = <0>;
 +				clocks = <&ccu CLK_DE>,
 +					 <&ccu CLK_BUS_DE>;
@@ -2479,6 +2413,7 @@ index 000000000..7c20353c5
 +
 +			pck_gpu: power-domain@2 {
 +				compatible = "allwinner,sun60i-a733-pd-gpu";
++				reg = <2>;
 +				#power-domain-cells = <0>;
 +				clocks = <&ccu CLK_GPU>;
 +				resets = <&ccu RST_BUS_GPU>;
@@ -2486,6 +2421,7 @@ index 000000000..7c20353c5
 +
 +			pck_pcie: power-domain@3 {
 +				compatible = "allwinner,sun60i-a733-pd-pcie";
++				reg = <3>;
 +				#power-domain-cells = <0>;
 +				clocks = <&ccu CLK_PCIE0_AUX>,
 +					 <&ccu CLK_PCIE0_AXI_SLV>;
@@ -2494,7 +2430,7 @@ index 000000000..7c20353c5
 +
 +			r_ppu0: r-ppu@1000 {
 +				compatible = "allwinner,sunxi-r-ppu-v1";
-+				reg = <0x07001000 0x400>;
++				reg = <0x1000>;
 +				interrupts = <GIC_SPI 195 IRQ_TYPE_LEVEL_HIGH>;
 +				clocks = <&r_ccu CLK_R_PPU>;
 +				clock-names = "r-ppu";
@@ -2504,7 +2440,7 @@ index 000000000..7c20353c5
 +
 +			r_ppu1: r-ppu@1400 {
 +				compatible = "allwinner,sunxi-r-ppu-v1";
-+				reg = <0x07001400 0x400>;
++				reg = <0x1400>;
 +				interrupts = <GIC_SPI 197 IRQ_TYPE_LEVEL_HIGH>;
 +				clocks = <&r_ccu CLK_R_PPU>;
 +				clock-names = "r-ppu";
@@ -12524,10 +12460,10 @@ index 000000000..593f5fd64
 +MODULE_DESCRIPTION("Allwinner A733 Temperature Sensor driver");
 diff --git a/include/dt-bindings/clock/sun60i-a733-ccu.h b/include/dt-bindings/clock/sun60i-a733-ccu.h
 new file mode 100644
-index 000000000..0d5d31381
+index 000000000..0837f5ac5
 --- /dev/null
 +++ b/include/dt-bindings/clock/sun60i-a733-ccu.h
-@@ -0,0 +1,368 @@
+@@ -0,0 +1,369 @@
 +/* SPDX-License-Identifier: GPL-2.0-only */
 +/*
 + * Copyright (C) 2024 The Linux Foundation. All rights reserved.
@@ -12875,6 +12811,7 @@ index 000000000..0d5d31381
 +
 +/* UART6 */
 +#define CLK_UART6			168
++#define CLK_BUS_UART6			168
 +
 +/* New reset indices */
 +#define RST_BUS_TWI7		55
