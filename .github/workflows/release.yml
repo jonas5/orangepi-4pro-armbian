@@ -3,6 +3,19 @@ name: Build and Upload Release Images
 on:
   release:
     types: [created]
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'Target release'
+        required: false
+        default: 'bookworm'
+        type: choice
+        options:
+          - bookworm
+          - noble
+          - trixie
+          - plucky
+          - forky
 
 env:
   BOARD: orangepi4pro
@@ -17,6 +30,7 @@ jobs:
     name: Bookworm Server
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 120
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && (inputs.release == 'bookworm' || inputs.release == ''))
     steps:
       - name: Install dependencies
         run: |
@@ -54,14 +68,22 @@ jobs:
           ls -lh "${IMG}.xz" 2>/dev/null || { echo "ERROR: xz output not found"; exit 1; }
           echo "IMAGE_PATH=$(realpath "${IMG}.xz")" >> $GITHUB_ENV
       - name: Upload to release
+        if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ env.IMAGE_PATH }}
+      - name: Upload artifact
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Orangepi4pro-bookworm-server
+          path: ${{ env.IMAGE_PATH }}
 
   build-noble-server:
     name: Noble Server
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 120
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release == 'noble')
     steps:
       - name: Install dependencies
         run: |
@@ -99,14 +121,22 @@ jobs:
           ls -lh "${IMG}.xz" 2>/dev/null || { echo "ERROR: xz output not found"; exit 1; }
           echo "IMAGE_PATH=$(realpath "${IMG}.xz")" >> $GITHUB_ENV
       - name: Upload to release
+        if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ env.IMAGE_PATH }}
+      - name: Upload artifact
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Orangepi4pro-noble-server
+          path: ${{ env.IMAGE_PATH }}
 
   build-trixie-desktop:
     name: Trixie GNOME Desktop
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 120
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release == 'trixie')
     steps:
       - name: Install dependencies
         run: |
@@ -146,14 +176,22 @@ jobs:
           ls -lh "${IMG}.xz" 2>/dev/null || { echo "ERROR: xz output not found"; exit 1; }
           echo "IMAGE_PATH=$(realpath "${IMG}.xz")" >> $GITHUB_ENV
       - name: Upload to release
+        if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ env.IMAGE_PATH }}
+      - name: Upload artifact
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Orangepi4pro-trixie-desktop
+          path: ${{ env.IMAGE_PATH }}
 
   build-noble-desktop:
     name: Noble GNOME Desktop
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 120
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release == 'noble')
     steps:
       - name: Install dependencies
         run: |
@@ -193,14 +231,22 @@ jobs:
           ls -lh "${IMG}.xz" 2>/dev/null || { echo "ERROR: xz output not found"; exit 1; }
           echo "IMAGE_PATH=$(realpath "${IMG}.xz")" >> $GITHUB_ENV
       - name: Upload to release
+        if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ env.IMAGE_PATH }}
+      - name: Upload artifact
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Orangepi4pro-noble-desktop
+          path: ${{ env.IMAGE_PATH }}
 
   build-plucky-server:
     name: Plucky Server (25.04)
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 120
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release == 'plucky')
     steps:
       - name: Install dependencies
         run: |
@@ -238,14 +284,22 @@ jobs:
           ls -lh "${IMG}.xz" 2>/dev/null || { echo "ERROR: xz output not found"; exit 1; }
           echo "IMAGE_PATH=$(realpath "${IMG}.xz")" >> $GITHUB_ENV
       - name: Upload to release
+        if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ env.IMAGE_PATH }}
+      - name: Upload artifact
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Orangepi4pro-plucky-server
+          path: ${{ env.IMAGE_PATH }}
 
   build-forky-server:
     name: Forky Server (Debian 14)
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 120
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release == 'forky')
     steps:
       - name: Install dependencies
         run: |
@@ -283,6 +337,13 @@ jobs:
           ls -lh "${IMG}.xz" 2>/dev/null || { echo "ERROR: xz output not found"; exit 1; }
           echo "IMAGE_PATH=$(realpath "${IMG}.xz")" >> $GITHUB_ENV
       - name: Upload to release
+        if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ env.IMAGE_PATH }}
+      - name: Upload artifact
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Orangepi4pro-forky-server
+          path: ${{ env.IMAGE_PATH }}
