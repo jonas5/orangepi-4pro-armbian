@@ -40,8 +40,10 @@ setenv bootargs "root=PARTUUID=${rootdev} rootwait rootfstype=${rootfstype} ${co
 # Load initrd / uInitrd
 if test -e ${devtype} ${devnum}:${distro_bootpart} /boot/uInitrd; then
 	load ${devtype} ${devnum}:${distro_bootpart} ${ramdisk_addr_r} /boot/uInitrd
+	setenv initrd_size ${filesize}
 elif test -e ${devtype} ${devnum}:${distro_bootpart} /uInitrd; then
 	load ${devtype} ${devnum}:${distro_bootpart} ${ramdisk_addr_r} /uInitrd
+	setenv initrd_size ${filesize}
 else
 	setenv ramdisk_addr_r "-"
 fi
@@ -69,4 +71,4 @@ fi
 fdt addr ${fdt_addr_r}
 fdt resize 0x10000
 
-booti ${kernel_addr_r} ${ramdisk_addr_r} ${fdt_addr_r}
+booti ${kernel_addr_r} ${ramdisk_addr_r}:${initrd_size} ${fdt_addr_r}
