@@ -10,10 +10,10 @@ index d116864b6..be98abfa1 100644
  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-a64-nanopi-a64.dtb
 diff --git a/arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts b/arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts
 new file mode 100644
-index 000000000..660a9f6cf
+index 000000000..1a1f12a65
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts
-@@ -0,0 +1,754 @@
+@@ -0,0 +1,752 @@
 +// SPDX-License-Identifier: (GPL-2.0-or-later OR MIT)
 +/*
 + * Device Tree Source for Orange Pi 4 Pro
@@ -28,8 +28,6 @@ index 000000000..660a9f6cf
 +/ {
 +	model = "Orange Pi 4 Pro";
 +	compatible = "xunlong,orangepi-4-pro", "allwinner,sun60i-a733", "arm,v8";
-+	#address-cells = <2>;
-+	#size-cells = <2>;
 +
 +	aliases {
 +		serial0 = &uart0;
@@ -43,16 +41,16 @@ index 000000000..660a9f6cf
 +
 +	memory@40000000 {
 +		device_type = "memory";
-+		reg = <0x0 0x40000000 0x3 0x00000000>;
++		reg = <0x40000000 0x40000000>;
 +	};
 +
 +	reserved-memory {
-+		#address-cells = <2>;
-+		#size-cells = <2>;
++		#address-cells = <1>;
++		#size-cells = <1>;
 +		ranges;
 +
 +		bl31@48000000 {
-+			reg = <0x0 0x48000000 0x0 0x01000000>;
++			reg = <0x48000000 0x01000000>;
 +			no-map;
 +		};
 +	};
@@ -770,7 +768,7 @@ index 000000000..660a9f6cf
 +&cpu7 { cpu-supply = <&reg_dcdc3>; };
 diff --git a/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi b/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi
 new file mode 100644
-index 000000000..e4bb61553
+index 000000000..0d708d133
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi
 @@ -0,0 +1,1692 @@
@@ -793,8 +791,8 @@ index 000000000..e4bb61553
 +
 +/ {
 +	interrupt-parent = <&gic>;
-+	#address-cells = <2>;
-+	#size-cells = <2>;
++	#address-cells = <1>;
++	#size-cells = <1>;
 +
 +	osc24M: osc26M: osc26M-clk {
 +		#clock-cells = <0>;
@@ -1292,8 +1290,8 @@ index 000000000..e4bb61553
 +		compatible = "simple-bus";
 +		#address-cells = <1>;
 +		#size-cells = <1>;
-+		ranges = <0x0 0x0 0x0 0x40000000>;
-+		dma-ranges = <0x40000000 0x0 0x40000000 0xc0000000>;
++		ranges;
++		dma-ranges;
 +
 +		ccu: clock-controller@2002000 {
 +			compatible = "allwinner,sun60i-a733-ccu";
@@ -2468,10 +2466,10 @@ index 000000000..e4bb61553
 +};
 diff --git a/arch/arm64/configs/orangepi_4pro_defconfig b/arch/arm64/configs/orangepi_4pro_defconfig
 new file mode 100644
-index 000000000..850d9bc98
+index 000000000..af723a23e
 --- /dev/null
 +++ b/arch/arm64/configs/orangepi_4pro_defconfig
-@@ -0,0 +1,256 @@
+@@ -0,0 +1,262 @@
 +#
 +# Orange Pi 4 Pro - Allwinner A733 (sun60i) minimal bootable config
 +# Based on arch/arm64/configs/defconfig, trimmed to sun60i essentials.
@@ -2597,6 +2595,12 @@ index 000000000..850d9bc98
 +CONFIG_SERIAL_8250_DW=y
 +CONFIG_SERIAL_OF_PLATFORM=y
 +CONFIG_SERIAL_DEV_BUS=y
++CONFIG_SERIAL_EARLYCON=y
++
++# ---------- Early boot debugging ----------
++CONFIG_CMDLINE="console=ttyS2,115200n8"
++CONFIG_DEBUG_INFO=y
++CONFIG_DEBUG_INFO_DWARF5=y
 +
 +# ---------- GPIO / pinctrl ----------
 +CONFIG_AW_PINCTRL_SUN60IW2=y
