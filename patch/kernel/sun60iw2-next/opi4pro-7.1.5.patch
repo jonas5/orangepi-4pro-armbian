@@ -10,7 +10,7 @@ index d116864b6..be98abfa1 100644
  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-a64-nanopi-a64.dtb
 diff --git a/arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts b/arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts
 new file mode 100644
-index 000000000..cf8f5f2f3
+index 000000000..c71c26ae6
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts
 @@ -0,0 +1,832 @@
@@ -35,7 +35,7 @@ index 000000000..cf8f5f2f3
 +	};
 +
 +	chosen {
-+		stdout-path = "serial0:115200n8";
++		stdout-path = "serial2:115200n8";
 +	};
 +
 +	reserved-memory {
