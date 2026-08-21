@@ -34,6 +34,13 @@ mkdir -p "$CFGDIR/boards"
 cp "$OVERLAY_DIR/config/boards/orangepi4pro.conf" \
    "$CFGDIR/boards/orangepi4pro.conf"
 
+# Bootscripts
+echo "  Bootscripts → $CFGDIR/bootscripts/"
+mkdir -p "$CFGDIR/bootscripts"
+if [[ -d "$OVERLAY_DIR/config/bootscripts" ]]; then
+    cp -r "$OVERLAY_DIR/config/bootscripts/"* "$CFGDIR/bootscripts/"
+fi
+
 # Kernel config
 echo "  Kernel config → $CFGDIR/kernel/linux-sun60iw2-next-a733.config"
 mkdir -p "$CFGDIR/kernel"
