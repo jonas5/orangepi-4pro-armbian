@@ -853,7 +853,7 @@ index 000000000..02b29b8a6
 +&cpu7 { cpu-supply = <&reg_dcdc3>; };
 diff --git a/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi b/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi
 new file mode 100644
-index 000000000..d42b25944
+index 000000000..7c20353c5
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi
 @@ -0,0 +1,1673 @@
@@ -1838,7 +1838,7 @@ index 000000000..d42b25944
 +			interrupts = <GIC_SPI 2 IRQ_TYPE_LEVEL_HIGH>;
 +			reg-shift = <2>;
 +			reg-io-width = <4>;
-+			clocks = <&ccu CLK_UART0>;
++			clocks = <&ccu CLK_BUS_UART0>;
 +			resets = <&ccu RST_BUS_UART0>;
 +			status = "disabled";
 +		};
@@ -1849,7 +1849,7 @@ index 000000000..d42b25944
 +			interrupts = <GIC_SPI 3 IRQ_TYPE_LEVEL_HIGH>;
 +			reg-shift = <2>;
 +			reg-io-width = <4>;
-+			clocks = <&ccu CLK_UART1>;
++			clocks = <&ccu CLK_BUS_UART1>;
 +			resets = <&ccu RST_BUS_UART1>;
 +			dmas = <&dma 15>, <&dma 15>;
 +			dma-names = "tx", "rx";
@@ -1862,7 +1862,7 @@ index 000000000..d42b25944
 +			interrupts = <GIC_SPI 4 IRQ_TYPE_LEVEL_HIGH>;
 +			reg-shift = <2>;
 +			reg-io-width = <4>;
-+			clocks = <&ccu CLK_UART2>;
++			clocks = <&ccu CLK_BUS_UART2>;
 +			resets = <&ccu RST_BUS_UART2>;
 +			dmas = <&dma 16>, <&dma 16>;
 +			dma-names = "tx", "rx";
@@ -1875,7 +1875,7 @@ index 000000000..d42b25944
 +			interrupts = <GIC_SPI 5 IRQ_TYPE_LEVEL_HIGH>;
 +			reg-shift = <2>;
 +			reg-io-width = <4>;
-+			clocks = <&ccu CLK_UART3>;
++			clocks = <&ccu CLK_BUS_UART3>;
 +			resets = <&ccu RST_BUS_UART3>;
 +			dmas = <&dma 17>, <&dma 17>;
 +			dma-names = "tx", "rx";
@@ -1888,7 +1888,7 @@ index 000000000..d42b25944
 +			interrupts = <GIC_SPI 6 IRQ_TYPE_LEVEL_HIGH>;
 +			reg-shift = <2>;
 +			reg-io-width = <4>;
-+			clocks = <&ccu CLK_UART4>;
++			clocks = <&ccu CLK_BUS_UART4>;
 +			resets = <&ccu RST_BUS_UART4>;
 +			dmas = <&dma 18>, <&dma 18>;
 +			dma-names = "tx", "rx";
@@ -1901,7 +1901,7 @@ index 000000000..d42b25944
 +			interrupts = <GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>;
 +			reg-shift = <2>;
 +			reg-io-width = <4>;
-+			clocks = <&ccu CLK_UART5>;
++			clocks = <&ccu CLK_BUS_UART5>;
 +			resets = <&ccu RST_BUS_UART5>;
 +			dmas = <&dma 19>, <&dma 19>;
 +			dma-names = "tx", "rx";
@@ -1914,7 +1914,7 @@ index 000000000..d42b25944
 +			interrupts = <GIC_SPI 8 IRQ_TYPE_LEVEL_HIGH>;
 +			reg-shift = <2>;
 +			reg-io-width = <4>;
-+			clocks = <&ccu CLK_UART6>;
++			clocks = <&ccu CLK_BUS_UART5>;
 +			resets = <&ccu RST_BUS_UART6>;
 +			dmas = <&dma 20>, <&dma 20>;
 +			dma-names = "tx", "rx";
