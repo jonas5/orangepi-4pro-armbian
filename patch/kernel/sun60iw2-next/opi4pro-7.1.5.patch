@@ -8532,10 +8532,10 @@ index a1cea2f57..643ae494e 100644
  obj-$(CONFIG_DWMAC_INTEL_PLAT)	+= dwmac-intel-plat.o
 diff --git a/drivers/net/ethernet/stmicro/stmmac/sun60i-gmac.c b/drivers/net/ethernet/stmicro/stmmac/sun60i-gmac.c
 new file mode 100644
-index 000000000..17b66ea10
+index 000000000..77e54ec02
 --- /dev/null
 +++ b/drivers/net/ethernet/stmicro/stmmac/sun60i-gmac.c
-@@ -0,0 +1,726 @@
+@@ -0,0 +1,725 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
 + * Allwinner sun60i GMAC Ethernet driver
@@ -8561,7 +8561,6 @@ index 000000000..17b66ea10
 +#include <linux/platform_device.h>
 +#include <linux/regulator/consumer.h>
 +#include <linux/stmmac.h>
-+#include <linux/stmmac/mdio.h>
 +
 +#define GMAC_SUN60I_NAME	"sun60i-gmac"
 +
