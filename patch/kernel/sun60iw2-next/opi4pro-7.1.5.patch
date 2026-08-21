@@ -6924,18 +6924,6 @@ index 000000000..31909d601
 +MODULE_AUTHOR("Allwinner");
 +MODULE_DESCRIPTION("AXP8191 PMIC MFD driver");
 +MODULE_ALIAS("platform:axp8191");
-diff --git a/drivers/mmc/host/Makefile b/drivers/mmc/host/Makefile
-index ee412e6b8..331a3cda0 100644
---- a/drivers/mmc/host/Makefile
-+++ b/drivers/mmc/host/Makefile
-@@ -69,6 +69,7 @@ obj-$(CONFIG_MMC_MESON_MX_SDHC)	+= meson-mx-sdhc.o
- obj-$(CONFIG_MMC_MESON_MX_SDIO)	+= meson-mx-sdio.o
- obj-$(CONFIG_MMC_MOXART)	+= moxart-mmc.o
- obj-$(CONFIG_MMC_SUNXI)		+= sunxi-mmc.o
-+obj-$(CONFIG_MMC_SUNXI)		+= sun20i-d1-mmc.o
- obj-$(CONFIG_MMC_USDHI6ROL0)	+= usdhi6rol0.o
- obj-$(CONFIG_MMC_TOSHIBA_PCI)	+= toshsd.o
- obj-$(CONFIG_MMC_BCM2835)	+= bcm2835.o
 diff --git a/drivers/mmc/host/sun20i-d1-mmc.c b/drivers/mmc/host/sun20i-d1-mmc.c
 new file mode 100644
 index 000000000..0848d4380
