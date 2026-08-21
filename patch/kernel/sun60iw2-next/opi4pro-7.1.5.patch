@@ -12153,10 +12153,10 @@ index bb21e7ea7..87e8b411c 100644
  obj-$(CONFIG_KIRKWOOD_THERMAL)  += kirkwood_thermal.o
 diff --git a/drivers/thermal/sun60i-thermal.c b/drivers/thermal/sun60i-thermal.c
 new file mode 100644
-index 000000000..a24c3614d
+index 000000000..593f5fd64
 --- /dev/null
 +++ b/drivers/thermal/sun60i-thermal.c
-@@ -0,0 +1,384 @@
+@@ -0,0 +1,360 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Allwinner A733 (sun60iw2) Temperature Sensor (THS) driver
@@ -12222,10 +12222,9 @@ index 000000000..a24c3614d
 +#define SUN60I_THERMAL_NUM_SENSORS	2
 +#define SUN60I_THERMAL_AVG_COUNT	16
 +
-+struct sun60i_thermal_sense {
-+	void __iomem		*data_reg;
-+	u32			threshold;
-+	bool			irq_enabled;
++struct sun60i_thermal_sensor {
++	struct sun60i_thermal	*ths;
++	int			id;
 +};
 +
 +struct sun60i_thermal {
@@ -12234,10 +12233,8 @@ index 000000000..a24c3614d
 +	struct clk		*bus_clk;
 +	struct clk		*mod_clk;
 +	struct reset_control	*rstc;
-+	struct regmap		*regmap;
 +
 +	struct thermal_zone_device *tzd[SUN60I_THERMAL_NUM_SENSORS];
-+	struct sun60i_thermal_sense sense[SUN60I_THERMAL_NUM_SENSORS];
 +
 +	/* Calibration data */
 +	u32			cali_data[SUN60I_THERMAL_NUM_SENSORS];
@@ -12258,52 +12255,21 @@ index 000000000..a24c3614d
 +	return reg;
 +}
 +
-+static int sun60i_thermal_zone_get_temp(void *data, int *temp)
++static int sun60i_thermal_get_temp(struct thermal_zone_device *tz, int *temp)
 +{
-+	struct sun60i_thermal *ths = data;
-+	struct thermal_zone_device *tz;
-+	int sensor, raw_temp, cal_temp;
-+
-+	for (sensor = 0; sensor < SUN60I_THERMAL_NUM_SENSORS; sensor++) {
-+		tz = ths->tzd[sensor];
-+		if (!tz)
-+			continue;
-+
-+		raw_temp = sun60i_thermal_read_temp(ths, sensor);
-+
-+		/*
-+		 * Convert raw sensor value to temperature in millidegrees.
-+		 * Formula: temp = (raw * 165000 - cal * 165000) >> 12
-+		 * The sensor has a resolution of about 0.4C per step.
-+		 */
-+		if (ths->calibrated)
-+			cal_temp = (raw_temp - ths->cali_data[sensor]) * 412;
-+		else
-+			cal_temp = raw_temp * 412 - 1089000;
-+
-+		thermal_zone_set_trip_points(tz);
-+	}
-+
-+	return 0;
-+}
-+
-+static int sun60i_thermal_get_temp(struct thermal_zone_device *tz)
-+{
-+	struct sun60i_thermal *ths = thermal_zone_device_priv(tz);
-+	int sensor;
++	struct sun60i_thermal_sensor *sensor = thermal_zone_device_priv(tz);
++	struct sun60i_thermal *ths = sensor->ths;
++	int sensor_id = sensor->id;
 +	u32 raw_temp;
-+	int temp;
 +
-+	sensor = (int)thermal_zone_device_get_drvdata(tz);
-+
-+	raw_temp = sun60i_thermal_read_temp(ths, sensor);
++	raw_temp = sun60i_thermal_read_temp(ths, sensor_id);
 +
 +	if (ths->calibrated)
-+		temp = (raw_temp - ths->cali_data[sensor]) * 412;
++		*temp = (raw_temp - ths->cali_data[sensor_id]) * 412;
 +	else
-+		temp = raw_temp * 412 - 1089000;
++		*temp = raw_temp * 412 - 1089000;
 +
-+	return temp;
++	return 0;
 +}
 +
 +static const struct thermal_zone_device_ops sun60i_thermal_ops = {
@@ -12487,8 +12453,18 @@ index 000000000..a24c3614d
 +	sun60i_thermal_init_sensors(ths);
 +
 +	for (i = 0; i < SUN60I_THERMAL_NUM_SENSORS; i++) {
-+		ths->tzd[i] = devm_thermal_zone_of_sensor_register(dev, i,
-+					ths, &sun60i_thermal_ops);
++		struct sun60i_thermal_sensor *sensor;
++
++		sensor = devm_kzalloc(dev, sizeof(*sensor), GFP_KERNEL);
++		if (!sensor) {
++			ret = -ENOMEM;
++			goto err_clk_disable;
++		}
++		sensor->ths = ths;
++		sensor->id = i;
++
++		ths->tzd[i] = devm_thermal_of_zone_register(dev, i,
++					sensor, &sun60i_thermal_ops);
 +		if (IS_ERR(ths->tzd[i])) {
 +			ret = PTR_ERR(ths->tzd[i]);
 +			dev_err(dev, "failed to register thermal zone %d: %d\n",
