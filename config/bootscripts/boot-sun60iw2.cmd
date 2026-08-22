@@ -16,7 +16,7 @@ setenv rootdev "/dev/mmcblk0p1"
 setenv rootfstype "ext4"
 setenv verbosity "7"
 setenv console "both"
-setenv earlycon "on"
+setenv earlycon "off"
 
 # Load environment file
 if test -e ${devtype} ${devnum}:${distro_bootpart} /boot/armbianEnv.txt; then
