@@ -34,7 +34,7 @@ if test -z "${kernel_addr_r}"; then setenv kernel_addr_r "0x41000000"; fi
 part uuid ${devtype} ${devnum}:${distro_bootpart} rootdev
 
 if test "${console}" = "display" || test "${console}" = "both"; then setenv consoleargs "console=tty1"; fi
-if test "${console}" = "serial" || test "${console}" = "both"; then setenv consoleargs "console=ttyS2,115200n8 ${consoleargs}"; fi
+if test "${console}" = "serial" || test "${console}" = "both"; then setenv consoleargs "console=ttyS0,115200n8 ${consoleargs}"; fi
 if test "${earlycon}" = "on"; then setenv consoleargs "earlycon ${consoleargs}"; fi
 
 setenv bootargs "root=PARTUUID=${rootdev} rootwait rootfstype=${rootfstype} ${consoleargs} ${extraargs} ${extraboardargs}"
