@@ -2904,6 +2904,28 @@ index 000000000..af723a23e
 +CONFIG_PRINTK_TIME=y
 +CONFIG_MAGIC_SYSRQ=y
 +CONFIG_DEBUG_KERNEL=y
+diff --git a/arch/arm64/kernel/head.S b/arch/arm64/kernel/head.S
+index 87a822e5c..a75afb88c 100644
+--- a/arch/arm64/kernel/head.S
++++ b/arch/arm64/kernel/head.S
+@@ -86,6 +86,17 @@ SYM_CODE_START(primary_entry)
+ 	bl	record_mmu_state
+ 	bl	preserve_boot_args
+ 
++	/* Low-level assembly UART0 write (0x02500000): KO */
++	mov	x20, #0x02500000
++	mov	w21, #75	/* 'K' */
++	str	w21, [x20]
++	mov	w21, #79	/* 'O' */
++	str	w21, [x20]
++	mov	w21, #13	/* '\r' */
++	str	w21, [x20]
++	mov	w21, #10	/* '\n' */
++	str	w21, [x20]
++
+ 	adrp	x1, early_init_stack
+ 	mov	sp, x1
+ 	mov	x29, xzr
 diff --git a/drivers/clk/sunxi-ng/Kconfig b/drivers/clk/sunxi-ng/Kconfig
 index 6af2d020e..0f5d48935 100644
 --- a/drivers/clk/sunxi-ng/Kconfig
