@@ -85,6 +85,14 @@ md.l ${fdt_addr_r} 0x10
 fdt addr ${fdt_addr_r}
 fdt resize 0x10000
 
+echo "=== FDT MEMORY NODE BEFORE FIX ==="
+fdt print /memory
+
+fdt set /memory reg <0x0 0x40000000 0x3 0x00000000>
+
+echo "=== FDT MEMORY NODE AFTER FIX ==="
+fdt print /memory
+
 echo "=== FDT CHOSEN NODE ==="
 fdt print /chosen
 
