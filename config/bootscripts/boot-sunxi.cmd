@@ -2,8 +2,8 @@
 # Board: Orange Pi 4 Pro (sun60iw2 / sun60i-a733)
 
 setenv kernel_addr_r "0x41000000"
-setenv ramdisk_addr_r "0x43000000"
-setenv fdt_addr_r "0x4FA00000"
+setenv ramdisk_addr_r "0x4b000000"
+setenv fdt_addr_r "0x4a000000"
 setenv loadaddr "0x40400000"
 setenv fdt_high "off"
 setenv initrd_high "off"
