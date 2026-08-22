@@ -70,7 +70,23 @@ elif test -e ${devtype} ${devnum}:${distro_bootpart} /dtb/allwinner/sun60i-a733-
 	load ${devtype} ${devnum}:${distro_bootpart} ${fdt_addr_r} /dtb/allwinner/sun60i-a733-orangepi-4-pro.dtb
 fi
 
+echo "=== U-BOOT BDINFO ==="
+bdinfo
+
+echo "=== U-BOOT ENV ==="
+printenv kernel_addr_r ramdisk_addr_r fdt_addr_r initrd_size fdt_high initrd_high bootargs
+
+echo "=== KERNEL HEADER AT ${kernel_addr_r} ==="
+md.l ${kernel_addr_r} 0x10
+
+echo "=== DTB HEADER AT ${fdt_addr_r} ==="
+md.l ${fdt_addr_r} 0x10
+
 fdt addr ${fdt_addr_r}
 fdt resize 0x10000
 
+echo "=== FDT CHOSEN NODE ==="
+fdt print /chosen
+
+echo "=== EXECUTING BOOTI ==="
 booti ${kernel_addr_r} ${ramdisk_addr_r}:${initrd_size} ${fdt_addr_r}
