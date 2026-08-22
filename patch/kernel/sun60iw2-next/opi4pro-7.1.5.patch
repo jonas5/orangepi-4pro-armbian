@@ -10,10 +10,10 @@ index d116864b6..be98abfa1 100644
  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-a64-nanopi-a64.dtb
 diff --git a/arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts b/arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts
 new file mode 100644
-index 000000000..cf7f8f77d
+index 000000000..ad774bd8f
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts
-@@ -0,0 +1,884 @@
+@@ -0,0 +1,919 @@
 +// SPDX-License-Identifier: (GPL-2.0-or-later OR MIT)
 +/*
 + * Device Tree Source for Orange Pi 4 Pro
@@ -336,6 +336,8 @@ index 000000000..cf7f8f77d
 +			};
 +
 +			aldo2 {
++				regulator-always-on;
++				regulator-boot-on;
 +				regulator-name = "axp8191-aldo2";
 +				regulator-min-microvolt = <500000>;
 +				regulator-max-microvolt = <3400000>;
@@ -343,6 +345,8 @@ index 000000000..cf7f8f77d
 +			};
 +
 +			aldo3 {
++				regulator-always-on;
++				regulator-boot-on;
 +				regulator-name = "axp8191-aldo3";
 +				regulator-min-microvolt = <500000>;
 +				regulator-max-microvolt = <3400000>;
@@ -350,6 +354,8 @@ index 000000000..cf7f8f77d
 +			};
 +
 +			aldo4 {
++				regulator-always-on;
++				regulator-boot-on;
 +				regulator-name = "axp8191-aldo4";
 +				regulator-min-microvolt = <500000>;
 +				regulator-max-microvolt = <3400000>;
@@ -357,6 +363,8 @@ index 000000000..cf7f8f77d
 +			};
 +
 +			aldo5 {
++				regulator-always-on;
++				regulator-boot-on;
 +				regulator-name = "axp8191-aldo5";
 +				regulator-min-microvolt = <500000>;
 +				regulator-max-microvolt = <3400000>;
@@ -364,6 +372,8 @@ index 000000000..cf7f8f77d
 +			};
 +
 +			aldo6 {
++				regulator-always-on;
++				regulator-boot-on;
 +				regulator-name = "axp8191-aldo6";
 +				regulator-min-microvolt = <500000>;
 +				regulator-max-microvolt = <3400000>;
@@ -371,6 +381,8 @@ index 000000000..cf7f8f77d
 +			};
 +
 +			bldo1 {
++				regulator-always-on;
++				regulator-boot-on;
 +				regulator-name = "axp8191-bldo1";
 +				regulator-min-microvolt = <500000>;
 +				regulator-max-microvolt = <3400000>;
@@ -378,6 +390,8 @@ index 000000000..cf7f8f77d
 +			};
 +
 +			bldo2 {
++				regulator-always-on;
++				regulator-boot-on;
 +				regulator-name = "axp8191-bldo2";
 +				regulator-min-microvolt = <500000>;
 +				regulator-max-microvolt = <3400000>;
@@ -385,6 +399,8 @@ index 000000000..cf7f8f77d
 +			};
 +
 +			bldo3 {
++				regulator-always-on;
++				regulator-boot-on;
 +				regulator-name = "axp8191-bldo3";
 +				regulator-min-microvolt = <500000>;
 +				regulator-max-microvolt = <3400000>;
@@ -401,6 +417,8 @@ index 000000000..cf7f8f77d
 +			};
 +
 +			bldo5 {
++				regulator-always-on;
++				regulator-boot-on;
 +				regulator-name = "axp8191-bldo5";
 +				regulator-min-microvolt = <500000>;
 +				regulator-max-microvolt = <3400000>;
@@ -435,6 +453,8 @@ index 000000000..cf7f8f77d
 +			};
 +
 +			cldo4 {
++				regulator-always-on;
++				regulator-boot-on;
 +				regulator-name = "axp8191-cldo4";
 +				regulator-min-microvolt = <500000>;
 +				regulator-max-microvolt = <3500000>;
@@ -460,6 +480,8 @@ index 000000000..cf7f8f77d
 +			};
 +
 +			reg_dldo2: dldo2 {
++				regulator-always-on;
++				regulator-boot-on;
 +				regulator-name = "axp8191-dldo2";
 +				regulator-min-microvolt = <500000>;
 +				regulator-max-microvolt = <3400000>;
@@ -467,6 +489,8 @@ index 000000000..cf7f8f77d
 +			};
 +
 +			dldo3 {
++				regulator-always-on;
++				regulator-boot-on;
 +				regulator-name = "axp8191-dldo3";
 +				regulator-min-microvolt = <500000>;
 +				regulator-max-microvolt = <3400000>;
@@ -474,6 +498,8 @@ index 000000000..cf7f8f77d
 +			};
 +
 +			dldo4 {
++				regulator-always-on;
++				regulator-boot-on;
 +				regulator-name = "axp8191-dldo4";
 +				regulator-min-microvolt = <500000>;
 +				regulator-max-microvolt = <3400000>;
@@ -481,6 +507,8 @@ index 000000000..cf7f8f77d
 +			};
 +
 +			dldo5 {
++				regulator-always-on;
++				regulator-boot-on;
 +				regulator-name = "axp8191-dldo5";
 +				regulator-min-microvolt = <500000>;
 +				regulator-max-microvolt = <3400000>;
@@ -515,6 +543,8 @@ index 000000000..cf7f8f77d
 +			};
 +
 +			eldo3 {
++				regulator-always-on;
++				regulator-boot-on;
 +				regulator-name = "axp8191-eldo3";
 +				regulator-min-microvolt = <500000>;
 +				regulator-max-microvolt = <3400000>;
@@ -522,6 +552,8 @@ index 000000000..cf7f8f77d
 +			};
 +
 +			eldo4 {
++				regulator-always-on;
++				regulator-boot-on;
 +				regulator-name = "axp8191-eldo4";
 +				regulator-min-microvolt = <500000>;
 +				regulator-max-microvolt = <3400000>;
@@ -529,6 +561,8 @@ index 000000000..cf7f8f77d
 +			};
 +
 +			eldo5 {
++				regulator-always-on;
++				regulator-boot-on;
 +				regulator-name = "axp8191-eldo5";
 +				regulator-min-microvolt = <500000>;
 +				regulator-max-microvolt = <3400000>;
@@ -552,6 +586,7 @@ index 000000000..cf7f8f77d
 +
 +			dc1sw2 {
 +				regulator-always-on;
++				regulator-boot-on;
 +				regulator-name = "axp8191-dc1sw2";
 +			};
 +		};
