@@ -35,7 +35,7 @@ part uuid ${devtype} ${devnum}:${distro_bootpart} rootdev
 
 if test "${console}" = "display" || test "${console}" = "both"; then setenv consoleargs "console=tty1"; fi
 if test "${console}" = "serial" || test "${console}" = "both"; then setenv consoleargs "console=ttyS2,115200n8 ${consoleargs}"; fi
-if test "${earlycon}" = "on"; then setenv consoleargs "earlycon=uart8250,mmio32,0x02502000 ${consoleargs}"; fi
+if test "${earlycon}" = "on"; then setenv consoleargs "earlycon ${consoleargs}"; fi
 
 setenv bootargs "root=PARTUUID=${rootdev} rootwait rootfstype=${rootfstype} ${consoleargs} ${extraargs} ${extraboardargs}"
 
