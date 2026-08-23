@@ -2897,7 +2897,7 @@ index 000000000..af723a23e
 +CONFIG_MAGIC_SYSRQ=y
 +CONFIG_DEBUG_KERNEL=y
 diff --git a/arch/arm64/kernel/head.S b/arch/arm64/kernel/head.S
-index 87a822e5c..e5982f00e 100644
+index 87a822e5c..3fc386401 100644
 --- a/arch/arm64/kernel/head.S
 +++ b/arch/arm64/kernel/head.S
 @@ -83,6 +83,14 @@
@@ -2974,7 +2974,36 @@ index 87a822e5c..e5982f00e 100644
  	bl	start_kernel
  	ASM_BUG()
  SYM_FUNC_END(__primary_switched)
-@@ -508,6 +554,17 @@ SYM_FUNC_END(__no_granule_support)
+@@ -467,8 +513,28 @@ SYM_FUNC_START(__enable_mmu)
+ 	msr	ttbr0_el1, x2			// load TTBR0
+ 	load_ttbr1 x1, x1, x3
+ 
++	mov	x22, #0x02500000
++	mov	w23, #'M'
++	str	w23, [x22]
++	mov	w23, #'1'
++	str	w23, [x22]
++	mov	w23, #13
++	str	w23, [x22]
++	mov	w23, #10
++	str	w23, [x22]
++
+ 	set_sctlr_el1	x0
+ 
++	mov	x22, #0x02500000
++	mov	w23, #'M'
++	str	w23, [x22]
++	mov	w23, #'2'
++	str	w23, [x22]
++	mov	w23, #13
++	str	w23, [x22]
++	mov	w23, #10
++	str	w23, [x22]
++
+ 	ret
+ SYM_FUNC_END(__enable_mmu)
+ 
+@@ -508,6 +574,17 @@ SYM_FUNC_END(__no_granule_support)
  SYM_FUNC_START_LOCAL(__primary_switch)
  	adrp	x1, reserved_pg_dir
  	adrp	x2, __pi_init_idmap_pg_dir
@@ -2992,7 +3021,7 @@ index 87a822e5c..e5982f00e 100644
  	bl	__enable_mmu
  
  	adrp	x1, early_init_stack
-@@ -515,8 +572,27 @@ SYM_FUNC_START_LOCAL(__primary_switch)
+@@ -515,8 +592,27 @@ SYM_FUNC_START_LOCAL(__primary_switch)
  	mov	x29, xzr
  	mov	x0, x20				// pass the full boot status
  	mov	x1, x21				// pass the FDT
@@ -3020,6 +3049,21 @@ index 87a822e5c..e5982f00e 100644
  	ldr	x8, =__primary_switched
  	adrp	x0, KERNEL_START		// __pa(KERNEL_START)
  	br	x8
+diff --git a/arch/arm64/kernel/pi/map_range.c b/arch/arm64/kernel/pi/map_range.c
+index de52cd85c..edca1e9dd 100644
+--- a/arch/arm64/kernel/pi/map_range.c
++++ b/arch/arm64/kernel/pi/map_range.c
+@@ -105,5 +105,10 @@ asmlinkage phys_addr_t __init create_init_idmap(pgd_t *pg_dir, ptdesc_t clrmask)
+ 		  (phys_addr_t)__initdata_begin, data_prot, IDMAP_ROOT_LEVEL,
+ 		  (pte_t *)pg_dir, false, 0);
+ 
++	/* Map UART0 MMIO (0x02500000) into initial idmap so UART print works after MMU enable */
++	map_range(&ptep, 0x02500000, 0x02501000,
++		  0x02500000, __pgprot(PROT_DEVICE_nGnRE), IDMAP_ROOT_LEVEL,
++		  (pte_t *)pg_dir, false, 0);
++
+ 	return ptep;
+ }
 diff --git a/drivers/clk/sunxi-ng/Kconfig b/drivers/clk/sunxi-ng/Kconfig
 index 6af2d020e..0f5d48935 100644
 --- a/drivers/clk/sunxi-ng/Kconfig
