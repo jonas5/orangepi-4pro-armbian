@@ -940,7 +940,7 @@ index 000000000..62df49b43
 +};
 diff --git a/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi b/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi
 new file mode 100644
-index 000000000..3adc58f52
+index 000000000..fa2c67297
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi
 @@ -0,0 +1,1679 @@
@@ -1508,13 +1508,13 @@ index 000000000..3adc58f52
 +			reg = <0x03000000 0x1000>;
 +		};
 +
-+		gic: interrupt-controller@3000000 {
++		gic: interrupt-controller@3400000 {
 +			compatible = "arm,gic-v3";
 +			#interrupt-cells = <3>;
 +			#address-cells = <0>;
 +			interrupt-controller;
-+			reg = <0x0 0x03000000 0x0 0x10000>,
-+			      <0x0 0x03080000 0x0 0x200000>;
++			reg = <0x03400000 0x10000>,
++			      <0x03460000 0x200000>;
 +			interrupts = <GIC_PPI 9 (GIC_CPU_MASK_SIMPLE(8) | IRQ_TYPE_LEVEL_HIGH)>;
 +		};
 +
@@ -2532,7 +2532,7 @@ index 000000000..3adc58f52
 +
 +		rtc: rtc@7080000 {
 +			compatible = "allwinner,sun60i-a733-rtc", "allwinner,sun50i-h616-rtc", "allwinner,sun6i-a31-rtc";
-+			reg = <0x0 0x07080000 0x0 0x400>;
++			reg = <0x07080000 0x400>;
 +			interrupts = <GIC_SPI 161 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&dcxo24M>;
 +			clock-names = "hosc";
