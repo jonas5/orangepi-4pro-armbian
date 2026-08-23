@@ -13170,7 +13170,7 @@ index 000000000..2f905e7f1
 +
 +#endif /* _DT_BINDINGS_THERMAL_SUN60I_A733_H */
 diff --git a/init/main.c b/init/main.c
-index 96f93bb06..990d40a5f 100644
+index 96f93bb06..d097e2d61 100644
 --- a/init/main.c
 +++ b/init/main.c
 @@ -1013,12 +1013,28 @@ static void __init print_kernel_cmdline(const char *cmdline)
@@ -13183,11 +13183,11 @@ index 96f93bb06..990d40a5f 100644
 +		"mov x9, #0x02500000\n"
 +		"99: ldr w10, [x9, #0x14]\n"
 +		"tbz w10, #5, 99b\n"
-+		"mov w10, %0\n"
++		"mov w10, %w0\n"
 +		"str w10, [x9]\n"
 +		:
 +		: "r" ((unsigned long)c)
-+		: "x9", "w10", "memory"
++		: "x9", "x10", "memory"
 +	);
 +}
 +
