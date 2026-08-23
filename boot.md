@@ -96,7 +96,7 @@ In the device tree source (`.dts`):
 ### Kernel Boot Arguments (Bootargs)
 
 ```text
-earlycon=uart8250,mmio32,0x02500000,115200n8,24000000 console=ttyS0,115200n8
+earlycon console=ttyS0,115200n8
 ```
 
 ### Kernel Earlycon Driver Declaration
@@ -176,7 +176,7 @@ fi
 part uuid mmc 0:1 rootdev
 
 # 5. Build kernel command line (bootargs)
-setenv consoleargs "earlycon=uart8250,mmio32,0x02500000,115200n8,24000000 console=ttyS0,115200n8"
+setenv consoleargs "earlycon console=ttyS0,115200n8"
 setenv bootargs "root=PARTUUID=${rootdev} rootwait rw rootfstype=ext4 loglevel=${verbosity} ${consoleargs} cma=${cma} ${extraargs}"
 
 # 6. Optional charger mode flag
