@@ -940,10 +940,10 @@ index 000000000..62df49b43
 +};
 diff --git a/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi b/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi
 new file mode 100644
-index 000000000..16ea4e80a
+index 000000000..30408760c
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi
-@@ -0,0 +1,1679 @@
+@@ -0,0 +1,1678 @@
 +// SPDX-License-Identifier: (GPL-2.0-or-later OR MIT)
 +/*
 + * Device Tree Source for Allwinner Sun60i A733 SoC
@@ -1460,14 +1460,13 @@ index 000000000..16ea4e80a
 +
 +	soc: soc@0 {
 +		compatible = "simple-bus";
-+		#address-cells = <1>;
-+		#size-cells = <1>;
-+		ranges = <0x0 0x0 0x0 0xffffffff>;
-+		dma-ranges = <0x0 0x0 0x0 0xffffffff>;
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
 +
 +		ccu: clock-controller@2002000 {
 +			compatible = "allwinner,sun60i-a733-ccu";
-+			reg = <0x02002000 0x2000>;
++			reg = <0x0 0x02002000 0x0 0x2000>;
 +			clocks = <&osc24M>, <&rtc_ccu 0>, <&rc_16m>;
 +			clock-names = "hosc", "losc", "iosc";
 +			#clock-cells = <1>;
@@ -1476,51 +1475,51 @@ index 000000000..16ea4e80a
 +
 +		sid: sid@3006000 {
 +			compatible = "allwinner,sun50i-a64-sid";
-+			reg = <0x03006000 0x1000>;
++			reg = <0x0 0x03006000 0x0 0x1000>;
 +			#address-cells = <1>;
 +			#size-cells = <1>;
 +
 +			efuse_key: key@0 {
-+				reg = <0x00 0x08>;
++				reg = <0x0 0x00 0x0 0x08>;
 +			};
 +
 +			efuse_chipid: chipid@200 {
-+				reg = <0x200 0x10>;
++				reg = <0x0 0x200 0x0 0x10>;
 +			};
 +
 +			efuse_rotpk: rotpk@140 {
-+				reg = <0x140 0x20>;
++				reg = <0x0 0x140 0x0 0x20>;
 +			};
 +
 +			efuse_huk: huk@80 {
-+				reg = <0x80 0x40>;
++				reg = <0x0 0x80 0x0 0x40>;
 +			};
 +		};
 +
 +		sram: sram@3000000 {
 +			compatible = "allwinner,sram";
-+			reg = <0x03000000 0x184>;
++			reg = <0x0 0x03000000 0x0 0x184>;
 +		};
 +
 +		syscon: syscon@3000000 {
 +			compatible = "allwinner,sun60i-a733-system-ctrl",
 +				     "syscon";
-+			reg = <0x03000000 0x1000>;
++			reg = <0x0 0x03000000 0x0 0x1000>;
 +		};
 +
-+		gic: interrupt-controller@3400000 {
++		gic: interrupt-controller@3000000 {
 +			compatible = "arm,gic-v3";
 +			#interrupt-cells = <3>;
 +			#address-cells = <0>;
 +			interrupt-controller;
-+			reg = <0x03400000 0x10000>,
-+			      <0x03460000 0x200000>;
++			reg = <0x0 0x03000000 0x0 0x10000>,
++			      <0x0 0x03080000 0x0 0x200000>;
 +			interrupts = <GIC_PPI 9 (GIC_CPU_MASK_SIMPLE(8) | IRQ_TYPE_LEVEL_HIGH)>;
 +		};
 +
 +		pio: pinctrl@2000000 {
 +			compatible = "allwinner,sun60i-a733-pinctrl";
-+			reg = <0x02000000 0x600>;
++			reg = <0x0 0x02000000 0x0 0x600>;
 +			interrupts = <GIC_SPI 69 IRQ_TYPE_LEVEL_HIGH>,
 +				     <GIC_SPI 71 IRQ_TYPE_LEVEL_HIGH>,
 +				     <GIC_SPI 73 IRQ_TYPE_LEVEL_HIGH>,
@@ -1672,7 +1671,7 @@ index 000000000..16ea4e80a
 +
 +		r_pio: pinctrl@7025000 {
 +			compatible = "allwinner,sun60i-a733-r-pinctrl";
-+			reg = <0x07025000 0x410>;
++			reg = <0x0 0x07025000 0x0 0x410>;
 +			interrupts = <GIC_SPI 198 IRQ_TYPE_LEVEL_HIGH>,
 +				     <GIC_SPI 200 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&r_ccu 0>, <&osc24M>, <&rtc_ccu 0>;
@@ -1686,14 +1685,14 @@ index 000000000..16ea4e80a
 +		wdt: watchdog@2050000 {
 +			compatible = "allwinner,sun60i-a733-wdt",
 +				     "allwinner,sun20i-wdt";
-+			reg = <0x02050000 0x20>;
++			reg = <0x0 0x02050000 0x0 0x20>;
 +			interrupts = <GIC_SPI 106 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&osc24M>;
 +		};
 +
 +		ths: thermal-sensor@2522000 {
 +			compatible = "allwinner,sun60i-a733-ths";
-+			reg = <0x02522000 0x500>;
++			reg = <0x0 0x02522000 0x0 0x500>;
 +			interrupts = <GIC_SPI 57 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_THS>, <&ccu CLK_GPADC0_24M>;
 +			clock-names = "bus", "gpadc";
@@ -1703,7 +1702,7 @@ index 000000000..16ea4e80a
 +
 +		timer0: timer@3009000 {
 +			compatible = "allwinner,sun50i-timer";
-+			reg = <0x03009000 0x400>;
++			reg = <0x0 0x03009000 0x0 0x400>;
 +			interrupts = <GIC_SPI 89 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&sys24M>, <&ccu CLK_BUS_TIMER>,
 +				 <&ccu CLK_TIMER0>, <&ccu CLK_TIMER1>;
@@ -1714,7 +1713,7 @@ index 000000000..16ea4e80a
 +
 +	gpufreq: gpu-freq@1800000 {
 +		compatible = "allwinner,sun60i-a733-gpufreq";
-+		reg = <0x01800000 0x8ffff>;
++		reg = <0x0 0x01800000 0x0 0x8ffff>;
 +		#freq-domain-cells = <0>;
 +		status = "disabled";
 +	};
@@ -1722,7 +1721,7 @@ index 000000000..16ea4e80a
 +		ledc: led-controller@2520000 {
 +			compatible = "allwinner,sun60i-a733-ledc",
 +				     "allwinner,sun50i-a100-ledc";
-+			reg = <0x02520000 0x400>;
++			reg = <0x0 0x02520000 0x0 0x400>;
 +			interrupts = <GIC_SPI 33 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_LEDC>, <&ccu CLK_BUS_LEDC>;
 +			clock-names = "mod", "bus";
@@ -1737,7 +1736,7 @@ index 000000000..16ea4e80a
 +		gpadc: gpadc@2521000 {
 +			compatible = "allwinner,sun60i-a733-gpadc",
 +				     "allwinner,sun6i-a31-gpadc";
-+			reg = <0x02521000 0x400>;
++			reg = <0x0 0x02521000 0x0 0x400>;
 +			interrupts = <GIC_SPI 38 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_GPADC0>, <&ccu CLK_GPADC0_24M>;
 +			clock-names = "bus", "hosc";
@@ -1748,7 +1747,7 @@ index 000000000..16ea4e80a
 +		lradc: lradc@2524000 {
 +			compatible = "allwinner,sun60i-a733-lradc",
 +				     "allwinner,sun20i-lradc";
-+			reg = <0x02524000 0x100>;
++			reg = <0x0 0x02524000 0x0 0x100>;
 +			interrupts = <GIC_SPI 37 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_LRADC>;
 +			resets = <&ccu RST_BUS_LRADC>;
@@ -1758,7 +1757,7 @@ index 000000000..16ea4e80a
 +		pwm: pwm@2527000 {
 +			compatible = "allwinner,sun60i-a733-pwm",
 +				     "allwinner,sun50i-a64-pwm";
-+			reg = <0x02527000 0x400>;
++			reg = <0x0 0x02527000 0x0 0x400>;
 +			interrupts = <GIC_SPI 35 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_PWM0>;
 +			resets = <&ccu RST_BUS_PWM0>;
@@ -1768,7 +1767,7 @@ index 000000000..16ea4e80a
 +
 +		hwspinlock: hwspinlock@3005000 {
 +			compatible = "allwinner,sun60i-a733-hwspinlock";
-+			reg = <0x03005000 0x1000>;
++			reg = <0x0 0x03005000 0x0 0x1000>;
 +			clocks = <&ccu CLK_SPINLOCK>;
 +			clock-names = "clk_hwspinlock_bus";
 +			resets = <&ccu RST_BUS_SPINLOCK>;
@@ -1778,8 +1777,8 @@ index 000000000..16ea4e80a
 +
 +		msgbox: mailbox@3004000 {
 +			compatible = "allwinner,sun60i-a733-msgbox";
-+			reg = <0x03004000 0x1000>,
-+			      <0x07094000 0x1000>;
++			reg = <0x0 0x03004000 0x0 0x1000>,
++			      <0x0 0x07094000 0x0 0x1000>;
 +			interrupts = <GIC_SPI 0 IRQ_TYPE_LEVEL_HIGH>,
 +				     <GIC_SPI 211 IRQ_TYPE_LEVEL_HIGH>;
 +			interrupt-names = "mbox",
@@ -1794,7 +1793,7 @@ index 000000000..16ea4e80a
 +
 +		iommu: iommu@3900000 {
 +			compatible = "allwinner,sun60i-a733-iommu";
-+			reg = <0x03900000 0x20000>;
++			reg = <0x0 0x03900000 0x0 0x20000>;
 +			interrupts = <GIC_SPI 170 IRQ_TYPE_LEVEL_HIGH>,
 +				     <GIC_SPI 171 IRQ_TYPE_LEVEL_HIGH>;
 +			interrupt-names = "iommu-irq1", "iommu-irq2";
@@ -1806,8 +1805,8 @@ index 000000000..16ea4e80a
 +
 +		ve: ve@1c0e000 {
 +			compatible = "allwinner,sunxi-cedar-ve";
-+			reg = <0x01c0e000 0x3000>,
-+			      <0x03000000 0x10>;
++			reg = <0x0 0x01c0e000 0x0 0x3000>,
++			      <0x0 0x03000000 0x0 0x10>;
 +			interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_PLL_VE0>, <&ccu CLK_VE_AHB_GATE>,
 +				 <&ccu CLK_DEC_MBUS_GATE>,
@@ -1821,8 +1820,8 @@ index 000000000..16ea4e80a
 +
 +		ve2: ve2@1c10000 {
 +			compatible = "allwinner,sunxi-cedar-ve2";
-+			reg = <0x01c10000 0x1000>,
-+			      <0x03000000 0x10>;
++			reg = <0x0 0x01c10000 0x0 0x1000>,
++			      <0x0 0x03000000 0x0 0x10>;
 +			interrupts = <GIC_SPI 48 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_PLL_VE1>, <&ccu CLK_VE_ENC_AHB_GATE>,
 +				 <&ccu CLK_MBUS_VE_GATE>,
@@ -1837,8 +1836,8 @@ index 000000000..16ea4e80a
 +		ce: crypto@4603000 {
 +			compatible = "allwinner,sun60i-a733-crypto",
 +				     "allwinner,sun8i-ce";
-+			reg = <0x04603000 0xa0>,
-+			      <0x04603800 0xa0>;
++			reg = <0x0 0x04603000 0x0 0xa0>,
++			      <0x0 0x04603800 0x0 0xa0>;
 +			interrupts = <GIC_SPI 168 IRQ_TYPE_EDGE_RISING>,
 +				     <GIC_SPI 169 IRQ_TYPE_EDGE_RISING>;
 +			interrupt-names = "ciphertext",
@@ -1852,7 +1851,7 @@ index 000000000..16ea4e80a
 +
 +		dma: dma-controller@4601000 {
 +			compatible = "allwinner,sun60i-a733-dma";
-+			reg = <0x04601000 0x2000>;
++			reg = <0x0 0x04601000 0x0 0x2000>;
 +			interrupts = <GIC_SPI 111 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_DMA>, <&ccu CLK_MBUS_DMA>;
 +			clock-names = "bus", "mbus";
@@ -1865,7 +1864,7 @@ index 000000000..16ea4e80a
 +		mmc0: mmc@4020000 {
 +			compatible = "allwinner,sun60i-a733-mmc",
 +				     "allwinner,sun50i-a64-mmc";
-+			reg = <0x04020000 0x1000>;
++			reg = <0x0 0x04020000 0x0 0x1000>;
 +			interrupts = <GIC_SPI 161 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&sys24M>, <&ccu CLK_PLL_PERI0_400M>,
 +				 <&ccu CLK_PLL_PERI0_300M>,
@@ -1884,7 +1883,7 @@ index 000000000..16ea4e80a
 +		mmc1: mmc@4021000 {
 +			compatible = "allwinner,sun60i-a733-mmc",
 +				     "allwinner,sun50i-a64-mmc";
-+			reg = <0x04021000 0x1000>;
++			reg = <0x0 0x04021000 0x0 0x1000>;
 +			interrupts = <GIC_SPI 162 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&sys24M>, <&ccu CLK_PLL_PERI0_400M>,
 +				 <&ccu CLK_PLL_PERI0_300M>,
@@ -1908,7 +1907,7 @@ index 000000000..16ea4e80a
 +		mmc2: mmc@4022000 {
 +			compatible = "allwinner,sun60i-a733-mmc",
 +				     "allwinner,sun50i-a64-mmc";
-+			reg = <0x04022000 0x1000>;
++			reg = <0x0 0x04022000 0x0 0x1000>;
 +			interrupts = <GIC_SPI 163 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&sys24M>, <&ccu CLK_PLL_PERI0_800M>,
 +				 <&ccu CLK_PLL_PERI0_600M>,
@@ -1930,7 +1929,7 @@ index 000000000..16ea4e80a
 +
 +		uart0: serial@2500000 {
 +			compatible = "allwinner,sun60i-a733-uart", "snps,dw-apb-uart";
-+			reg = <0x02500000 0x400>;
++			reg = <0x0 0x02500000 0x0 0x400>;
 +			interrupts = <GIC_SPI 2 IRQ_TYPE_LEVEL_HIGH>;
 +			reg-shift = <2>;
 +			reg-io-width = <4>;
@@ -1942,7 +1941,7 @@ index 000000000..16ea4e80a
 +
 +		uart1: serial@2501000 {
 +			compatible = "allwinner,sun60i-a733-uart", "snps,dw-apb-uart";
-+			reg = <0x02501000 0x400>;
++			reg = <0x0 0x02501000 0x0 0x400>;
 +			interrupts = <GIC_SPI 3 IRQ_TYPE_LEVEL_HIGH>;
 +			reg-shift = <2>;
 +			reg-io-width = <4>;
@@ -1955,7 +1954,7 @@ index 000000000..16ea4e80a
 +
 +		uart2: serial@2502000 {
 +			compatible = "allwinner,sun60i-a733-uart", "snps,dw-apb-uart";
-+			reg = <0x02502000 0x400>;
++			reg = <0x0 0x02502000 0x0 0x400>;
 +			interrupts = <GIC_SPI 4 IRQ_TYPE_LEVEL_HIGH>;
 +			reg-shift = <2>;
 +			reg-io-width = <4>;
@@ -1968,7 +1967,7 @@ index 000000000..16ea4e80a
 +
 +		uart3: serial@2503000 {
 +			compatible = "allwinner,sun60i-a733-uart", "snps,dw-apb-uart";
-+			reg = <0x02503000 0x400>;
++			reg = <0x0 0x02503000 0x0 0x400>;
 +			interrupts = <GIC_SPI 5 IRQ_TYPE_LEVEL_HIGH>;
 +			reg-shift = <2>;
 +			reg-io-width = <4>;
@@ -1981,7 +1980,7 @@ index 000000000..16ea4e80a
 +
 +		uart4: serial@2504000 {
 +			compatible = "allwinner,sun60i-a733-uart", "snps,dw-apb-uart";
-+			reg = <0x02504000 0x400>;
++			reg = <0x0 0x02504000 0x0 0x400>;
 +			interrupts = <GIC_SPI 6 IRQ_TYPE_LEVEL_HIGH>;
 +			reg-shift = <2>;
 +			reg-io-width = <4>;
@@ -1994,7 +1993,7 @@ index 000000000..16ea4e80a
 +
 +		uart5: serial@2505000 {
 +			compatible = "allwinner,sun60i-a733-uart", "snps,dw-apb-uart";
-+			reg = <0x02505000 0x400>;
++			reg = <0x0 0x02505000 0x0 0x400>;
 +			interrupts = <GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>;
 +			reg-shift = <2>;
 +			reg-io-width = <4>;
@@ -2007,7 +2006,7 @@ index 000000000..16ea4e80a
 +
 +		uart6: serial@2506000 {
 +			compatible = "snps,dw-apb-uart";
-+			reg = <0x02506000 0x400>;
++			reg = <0x0 0x02506000 0x0 0x400>;
 +			interrupts = <GIC_SPI 8 IRQ_TYPE_LEVEL_HIGH>;
 +			reg-shift = <2>;
 +			reg-io-width = <4>;
@@ -2022,7 +2021,7 @@ index 000000000..16ea4e80a
 +			compatible = "allwinner,sun60i-a733-i2c",
 +				     "allwinner,sun8i-v536-i2c",
 +				     "allwinner,sun6i-a31-i2c";
-+			reg = <0x02510000 0x400>;
++			reg = <0x0 0x02510000 0x0 0x400>;
 +			interrupts = <GIC_SPI 11 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_BUS_TWI0>;
 +			resets = <&ccu RST_BUS_TWI0>;
@@ -2039,7 +2038,7 @@ index 000000000..16ea4e80a
 +			compatible = "allwinner,sun60i-a733-i2c",
 +				     "allwinner,sun8i-v536-i2c",
 +				     "allwinner,sun6i-a31-i2c";
-+			reg = <0x02511000 0x400>;
++			reg = <0x0 0x02511000 0x0 0x400>;
 +			interrupts = <GIC_SPI 12 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_BUS_TWI1>;
 +			resets = <&ccu RST_BUS_TWI1>;
@@ -2056,7 +2055,7 @@ index 000000000..16ea4e80a
 +			compatible = "allwinner,sun60i-a733-i2c",
 +				     "allwinner,sun8i-v536-i2c",
 +				     "allwinner,sun6i-a31-i2c";
-+			reg = <0x02512000 0x400>;
++			reg = <0x0 0x02512000 0x0 0x400>;
 +			interrupts = <GIC_SPI 13 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_BUS_TWI2>;
 +			resets = <&ccu RST_BUS_TWI2>;
@@ -2073,7 +2072,7 @@ index 000000000..16ea4e80a
 +			compatible = "allwinner,sun60i-a733-i2c",
 +				     "allwinner,sun8i-v536-i2c",
 +				     "allwinner,sun6i-a31-i2c";
-+			reg = <0x02513000 0x400>;
++			reg = <0x0 0x02513000 0x0 0x400>;
 +			interrupts = <GIC_SPI 14 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_BUS_TWI3>;
 +			resets = <&ccu RST_BUS_TWI3>;
@@ -2088,7 +2087,7 @@ index 000000000..16ea4e80a
 +			compatible = "allwinner,sun60i-a733-i2c",
 +				     "allwinner,sun8i-v536-i2c",
 +				     "allwinner,sun6i-a31-i2c";
-+			reg = <0x02514000 0x400>;
++			reg = <0x0 0x02514000 0x0 0x400>;
 +			interrupts = <GIC_SPI 15 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_BUS_TWI4>;
 +			resets = <&ccu RST_BUS_TWI4>;
@@ -2103,7 +2102,7 @@ index 000000000..16ea4e80a
 +			compatible = "allwinner,sun60i-a733-i2c",
 +				     "allwinner,sun8i-v536-i2c",
 +				     "allwinner,sun6i-a31-i2c";
-+			reg = <0x02515000 0x400>;
++			reg = <0x0 0x02515000 0x0 0x400>;
 +			interrupts = <GIC_SPI 16 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_BUS_TWI5>;
 +			resets = <&ccu RST_BUS_TWI5>;
@@ -2120,7 +2119,7 @@ index 000000000..16ea4e80a
 +			compatible = "allwinner,sun60i-a733-i2c",
 +				     "allwinner,sun8i-v536-i2c",
 +				     "allwinner,sun6i-a31-i2c";
-+			reg = <0x02517000 0x400>;
++			reg = <0x0 0x02517000 0x0 0x400>;
 +			interrupts = <GIC_SPI 18 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_BUS_TWI7>;
 +			resets = <&ccu RST_BUS_TWI7>;
@@ -2135,7 +2134,7 @@ index 000000000..16ea4e80a
 +			compatible = "allwinner,sun60i-a733-i2c",
 +				     "allwinner,sun8i-v536-i2c",
 +				     "allwinner,sun6i-a31-i2c";
-+			reg = <0x02518000 0x400>;
++			reg = <0x0 0x02518000 0x0 0x400>;
 +			interrupts = <GIC_SPI 19 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_BUS_TWI8>;
 +			resets = <&ccu RST_BUS_TWI8>;
@@ -2150,7 +2149,7 @@ index 000000000..16ea4e80a
 +			compatible = "allwinner,sun60i-a733-i2c",
 +				     "allwinner,sun8i-v536-i2c",
 +				     "allwinner,sun6i-a31-i2c";
-+			reg = <0x02519000 0x400>;
++			reg = <0x0 0x02519000 0x0 0x400>;
 +			interrupts = <GIC_SPI 20 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_BUS_TWI9>;
 +			resets = <&ccu RST_BUS_TWI9>;
@@ -2166,7 +2165,7 @@ index 000000000..16ea4e80a
 +		spi0: spi@2540000 {
 +			compatible = "allwinner,sun60i-a733-spi",
 +				     "allwinner,sun8i-h3-spi";
-+			reg = <0x02540000 0x1000>;
++			reg = <0x0 0x02540000 0x0 0x1000>;
 +			interrupts = <GIC_SPI 24 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_PLL_PERI0_300M>,
 +				 <&ccu CLK_SPI0>,
@@ -2184,7 +2183,7 @@ index 000000000..16ea4e80a
 +		spi1: spi@2541000 {
 +			compatible = "allwinner,sun60i-a733-spi",
 +				     "allwinner,sun8i-h3-spi";
-+			reg = <0x02541000 0x1000>;
++			reg = <0x0 0x02541000 0x0 0x1000>;
 +			interrupts = <GIC_SPI 25 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_PLL_PERI0_300M>,
 +				 <&ccu CLK_SPI1>,
@@ -2202,7 +2201,7 @@ index 000000000..16ea4e80a
 +		spi2: spi@2542000 {
 +			compatible = "allwinner,sun60i-a733-spi",
 +				     "allwinner,sun8i-h3-spi";
-+			reg = <0x02542000 0x1000>;
++			reg = <0x0 0x02542000 0x0 0x1000>;
 +			interrupts = <GIC_SPI 26 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_PLL_PERI0_300M>,
 +				 <&ccu CLK_SPI2>,
@@ -2220,7 +2219,7 @@ index 000000000..16ea4e80a
 +		spi3: spi@2543000 {
 +			compatible = "allwinner,sun60i-a733-spi",
 +				     "allwinner,sun8i-h3-spi";
-+			reg = <0x02543000 0x1000>;
++			reg = <0x0 0x02543000 0x0 0x1000>;
 +			interrupts = <GIC_SPI 27 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_PLL_PERI0_300M>,
 +				 <&ccu CLK_SPI3>,
@@ -2238,8 +2237,8 @@ index 000000000..16ea4e80a
 +		usb_otg: usb@4100000 {
 +			compatible = "allwinner,sun60i-a733-usb",
 +				     "allwinner,sun50i-a64-otg";
-+			reg = <0x04100000 0x1000>,
-+			      <0x00000000 0x100>;
++			reg = <0x0 0x04100000 0x0 0x1000>,
++			      <0x0 0x00000000 0x0 0x100>;
 +			interrupts = <GIC_SPI 156 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_USB0>, <&ccu CLK_USB0_DEVICE>;
 +			clock-names = "bus_otg", "mod";
@@ -2254,7 +2253,7 @@ index 000000000..16ea4e80a
 +		usbphy: phy@4100400 {
 +			compatible = "allwinner,sun60i-a733-usb-phy",
 +				     "allwinner,sun8i-h3-usb-phy";
-+			reg = <0x04100400 0x400>;
++			reg = <0x0 0x04100400 0x0 0x400>;
 +			clocks = <&osc24M>;
 +			clock-names = "usb_ref";
 +			resets = <&ccu RST_USB0>;
@@ -2266,9 +2265,9 @@ index 000000000..16ea4e80a
 +		ehci: ehci@4101000 {
 +			compatible = "allwinner,sun60i-a733-ehci",
 +				     "allwinner,sun8i-h3-ehci";
-+			reg = <0x04101000 0xfff>,
-+			      <0x00000000 0x100>,
-+			      <0x04100000 0x1000>;
++			reg = <0x0 0x04101000 0x0 0xfff>,
++			      <0x0 0x00000000 0x0 0x100>,
++			      <0x0 0x04100000 0x0 0x1000>;
 +			interrupts = <GIC_SPI 157 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_USB0_EHCI>;
 +			resets = <&ccu RST_USB0_EHCI>;
@@ -2280,9 +2279,9 @@ index 000000000..16ea4e80a
 +		ohci: ohci@4101400 {
 +			compatible = "allwinner,sun60i-a733-ohci",
 +				     "allwinner,sun8i-h3-ohci";
-+			reg = <0x04101400 0xfff>,
-+			      <0x00000000 0x100>,
-+			      <0x04100000 0x1000>;
++			reg = <0x0 0x04101400 0x0 0xfff>,
++			      <0x0 0x00000000 0x0 0x100>,
++			      <0x0 0x04100000 0x0 0x1000>;
 +			interrupts = <GIC_SPI 158 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_USB0_OHCI>;
 +			resets = <&ccu RST_USB0_OHCI>;
@@ -2294,9 +2293,9 @@ index 000000000..16ea4e80a
 +		ehci1: ehci@4200000 {
 +			compatible = "allwinner,sun60i-a733-ehci",
 +				     "allwinner,sun8i-h3-ehci";
-+			reg = <0x04200000 0xfff>,
-+			      <0x00000000 0x100>,
-+			      <0x04100000 0x1000>;
++			reg = <0x0 0x04200000 0x0 0xfff>,
++			      <0x0 0x00000000 0x0 0x100>,
++			      <0x0 0x04100000 0x0 0x1000>;
 +			interrupts = <GIC_SPI 159 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_USB1_EHCI>;
 +			resets = <&ccu RST_USB1_EHCI>;
@@ -2308,9 +2307,9 @@ index 000000000..16ea4e80a
 +		ohci1: ohci@4200400 {
 +			compatible = "allwinner,sun60i-a733-ohci",
 +				     "allwinner,sun8i-h3-ohci";
-+			reg = <0x04200400 0xfff>,
-+			      <0x00000000 0x100>,
-+			      <0x04100000 0x1000>;
++			reg = <0x0 0x04200400 0x0 0xfff>,
++			      <0x0 0x00000000 0x0 0x100>,
++			      <0x0 0x04100000 0x0 0x1000>;
 +			interrupts = <GIC_SPI 160 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_USB1_OHCI>;
 +			resets = <&ccu RST_USB1_OHCI>;
@@ -2321,7 +2320,7 @@ index 000000000..16ea4e80a
 +
 +		dwc3: dwc3@6a00000 {
 +			compatible = "snps,dwc3";
-+			reg = <0x06a00000 0x100000>;
++			reg = <0x0 0x06a00000 0x0 0x100000>;
 +			interrupts = <GIC_SPI 155 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_USB2_MF>;
 +			clock-names = "bus_clk";
@@ -2337,7 +2336,7 @@ index 000000000..16ea4e80a
 +
 +		pcie: pcie@6000000 {
 +			compatible = "allwinner,sun60i-a733-pcie";
-+			reg = <0x06000000 0x480000>;
++			reg = <0x0 0x06000000 0x0 0x480000>;
 +			reg-names = "dbi";
 +			interrupts = <GIC_SPI 152 IRQ_TYPE_LEVEL_HIGH>,
 +				     <GIC_SPI 153 IRQ_TYPE_LEVEL_HIGH>,
@@ -2381,8 +2380,8 @@ index 000000000..16ea4e80a
 +			compatible = "allwinner,sun60i-a733-gmac",
 +				     "allwinner,sun50i-r329-gmac",
 +				     "snps,dwmac-5.20";
-+			reg = <0x04500000 0x8000>,
-+			      <0x04508000 0x1000>;
++			reg = <0x0 0x04500000 0x0 0x8000>,
++			      <0x0 0x04508000 0x0 0x1000>;
 +			reg-names = "mac", "mtl";
 +			interrupts = <GIC_SPI 172 IRQ_TYPE_LEVEL_HIGH>;
 +			interrupt-names = "macirq";
@@ -2410,7 +2409,7 @@ index 000000000..16ea4e80a
 +
 +		npu: npu@3600000 {
 +			compatible = "allwinner,sun60i-a733-npu";
-+			reg = <0x03600000 0x1000>;
++			reg = <0x0 0x03600000 0x0 0x1000>;
 +			interrupts = <GIC_SPI 65 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_NPU>, <&ccu CLK_PLL_NPU>,
 +				 <&ccu CLK_BUS_NPU>;
@@ -2422,7 +2421,7 @@ index 000000000..16ea4e80a
 +		gpu: gpu@1800000 {
 +			compatible = "allwinner,sun60i-a733-mali",
 +				     "arm,mali-bifrost";
-+			reg = <0x01800000 0x8ffff>;
++			reg = <0x0 0x01800000 0x0 0x8ffff>;
 +			interrupts = <GIC_SPI 63 IRQ_TYPE_LEVEL_HIGH>,
 +				     <GIC_SPI 64 IRQ_TYPE_LEVEL_HIGH>,
 +				     <GIC_SPI 64 IRQ_TYPE_LEVEL_HIGH>;
@@ -2444,7 +2443,7 @@ index 000000000..16ea4e80a
 +
 +		serdes0_phy: phy@6c00000 {
 +			compatible = "allwinner,sun60i-a733-serdes";
-+			reg = <0x06c00000 0x10000>;
++			reg = <0x0 0x06c00000 0x0 0x10000>;
 +			clocks = <&ccu CLK_PLL_PERI0_400M>, <&osc24M>;
 +			clock-names = "refclk", "sysclk";
 +			resets = <&ccu RST_USB0>;
@@ -2455,8 +2454,8 @@ index 000000000..16ea4e80a
 +		nsi: nsi@2020000 {
 +			compatible = "allwinner,sunxi-nsi-v2";
 +			interrupts = <GIC_SPI 43 IRQ_TYPE_LEVEL_HIGH>;
-+			reg = <0x02020000 0x10000>,
-+			      <0x0A030000 0x20000>;
++			reg = <0x0 0x02020000 0x0 0x10000>,
++			      <0x0 0x0A030000 0x0 0x20000>;
 +			clocks = <&ccu 0>, <&ccu 1>, <&ccu 2>,
 +				 <&ccu 3>, <&ccu 4>, <&ccu 5>,
 +				 <&ccu 6>, <&ccu 7>;
@@ -2465,12 +2464,12 @@ index 000000000..16ea4e80a
 +
 +		dsufreq: dsufreq@8860000 {
 +			compatible = "allwinner,sun60i-a733-dsufreq";
-+			reg = <0x08860000 0x1000>;
++			reg = <0x0 0x08860000 0x0 0x1000>;
 +		};
 +
 +		cpupll_ccu: cpupll-ccu@8870000 {
 +			compatible = "allwinner,sun60i-a733-cpupll";
-+			reg = <0x08870000 0x3034>;
++			reg = <0x0 0x08870000 0x0 0x3034>;
 +			clocks = <&rtc_ccu 0>;
 +			clock-names = "dcxo";
 +			#clock-cells = <1>;
@@ -2479,14 +2478,14 @@ index 000000000..16ea4e80a
 +
 +		rtc_ccu: rtc-ccu@7090000 {
 +			compatible = "allwinner,sun60i-a733-rtc-ccu", "allwinner,sun50i-h616-rtc-ccu";
-+			reg = <0x07090000 0x400>;
++			reg = <0x0 0x07090000 0x0 0x400>;
 +			#clock-cells = <1>;
 +			#reset-cells = <1>;
 +		};
 +
 +		r_ccu: r-ccu@7010000 {
 +			compatible = "allwinner,sun60i-a733-r-ccu";
-+			reg = <0x07010000 0x340>;
++			reg = <0x0 0x07010000 0x0 0x340>;
 +			clocks = <&osc24M>,
 +				 <&rtc_ccu 0>,
 +				 <&rc_16m>,
@@ -2507,7 +2506,7 @@ index 000000000..16ea4e80a
 +		nmi_intc: nmi-intc@7010320 {
 +			compatible = "allwinner,sun60i-a733-nmi",
 +				     "allwinner,sun9i-a80-nmi";
-+			reg = <0x07010320 0xc>;
++			reg = <0x0 0x07010320 0x0 0xc>;
 +			interrupts = <GIC_SPI 188 IRQ_TYPE_LEVEL_HIGH>;
 +			interrupt-controller;
 +			#interrupt-cells = <2>;
@@ -2517,7 +2516,7 @@ index 000000000..16ea4e80a
 +			compatible = "allwinner,sun60i-a733-i2c",
 +				     "allwinner,sun8i-v536-i2c",
 +				     "allwinner,sun6i-a31-i2c";
-+			reg = <0x07083000 0x400>;
++			reg = <0x0 0x07083000 0x0 0x400>;
 +			interrupts = <GIC_SPI 203 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&r_ccu CLK_R_TWI0>;
 +			resets = <&r_ccu RST_BUS_R_TWI0>;
@@ -2532,7 +2531,7 @@ index 000000000..16ea4e80a
 +
 +		rtc: rtc@7080000 {
 +			compatible = "allwinner,sun60i-a733-rtc", "allwinner,sun50i-h616-rtc", "allwinner,sun6i-a31-rtc";
-+			reg = <0x07080000 0x400>;
++			reg = <0x0 0x07080000 0x0 0x400>;
 +			interrupts = <GIC_SPI 161 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&dcxo24M>;
 +			clock-names = "hosc";
@@ -2542,7 +2541,7 @@ index 000000000..16ea4e80a
 +		pck: power-controller@7060000 {
 +			compatible = "allwinner,sun60i-a733-power-controller",
 +				     "syscon", "simple-mfd";
-+			reg = <0x07060000 0xb000>;
++			reg = <0x0 0x07060000 0x0 0xb000>;
 +			#address-cells = <1>;
 +			#size-cells = <0>;
 +			#power-domain-cells = <1>;
@@ -2608,7 +2607,7 @@ index 000000000..16ea4e80a
 +
 +		sunxi-dram-freq@2020000 {
 +			compatible = "allwinner,sun60i-a733-dramfreq";
-+			reg = <0x02020000 0x10000>;
++			reg = <0x0 0x02020000 0x0 0x10000>;
 +			clocks = <&ccu CLK_PLL_DDR>, <&ccu CLK_PLL_DDR1>;
 +			clock-names = "pll-ddr0", "pll-ddr1";
 +			status = "disabled";
@@ -2891,6 +2890,24 @@ index 000000000..af723a23e
 +CONFIG_PRINTK_TIME=y
 +CONFIG_MAGIC_SYSRQ=y
 +CONFIG_DEBUG_KERNEL=y
+diff --git a/arch/arm64/kernel/head.S b/arch/arm64/kernel/head.S
+index 87a822e5c..8fa7d27c4 100644
+--- a/arch/arm64/kernel/head.S
++++ b/arch/arm64/kernel/head.S
+@@ -83,6 +83,13 @@
+ 	 *  x21        primary_entry() .. start_kernel()        FDT pointer passed at boot in x0
+ 	 */
+ SYM_CODE_START(primary_entry)
++	/* Assembly checkpoint 'E' on UART0 at 0x02500000 */
++	mov	x9, #0x02500000
++99:	ldr	w10, [x9, #0x14]
++	tbz	w10, #5, 99b
++	mov	w10, #'E'
++	str	w10, [x9]
++
+ 	bl	record_mmu_state
+ 	bl	preserve_boot_args
+ 
 diff --git a/drivers/clk/sunxi-ng/Kconfig b/drivers/clk/sunxi-ng/Kconfig
 index 6af2d020e..0f5d48935 100644
 --- a/drivers/clk/sunxi-ng/Kconfig
@@ -13152,6 +13169,39 @@ index 000000000..2f905e7f1
 +#endif
 +
 +#endif /* _DT_BINDINGS_THERMAL_SUN60I_A733_H */
+diff --git a/init/main.c b/init/main.c
+index 96f93bb06..990d40a5f 100644
+--- a/init/main.c
++++ b/init/main.c
+@@ -1013,12 +1013,28 @@ static void __init print_kernel_cmdline(const char *cmdline)
+ 		pr_notice("%s%s\n", KERNEL_CMDLINE_PREFIX, cmdline);
+ }
+ 
++static inline void putc_idmap(char c)
++{
++	asm volatile(
++		"mov x9, #0x02500000\n"
++		"99: ldr w10, [x9, #0x14]\n"
++		"tbz w10, #5, 99b\n"
++		"mov w10, %0\n"
++		"str w10, [x9]\n"
++		:
++		: "r" ((unsigned long)c)
++		: "x9", "w10", "memory"
++	);
++}
++
+ asmlinkage __visible __init __no_sanitize_address __noreturn __no_stack_protector
+ void start_kernel(void)
+ {
+ 	char *command_line;
+ 	char *after_dashes;
+ 
++	putc_idmap('E');
++
+ 	set_task_stack_end_magic(&init_task);
+ 	smp_setup_processor_id();
+ 	debug_objects_early_init();
 diff --git a/scripts/Makefile.dtbs b/scripts/Makefile.dtbs
 index c4e466390..a86cdff32 100644
 --- a/scripts/Makefile.dtbs
