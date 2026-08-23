@@ -940,10 +940,10 @@ index 000000000..62df49b43
 +};
 diff --git a/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi b/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi
 new file mode 100644
-index 000000000..cdfe82103
+index 000000000..eeec3b4b3
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi
-@@ -0,0 +1,1684 @@
+@@ -0,0 +1,1679 @@
 +// SPDX-License-Identifier: (GPL-2.0-or-later OR MIT)
 +/*
 + * Device Tree Source for Allwinner Sun60i A733 SoC
@@ -1508,13 +1508,13 @@ index 000000000..cdfe82103
 +			reg = <0x03000000 0x1000>;
 +		};
 +
-+		gic: interrupt-controller@3400000 {
++		gic: interrupt-controller@3000000 {
 +			compatible = "arm,gic-v3";
 +			#interrupt-cells = <3>;
 +			#address-cells = <0>;
 +			interrupt-controller;
-+			reg = <0x0 0x03400000 0x0 0x10000>,
-+			      <0x0 0x03460000 0x0 0x100000>;
++			reg = <0x0 0x03000000 0x0 0x10000>,
++			      <0x0 0x03080000 0x0 0x200000>;
 +			interrupts = <GIC_PPI 9 (GIC_CPU_MASK_SIMPLE(8) | IRQ_TYPE_LEVEL_HIGH)>;
 +		};
 +
@@ -2530,18 +2530,13 @@ index 000000000..cdfe82103
 +			#size-cells = <0>;
 +		};
 +
-+		rtc: rtc@7090000 {
-+			compatible = "allwinner,sun60i-a733-rtc",
-+				     "allwinner,sun6i-a31-rtc";
-+			reg = <0x07090000 0x320>;
-+			interrupts = <GIC_SPI 196 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&r_ccu CLK_R_AHB>,
-+				 <&rtc_ccu CLK_RTC_1K>,
-+				 <&rtc_ccu CLK_RTC_SPI>;
-+			clock-names = "r-ahb-rtc", "rtc-1k", "rtc-spi";
-+			resets = <&r_ccu RST_BUS_RTC>;
++		rtc: rtc@7080000 {
++			compatible = "allwinner,sun60i-a733-rtc", "allwinner,sun50i-h616-rtc", "allwinner,sun6i-a31-rtc";
++			reg = <0x0 0x07080000 0x0 0x400>;
++			interrupts = <GIC_SPI 161 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&dcxo24M>;
++			clock-names = "hosc";
 +			#clock-cells = <1>;
-+			status = "disabled";
 +		};
 +
 +		pck: power-controller@7060000 {
@@ -2896,229 +2891,6 @@ index 000000000..af723a23e
 +CONFIG_PRINTK_TIME=y
 +CONFIG_MAGIC_SYSRQ=y
 +CONFIG_DEBUG_KERNEL=y
-diff --git a/arch/arm64/kernel/head.S b/arch/arm64/kernel/head.S
-index 87a822e5c..3fc386401 100644
---- a/arch/arm64/kernel/head.S
-+++ b/arch/arm64/kernel/head.S
-@@ -83,6 +83,14 @@
- 	 *  x21        primary_entry() .. start_kernel()        FDT pointer passed at boot in x0
- 	 */
- SYM_CODE_START(primary_entry)
-+	mov	x9, #0x02500000
-+	mov	w10, #'A'
-+	str	w10, [x9]
-+	mov	w10, #13
-+	str	w10, [x9]
-+	mov	w10, #10
-+	str	w10, [x9]
-+
- 	bl	record_mmu_state
- 	bl	preserve_boot_args
- 
-@@ -120,13 +128,42 @@ SYM_CODE_START(primary_entry)
- 	bl	init_kernel_el			// w0=cpu_boot_mode
- 	mov	x20, x0
- 
-+	mov	x9, #0x02500000
-+	mov	w10, #'B'
-+	str	w10, [x9]
-+	mov	w10, #13
-+	str	w10, [x9]
-+	mov	w10, #10
-+	str	w10, [x9]
-+
- 	/*
- 	 * The following calls CPU setup code, see arch/arm64/mm/proc.S for
- 	 * details.
- 	 * On return, the CPU will be ready for the MMU to be turned on and
- 	 * the TCR will have been set.
- 	 */
-+	mov	x22, #0x02500000
-+	mov	w23, #'B'
-+	str	w23, [x22]
-+	mov	w23, #'1'
-+	str	w23, [x22]
-+	mov	w23, #13
-+	str	w23, [x22]
-+	mov	w23, #10
-+	str	w23, [x22]
-+
- 	bl	__cpu_setup			// initialise processor
-+
-+	mov	x22, #0x02500000
-+	mov	w23, #'B'
-+	str	w23, [x22]
-+	mov	w23, #'2'
-+	str	w23, [x22]
-+	mov	w23, #13
-+	str	w23, [x22]
-+	mov	w23, #10
-+	str	w23, [x22]
-+
- 	b	__primary_switch
- SYM_CODE_END(primary_entry)
- 
-@@ -243,6 +280,15 @@ SYM_FUNC_START_LOCAL(__primary_switched)
- 	mov	x0, x20
- 	bl	finalise_el2			// Prefer VHE if possible
- 	ldp	x29, x30, [sp], #16
-+
-+	mov	x9, #0x02500000
-+	mov	w10, #'D'
-+	str	w10, [x9]
-+	mov	w10, #13
-+	str	w10, [x9]
-+	mov	w10, #10
-+	str	w10, [x9]
-+
- 	bl	start_kernel
- 	ASM_BUG()
- SYM_FUNC_END(__primary_switched)
-@@ -467,8 +513,28 @@ SYM_FUNC_START(__enable_mmu)
- 	msr	ttbr0_el1, x2			// load TTBR0
- 	load_ttbr1 x1, x1, x3
- 
-+	mov	x22, #0x02500000
-+	mov	w23, #'M'
-+	str	w23, [x22]
-+	mov	w23, #'1'
-+	str	w23, [x22]
-+	mov	w23, #13
-+	str	w23, [x22]
-+	mov	w23, #10
-+	str	w23, [x22]
-+
- 	set_sctlr_el1	x0
- 
-+	mov	x22, #0x02500000
-+	mov	w23, #'M'
-+	str	w23, [x22]
-+	mov	w23, #'2'
-+	str	w23, [x22]
-+	mov	w23, #13
-+	str	w23, [x22]
-+	mov	w23, #10
-+	str	w23, [x22]
-+
- 	ret
- SYM_FUNC_END(__enable_mmu)
- 
-@@ -508,6 +574,17 @@ SYM_FUNC_END(__no_granule_support)
- SYM_FUNC_START_LOCAL(__primary_switch)
- 	adrp	x1, reserved_pg_dir
- 	adrp	x2, __pi_init_idmap_pg_dir
-+
-+	mov	x22, #0x02500000
-+	mov	w23, #'B'
-+	str	w23, [x22]
-+	mov	w23, #'4'
-+	str	w23, [x22]
-+	mov	w23, #13
-+	str	w23, [x22]
-+	mov	w23, #10
-+	str	w23, [x22]
-+
- 	bl	__enable_mmu
- 
- 	adrp	x1, early_init_stack
-@@ -515,8 +592,27 @@ SYM_FUNC_START_LOCAL(__primary_switch)
- 	mov	x29, xzr
- 	mov	x0, x20				// pass the full boot status
- 	mov	x1, x21				// pass the FDT
-+
-+	mov	x22, #0x02500000
-+	mov	w23, #'B'
-+	str	w23, [x22]
-+	mov	w23, #'3'
-+	str	w23, [x22]
-+	mov	w23, #13
-+	str	w23, [x22]
-+	mov	w23, #10
-+	str	w23, [x22]
-+
- 	bl	__pi_early_map_kernel		// Map and relocate the kernel
- 
-+	mov	x9, #0x02500000
-+	mov	w10, #'C'
-+	str	w10, [x9]
-+	mov	w10, #13
-+	str	w10, [x9]
-+	mov	w10, #10
-+	str	w10, [x9]
-+
- 	ldr	x8, =__primary_switched
- 	adrp	x0, KERNEL_START		// __pa(KERNEL_START)
- 	br	x8
-diff --git a/arch/arm64/kernel/pi/map_range.c b/arch/arm64/kernel/pi/map_range.c
-index de52cd85c..edca1e9dd 100644
---- a/arch/arm64/kernel/pi/map_range.c
-+++ b/arch/arm64/kernel/pi/map_range.c
-@@ -105,5 +105,10 @@ asmlinkage phys_addr_t __init create_init_idmap(pgd_t *pg_dir, ptdesc_t clrmask)
- 		  (phys_addr_t)__initdata_begin, data_prot, IDMAP_ROOT_LEVEL,
- 		  (pte_t *)pg_dir, false, 0);
- 
-+	/* Map UART0 MMIO (0x02500000) into initial idmap so UART print works after MMU enable */
-+	map_range(&ptep, 0x02500000, 0x02501000,
-+		  0x02500000, __pgprot(PROT_DEVICE_nGnRE), IDMAP_ROOT_LEVEL,
-+		  (pte_t *)pg_dir, false, 0);
-+
- 	return ptep;
- }
-diff --git a/arch/arm64/kernel/setup.c b/arch/arm64/kernel/setup.c
-index 23c05dc7a..29037e130 100644
---- a/arch/arm64/kernel/setup.c
-+++ b/arch/arm64/kernel/setup.c
-@@ -278,12 +278,30 @@ u64 cpu_logical_map(unsigned int cpu)
- 	return __cpu_logical_map[cpu];
- }
- 
-+static inline void putc_idmap(char c)
-+{
-+	asm volatile(
-+		"mov x9, #0x02500000\n\t"
-+		"str %w0, [x9]\n\t"
-+		"mov w10, #13\n\t"
-+		"str w10, [x9]\n\t"
-+		"mov w10, #10\n\t"
-+		"str w10, [x9]\n\t"
-+		:
-+		: "r"(c)
-+		: "x9", "w10", "memory"
-+	);
-+}
-+
- void __init __no_sanitize_address setup_arch(char **cmdline_p)
- {
- 	setup_initial_init_mm(_text, _etext, _edata, _end);
- 
- 	*cmdline_p = boot_command_line;
- 
-+	/* Point G */
-+	putc_idmap('G');
-+
- 	kaslr_init();
- 
- 	early_fixmap_init();
-@@ -291,6 +309,9 @@ void __init __no_sanitize_address setup_arch(char **cmdline_p)
- 
- 	setup_machine_fdt(__fdt_pointer);
- 
-+	/* Point H */
-+	putc_idmap('H');
-+
- 	/*
- 	 * Initialise the static keys early as they may be enabled by the
- 	 * cpufeature code and early parameters.
-@@ -298,6 +319,9 @@ void __init __no_sanitize_address setup_arch(char **cmdline_p)
- 	jump_label_init();
- 	parse_early_param();
- 
-+	/* Point I */
-+	putc_idmap('I');
-+
- 	dynamic_scs_init();
- 
- 	/*
 diff --git a/drivers/clk/sunxi-ng/Kconfig b/drivers/clk/sunxi-ng/Kconfig
 index 6af2d020e..0f5d48935 100644
 --- a/drivers/clk/sunxi-ng/Kconfig
@@ -13380,51 +13152,6 @@ index 000000000..2f905e7f1
 +#endif
 +
 +#endif /* _DT_BINDINGS_THERMAL_SUN60I_A733_H */
-diff --git a/init/main.c b/init/main.c
-index 96f93bb06..d230ecc73 100644
---- a/init/main.c
-+++ b/init/main.c
-@@ -1013,12 +1013,29 @@ static void __init print_kernel_cmdline(const char *cmdline)
- 		pr_notice("%s%s\n", KERNEL_CMDLINE_PREFIX, cmdline);
- }
- 
-+static inline void putc_idmap(char c)
-+{
-+	asm volatile(
-+		"mov x9, #0x02500000\n\t"
-+		"str %w0, [x9]\n\t"
-+		"mov w10, #13\n\t"
-+		"str w10, [x9]\n\t"
-+		"mov w10, #10\n\t"
-+		"str w10, [x9]\n\t"
-+		:
-+		: "r"(c)
-+		: "x9", "w10", "memory"
-+	);
-+}
-+
- asmlinkage __visible __init __no_sanitize_address __noreturn __no_stack_protector
- void start_kernel(void)
- {
- 	char *command_line;
- 	char *after_dashes;
- 
-+	putc_idmap('E');
-+
- 	set_task_stack_end_magic(&init_task);
- 	smp_setup_processor_id();
- 	debug_objects_early_init();
-@@ -1036,6 +1053,10 @@ void start_kernel(void)
- 	boot_cpu_init();
- 	page_address_init();
- 	pr_notice("%s", linux_banner);
-+
-+	/* Point F */
-+	putc_idmap('F');
-+
- 	setup_arch(&command_line);
- 	mm_core_init_early();
- 	/* Static keys and static calls are needed by LSMs */
 diff --git a/scripts/Makefile.dtbs b/scripts/Makefile.dtbs
 index c4e466390..a86cdff32 100644
 --- a/scripts/Makefile.dtbs
