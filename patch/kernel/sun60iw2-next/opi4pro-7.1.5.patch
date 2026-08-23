@@ -2891,6 +2891,153 @@ index 000000000..af723a23e
 +CONFIG_PRINTK_TIME=y
 +CONFIG_MAGIC_SYSRQ=y
 +CONFIG_DEBUG_KERNEL=y
+diff --git a/arch/arm64/kernel/head.S b/arch/arm64/kernel/head.S
+index 87a822e5c..d20923a09 100644
+--- a/arch/arm64/kernel/head.S
++++ b/arch/arm64/kernel/head.S
+@@ -82,7 +82,14 @@
+ 	 *  x20        primary_entry() .. __primary_switch()    CPU boot mode
+ 	 *  x21        primary_entry() .. start_kernel()        FDT pointer passed at boot in x0
+ 	 */
++.macro uart_putc, ch
++	movz	x9, #0x0250, lsl #16
++	mov	w10, #\ch
++	str	w10, [x9]
++.endm
++
+ SYM_CODE_START(primary_entry)
++	uart_putc 'A'
+ 	bl	record_mmu_state
+ 	bl	preserve_boot_args
+ 
+@@ -119,6 +126,7 @@ SYM_CODE_START(primary_entry)
+ 1:	mov	x0, x19
+ 	bl	init_kernel_el			// w0=cpu_boot_mode
+ 	mov	x20, x0
++	uart_putc 'B'
+ 
+ 	/*
+ 	 * The following calls CPU setup code, see arch/arm64/mm/proc.S for
+@@ -126,7 +134,11 @@ SYM_CODE_START(primary_entry)
+ 	 * On return, the CPU will be ready for the MMU to be turned on and
+ 	 * the TCR will have been set.
+ 	 */
++	uart_putc 'B'
++	uart_putc '1'
+ 	bl	__cpu_setup			// initialise processor
++	uart_putc 'B'
++	uart_putc '2'
+ 	b	__primary_switch
+ SYM_CODE_END(primary_entry)
+ 
+@@ -243,6 +255,7 @@ SYM_FUNC_START_LOCAL(__primary_switched)
+ 	mov	x0, x20
+ 	bl	finalise_el2			// Prefer VHE if possible
+ 	ldp	x29, x30, [sp], #16
++	uart_putc 'D'
+ 	bl	start_kernel
+ 	ASM_BUG()
+ SYM_FUNC_END(__primary_switched)
+@@ -467,8 +480,14 @@ SYM_FUNC_START(__enable_mmu)
+ 	msr	ttbr0_el1, x2			// load TTBR0
+ 	load_ttbr1 x1, x1, x3
+ 
++	uart_putc 'M'
++	uart_putc '1'
++
+ 	set_sctlr_el1	x0
+ 
++	uart_putc 'M'
++	uart_putc '2'
++
+ 	ret
+ SYM_FUNC_END(__enable_mmu)
+ 
+@@ -506,10 +525,16 @@ SYM_FUNC_START_LOCAL(__no_granule_support)
+ SYM_FUNC_END(__no_granule_support)
+ 
+ SYM_FUNC_START_LOCAL(__primary_switch)
++	uart_putc 'B'
++	uart_putc '4'
++
+ 	adrp	x1, reserved_pg_dir
+ 	adrp	x2, __pi_init_idmap_pg_dir
+ 	bl	__enable_mmu
+ 
++	uart_putc 'B'
++	uart_putc '3'
++
+ 	adrp	x1, early_init_stack
+ 	mov	sp, x1
+ 	mov	x29, xzr
+@@ -517,6 +542,8 @@ SYM_FUNC_START_LOCAL(__primary_switch)
+ 	mov	x1, x21				// pass the FDT
+ 	bl	__pi_early_map_kernel		// Map and relocate the kernel
+ 
++	uart_putc 'C'
++
+ 	ldr	x8, =__primary_switched
+ 	adrp	x0, KERNEL_START		// __pa(KERNEL_START)
+ 	br	x8
+diff --git a/arch/arm64/kernel/setup.c b/arch/arm64/kernel/setup.c
+index 23c05dc7a..0c2b07fb9 100644
+--- a/arch/arm64/kernel/setup.c
++++ b/arch/arm64/kernel/setup.c
+@@ -35,6 +35,22 @@
+ 
+ #include <asm/acpi.h>
+ #include <asm/fixmap.h>
++
++#if defined(__aarch64__)
++static inline void putc_idmap(char c)
++{
++	asm volatile(
++		"movz x9, #0x0250, lsl #16\n\t"
++		"mov w10, %w0\n\t"
++		"str w10, [x9]\n\t"
++		:
++		: "r" ((unsigned int)(unsigned char)c)
++		: "x9", "w10", "memory"
++	);
++}
++#else
++static inline void putc_idmap(char c) { }
++#endif
+ #include <asm/cpu.h>
+ #include <asm/cputype.h>
+ #include <asm/daifflags.h>
+@@ -280,6 +296,7 @@ u64 cpu_logical_map(unsigned int cpu)
+ 
+ void __init __no_sanitize_address setup_arch(char **cmdline_p)
+ {
++	putc_idmap('G');
+ 	setup_initial_init_mm(_text, _etext, _edata, _end);
+ 
+ 	*cmdline_p = boot_command_line;
+@@ -290,6 +307,7 @@ void __init __no_sanitize_address setup_arch(char **cmdline_p)
+ 	early_ioremap_init();
+ 
+ 	setup_machine_fdt(__fdt_pointer);
++	putc_idmap('H');
+ 
+ 	/*
+ 	 * Initialise the static keys early as they may be enabled by the
+@@ -297,6 +315,7 @@ void __init __no_sanitize_address setup_arch(char **cmdline_p)
+ 	 */
+ 	jump_label_init();
+ 	parse_early_param();
++	putc_idmap('I');
+ 
+ 	dynamic_scs_init();
+ 
+@@ -375,6 +394,7 @@ void __init __no_sanitize_address setup_arch(char **cmdline_p)
+ 			"This indicates a broken bootloader or old kernel\n",
+ 			boot_args[1], boot_args[2], boot_args[3]);
+ 	}
++	putc_idmap('J');
+ }
+ 
+ static inline bool cpu_can_disable(unsigned int cpu)
 diff --git a/drivers/clk/sunxi-ng/Kconfig b/drivers/clk/sunxi-ng/Kconfig
 index 6af2d020e..0f5d48935 100644
 --- a/drivers/clk/sunxi-ng/Kconfig
@@ -13152,6 +13299,66 @@ index 000000000..2f905e7f1
 +#endif
 +
 +#endif /* _DT_BINDINGS_THERMAL_SUN60I_A733_H */
+diff --git a/init/main.c b/init/main.c
+index 96f93bb06..f90d64df9 100644
+--- a/init/main.c
++++ b/init/main.c
+@@ -41,6 +41,22 @@
+ #include <linux/kernel_stat.h>
+ #include <linux/start_kernel.h>
+ #include <linux/security.h>
++
++#if defined(__aarch64__)
++static inline void putc_idmap(char c)
++{
++	asm volatile(
++		"movz x9, #0x0250, lsl #16\n\t"
++		"mov w10, %w0\n\t"
++		"str w10, [x9]\n\t"
++		:
++		: "r" ((unsigned int)(unsigned char)c)
++		: "x9", "w10", "memory"
++	);
++}
++#else
++static inline void putc_idmap(char c) { }
++#endif
+ #include <linux/smp.h>
+ #include <linux/profile.h>
+ #include <linux/kfence.h>
+@@ -1019,6 +1035,8 @@ void start_kernel(void)
+ 	char *command_line;
+ 	char *after_dashes;
+ 
++	putc_idmap('E');
++
+ 	set_task_stack_end_magic(&init_task);
+ 	smp_setup_processor_id();
+ 	debug_objects_early_init();
+@@ -1036,6 +1054,7 @@ void start_kernel(void)
+ 	boot_cpu_init();
+ 	page_address_init();
+ 	pr_notice("%s", linux_banner);
++	putc_idmap('F');
+ 	setup_arch(&command_line);
+ 	mm_core_init_early();
+ 	/* Static keys and static calls are needed by LSMs */
+@@ -1077,6 +1096,7 @@ void start_kernel(void)
+ 	sort_main_extable();
+ 	trap_init();
+ 	mm_core_init();
++	putc_idmap('K');
+ 	maple_tree_init();
+ 	poking_init();
+ 	ftrace_init();
+@@ -1213,6 +1233,7 @@ void start_kernel(void)
+ 	delayacct_init();
+ 
+ 	acpi_subsystem_init();
++	putc_idmap('L');
+ 	arch_post_acpi_subsys_init();
+ 	kcsan_init();
+ 
 diff --git a/scripts/Makefile.dtbs b/scripts/Makefile.dtbs
 index c4e466390..a86cdff32 100644
 --- a/scripts/Makefile.dtbs
