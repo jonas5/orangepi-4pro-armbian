@@ -2625,7 +2625,7 @@ index 000000000..16ea4e80a
 +};
 diff --git a/arch/arm64/configs/orangepi_4pro_defconfig b/arch/arm64/configs/orangepi_4pro_defconfig
 new file mode 100644
-index 000000000..af723a23e
+index 000000000..8f753861a
 --- /dev/null
 +++ b/arch/arm64/configs/orangepi_4pro_defconfig
 @@ -0,0 +1,262 @@
@@ -2723,7 +2723,7 @@ index 000000000..af723a23e
 +CONFIG_ETHERNET=y
 +CONFIG_STMMAC_ETH=y
 +CONFIG_STMMAC_PLATFORM=y
-+CONFIG_SUN60I_GMAC=y
++# CONFIG_SUN60I_GMAC is not set
 +CONFIG_PHYLIB=y
 +CONFIG_MOTORCOMM_PHY=y
 +CONFIG_FIXED_PHY=y
@@ -2892,7 +2892,7 @@ index 000000000..af723a23e
 +CONFIG_MAGIC_SYSRQ=y
 +CONFIG_DEBUG_KERNEL=y
 diff --git a/arch/arm64/kernel/head.S b/arch/arm64/kernel/head.S
-index 87a822e5c..d20923a09 100644
+index 87a822e5c..b4aedbed5 100644
 --- a/arch/arm64/kernel/head.S
 +++ b/arch/arm64/kernel/head.S
 @@ -82,7 +82,14 @@
@@ -2900,15 +2900,24 @@ index 87a822e5c..d20923a09 100644
  	 *  x21        primary_entry() .. start_kernel()        FDT pointer passed at boot in x0
  	 */
 +.macro uart_putc, ch
-+	movz	x9, #0x0250, lsl #16
-+	mov	w10, #\ch
-+	str	w10, [x9]
++	movz	x22, #0x0250, lsl #16
++	mov	w23, #\ch
++	str	w23, [x22]
 +.endm
 +
  SYM_CODE_START(primary_entry)
 +	uart_putc 'A'
  	bl	record_mmu_state
  	bl	preserve_boot_args
+ 
+@@ -102,7 +109,7 @@ SYM_CODE_START(primary_entry)
+ 	dmb     sy
+ 	mov	x1, x0				// end of used region
+ 	adrp    x0, __pi_init_idmap_pg_dir
+-	adr_l	x2, dcache_inval_poc
++	adr_l	x2, dcache_clean_poc
+ 	blr	x2
+ 	b	1f
  
 @@ -119,6 +126,7 @@ SYM_CODE_START(primary_entry)
  1:	mov	x0, x19
@@ -2938,13 +2947,15 @@ index 87a822e5c..d20923a09 100644
  	bl	start_kernel
  	ASM_BUG()
  SYM_FUNC_END(__primary_switched)
-@@ -467,8 +480,14 @@ SYM_FUNC_START(__enable_mmu)
+@@ -467,8 +480,16 @@ SYM_FUNC_START(__enable_mmu)
  	msr	ttbr0_el1, x2			// load TTBR0
  	load_ttbr1 x1, x1, x3
  
 +	uart_putc 'M'
 +	uart_putc '1'
 +
++	dsb	sy
++	isb
  	set_sctlr_el1	x0
  
 +	uart_putc 'M'
@@ -2953,12 +2964,22 @@ index 87a822e5c..d20923a09 100644
  	ret
  SYM_FUNC_END(__enable_mmu)
  
-@@ -506,10 +525,16 @@ SYM_FUNC_START_LOCAL(__no_granule_support)
+@@ -506,10 +527,26 @@ SYM_FUNC_START_LOCAL(__no_granule_support)
  SYM_FUNC_END(__no_granule_support)
  
  SYM_FUNC_START_LOCAL(__primary_switch)
 +	uart_putc 'B'
 +	uart_putc '4'
++
++	adrp	x0, __pi_init_idmap_pg_dir
++	adr_l	x1, __pi_init_idmap_pg_end
++	adr_l	x2, dcache_clean_poc
++	blr	x2
++
++	adrp	x0, reserved_pg_dir
++	adr_l	x1, swapper_pg_dir
++	adr_l	x2, dcache_clean_poc
++	blr	x2
 +
  	adrp	x1, reserved_pg_dir
  	adrp	x2, __pi_init_idmap_pg_dir
@@ -2970,7 +2991,7 @@ index 87a822e5c..d20923a09 100644
  	adrp	x1, early_init_stack
  	mov	sp, x1
  	mov	x29, xzr
-@@ -517,6 +542,8 @@ SYM_FUNC_START_LOCAL(__primary_switch)
+@@ -517,6 +554,8 @@ SYM_FUNC_START_LOCAL(__primary_switch)
  	mov	x1, x21				// pass the FDT
  	bl	__pi_early_map_kernel		// Map and relocate the kernel
  
