@@ -2897,7 +2897,7 @@ index 000000000..af723a23e
 +CONFIG_MAGIC_SYSRQ=y
 +CONFIG_DEBUG_KERNEL=y
 diff --git a/arch/arm64/kernel/head.S b/arch/arm64/kernel/head.S
-index 87a822e5c..e4e3f73f8 100644
+index 87a822e5c..e5982f00e 100644
 --- a/arch/arm64/kernel/head.S
 +++ b/arch/arm64/kernel/head.S
 @@ -83,6 +83,14 @@
@@ -2915,7 +2915,7 @@ index 87a822e5c..e4e3f73f8 100644
  	bl	record_mmu_state
  	bl	preserve_boot_args
  
-@@ -120,6 +128,14 @@ SYM_CODE_START(primary_entry)
+@@ -120,13 +128,42 @@ SYM_CODE_START(primary_entry)
  	bl	init_kernel_el			// w0=cpu_boot_mode
  	mov	x20, x0
  
@@ -2930,7 +2930,35 @@ index 87a822e5c..e4e3f73f8 100644
  	/*
  	 * The following calls CPU setup code, see arch/arm64/mm/proc.S for
  	 * details.
-@@ -243,6 +259,15 @@ SYM_FUNC_START_LOCAL(__primary_switched)
+ 	 * On return, the CPU will be ready for the MMU to be turned on and
+ 	 * the TCR will have been set.
+ 	 */
++	mov	x22, #0x02500000
++	mov	w23, #'B'
++	str	w23, [x22]
++	mov	w23, #'1'
++	str	w23, [x22]
++	mov	w23, #13
++	str	w23, [x22]
++	mov	w23, #10
++	str	w23, [x22]
++
+ 	bl	__cpu_setup			// initialise processor
++
++	mov	x22, #0x02500000
++	mov	w23, #'B'
++	str	w23, [x22]
++	mov	w23, #'2'
++	str	w23, [x22]
++	mov	w23, #13
++	str	w23, [x22]
++	mov	w23, #10
++	str	w23, [x22]
++
+ 	b	__primary_switch
+ SYM_CODE_END(primary_entry)
+ 
+@@ -243,6 +280,15 @@ SYM_FUNC_START_LOCAL(__primary_switched)
  	mov	x0, x20
  	bl	finalise_el2			// Prefer VHE if possible
  	ldp	x29, x30, [sp], #16
@@ -2946,8 +2974,39 @@ index 87a822e5c..e4e3f73f8 100644
  	bl	start_kernel
  	ASM_BUG()
  SYM_FUNC_END(__primary_switched)
-@@ -517,6 +542,14 @@ SYM_FUNC_START_LOCAL(__primary_switch)
+@@ -508,6 +554,17 @@ SYM_FUNC_END(__no_granule_support)
+ SYM_FUNC_START_LOCAL(__primary_switch)
+ 	adrp	x1, reserved_pg_dir
+ 	adrp	x2, __pi_init_idmap_pg_dir
++
++	mov	x22, #0x02500000
++	mov	w23, #'B'
++	str	w23, [x22]
++	mov	w23, #'4'
++	str	w23, [x22]
++	mov	w23, #13
++	str	w23, [x22]
++	mov	w23, #10
++	str	w23, [x22]
++
+ 	bl	__enable_mmu
+ 
+ 	adrp	x1, early_init_stack
+@@ -515,8 +572,27 @@ SYM_FUNC_START_LOCAL(__primary_switch)
+ 	mov	x29, xzr
+ 	mov	x0, x20				// pass the full boot status
  	mov	x1, x21				// pass the FDT
++
++	mov	x22, #0x02500000
++	mov	w23, #'B'
++	str	w23, [x22]
++	mov	w23, #'3'
++	str	w23, [x22]
++	mov	w23, #13
++	str	w23, [x22]
++	mov	w23, #10
++	str	w23, [x22]
++
  	bl	__pi_early_map_kernel		// Map and relocate the kernel
  
 +	mov	x9, #0x02500000
