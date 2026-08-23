@@ -940,7 +940,7 @@ index 000000000..62df49b43
 +};
 diff --git a/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi b/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi
 new file mode 100644
-index 000000000..4db37ea70
+index 000000000..16ea4e80a
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi
 @@ -0,0 +1,1679 @@
@@ -1508,13 +1508,13 @@ index 000000000..4db37ea70
 +			reg = <0x03000000 0x1000>;
 +		};
 +
-+		gic: interrupt-controller@3000000 {
++		gic: interrupt-controller@3400000 {
 +			compatible = "arm,gic-v3";
 +			#interrupt-cells = <3>;
 +			#address-cells = <0>;
 +			interrupt-controller;
-+			reg = <0x03000000 0x10000>,
-+			      <0x03080000 0x200000>;
++			reg = <0x03400000 0x10000>,
++			      <0x03460000 0x200000>;
 +			interrupts = <GIC_PPI 9 (GIC_CPU_MASK_SIMPLE(8) | IRQ_TYPE_LEVEL_HIGH)>;
 +		};
 +
@@ -2625,10 +2625,10 @@ index 000000000..4db37ea70
 +};
 diff --git a/arch/arm64/configs/orangepi_4pro_defconfig b/arch/arm64/configs/orangepi_4pro_defconfig
 new file mode 100644
-index 000000000..28b33bddc
+index 000000000..af723a23e
 --- /dev/null
 +++ b/arch/arm64/configs/orangepi_4pro_defconfig
-@@ -0,0 +1,269 @@
+@@ -0,0 +1,262 @@
 +#
 +# Orange Pi 4 Pro - Allwinner A733 (sun60i) minimal bootable config
 +# Based on arch/arm64/configs/defconfig, trimmed to sun60i essentials.
@@ -2660,7 +2660,7 @@ index 000000000..28b33bddc
 +CONFIG_IRQ_TIME_ACCOUNTING=y
 +CONFIG_IKCONFIG=y
 +CONFIG_IKCONFIG_PROC=y
-+CONFIG_LOG_BUF_SHIFT=19
++CONFIG_LOG_BUF_SHIFT=18
 +CONFIG_MEMCG=y
 +CONFIG_BLK_CGROUP=y
 +CONFIG_CGROUP_PIDS=y
@@ -2754,6 +2754,12 @@ index 000000000..28b33bddc
 +CONFIG_SERIAL_8250_DW=y
 +CONFIG_SERIAL_OF_PLATFORM=y
 +CONFIG_SERIAL_DEV_BUS=y
++CONFIG_SERIAL_EARLYCON=y
++
++# ---------- Early boot debugging ----------
++CONFIG_CMDLINE="console=ttyS2,115200n8"
++CONFIG_DEBUG_INFO=y
++CONFIG_DEBUG_INFO_DWARF5=y
 +
 +# ---------- GPIO / pinctrl ----------
 +CONFIG_AW_PINCTRL_SUN60IW2=y
@@ -2762,7 +2768,6 @@ index 000000000..28b33bddc
 +CONFIG_COMMON_CLK=y
 +CONFIG_SUNXI_CCU=y
 +CONFIG_SUN60I_CCU=y
-+CONFIG_SUN50I_H616_RTC_CCU=y
 +
 +# ---------- I2C (AXP8191 PMIC bus) ----------
 +CONFIG_I2C=y
@@ -2883,39 +2888,9 @@ index 000000000..28b33bddc
 +CONFIG_LSM="landlock,lockdown,yama,integrity,bpf"
 +
 +# ---------- Logging / debug ----------
-+CONFIG_PRINTK=y
 +CONFIG_PRINTK_TIME=y
-+CONFIG_LOG_BUF_SHIFT=19
-+CONFIG_CONSOLE_LOGLEVEL_DEFAULT=8
-+CONFIG_CONSOLE_LOGLEVEL_QUIET=8
-+CONFIG_MESSAGE_LOGLEVEL_DEFAULT=7
-+CONFIG_DEBUG_KERNEL=y
-+CONFIG_INITCALL_DEBUG=y
-+CONFIG_DYNAMIC_DEBUG=y
-+CONFIG_SERIAL_EARLYCON=y
-+CONFIG_SERIAL_8250_CONSOLE=y
-+CONFIG_SERIAL_8250_DW=y
-+CONFIG_DEBUG_DRIVER=y
-+CONFIG_DEBUG_DEVRES=y
 +CONFIG_MAGIC_SYSRQ=y
-diff --git a/arch/arm64/kernel/head.S b/arch/arm64/kernel/head.S
-index 87a822e5c..8fa7d27c4 100644
---- a/arch/arm64/kernel/head.S
-+++ b/arch/arm64/kernel/head.S
-@@ -83,6 +83,13 @@
- 	 *  x21        primary_entry() .. start_kernel()        FDT pointer passed at boot in x0
- 	 */
- SYM_CODE_START(primary_entry)
-+	/* Assembly checkpoint 'E' on UART0 at 0x02500000 */
-+	mov	x9, #0x02500000
-+99:	ldr	w10, [x9, #0x14]
-+	tbz	w10, #5, 99b
-+	mov	w10, #'E'
-+	str	w10, [x9]
-+
- 	bl	record_mmu_state
- 	bl	preserve_boot_args
- 
++CONFIG_DEBUG_KERNEL=y
 diff --git a/drivers/clk/sunxi-ng/Kconfig b/drivers/clk/sunxi-ng/Kconfig
 index 6af2d020e..0f5d48935 100644
 --- a/drivers/clk/sunxi-ng/Kconfig
@@ -13177,39 +13152,6 @@ index 000000000..2f905e7f1
 +#endif
 +
 +#endif /* _DT_BINDINGS_THERMAL_SUN60I_A733_H */
-diff --git a/init/main.c b/init/main.c
-index 96f93bb06..d097e2d61 100644
---- a/init/main.c
-+++ b/init/main.c
-@@ -1013,12 +1013,28 @@ static void __init print_kernel_cmdline(const char *cmdline)
- 		pr_notice("%s%s\n", KERNEL_CMDLINE_PREFIX, cmdline);
- }
- 
-+static inline void putc_idmap(char c)
-+{
-+	asm volatile(
-+		"mov x9, #0x02500000\n"
-+		"99: ldr w10, [x9, #0x14]\n"
-+		"tbz w10, #5, 99b\n"
-+		"mov w10, %w0\n"
-+		"str w10, [x9]\n"
-+		:
-+		: "r" ((unsigned long)c)
-+		: "x9", "x10", "memory"
-+	);
-+}
-+
- asmlinkage __visible __init __no_sanitize_address __noreturn __no_stack_protector
- void start_kernel(void)
- {
- 	char *command_line;
- 	char *after_dashes;
- 
-+	putc_idmap('E');
-+
- 	set_task_stack_end_magic(&init_task);
- 	smp_setup_processor_id();
- 	debug_objects_early_init();
 diff --git a/scripts/Makefile.dtbs b/scripts/Makefile.dtbs
 index c4e466390..a86cdff32 100644
 --- a/scripts/Makefile.dtbs
