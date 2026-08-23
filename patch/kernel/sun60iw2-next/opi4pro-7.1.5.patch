@@ -940,7 +940,7 @@ index 000000000..62df49b43
 +};
 diff --git a/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi b/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi
 new file mode 100644
-index 000000000..eeec3b4b3
+index 000000000..3adc58f52
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60i-a733.dtsi
 @@ -0,0 +1,1679 @@
@@ -966,7 +966,7 @@ index 000000000..eeec3b4b3
 +	#address-cells = <2>;
 +	#size-cells = <2>;
 +
-+	osc24M: osc26M: osc26M-clk {
++	dcxo24M: osc24M: osc26M: osc26M-clk {
 +		#clock-cells = <0>;
 +		compatible = "fixed-clock";
 +		clock-frequency = <26000000>;
