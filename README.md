@@ -1,3 +1,20 @@
+# ⚠️ REPOSITORY CONSOLIDATED & MOVED
+
+> ## 👉 **Active Development Has Moved To:**
+> # [https://github.com/jonas5/orangepi-4pro-kernel](https://github.com/jonas5/orangepi-4pro-kernel)
+>
+> **The `orangepi-4pro-armbian` repository is now redundant and deprecated.**
+> All active mainline Linux 6.18 kernel development, device trees, patches, and multi-distribution images (**Ubuntu 24.04/22.04/20.04**, **Debian 12/13/11/Sid**, and **Arch Linux ARM**) across Minimal, Server, and Desktop (XFCE/GNOME) flavours are now consolidated and actively maintained at:
+>
+> ### 🔗 **[github.com/jonas5/orangepi-4pro-kernel](https://github.com/jonas5/orangepi-4pro-kernel)**
+>
+> Please update your bookmarks and git remotes:
+> ```bash
+> git remote set-url origin git@github.com:jonas5/orangepi-4pro-kernel.git
+> ```
+
+---
+
 # Orange Pi 4 Pro — Armbian Build Overlay
 
 [![Build](https://github.com/jonas5/orangepi-4pro-armbian/actions/workflows/release.yml/badge.svg)](https://github.com/jonas5/orangepi-4pro-armbian/actions/workflows/release.yml)
